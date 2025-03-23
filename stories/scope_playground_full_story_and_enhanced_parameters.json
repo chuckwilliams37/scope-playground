@@ -1,0 +1,466 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-23",
+  "stories": [
+    {
+      "id": "story-001",
+      "title": "Client-Specific Story Access",
+      "userStory": "As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Access Control"
+    },
+    {
+      "id": "story-002",
+      "title": "Backlog Story Viewer",
+      "userStory": "As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.",
+      "points": 3,
+      "businessValue": "Critical",
+      "category": "Story Management"
+    },
+    {
+      "id": "story-003",
+      "title": "Scope Matrix Drag-and-Drop (Effort Validated)",
+      "userStory": "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "UI Interaction"
+    },
+    {
+      "id": "story-004",
+      "title": "Business Value Mismatch Explanation",
+      "userStory": "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "UX Enhancement"
+    },
+    {
+      "id": "story-005",
+      "title": "Real-Time Scope Metrics Panel",
+      "userStory": "As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Analytics"
+    },
+    {
+      "id": "story-006",
+      "title": "Scenario Presets and Reset",
+      "userStory": "As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.",
+      "points": 3,
+      "businessValue": "Medium",
+      "category": "Configuration"
+    },
+    {
+      "id": "story-007",
+      "title": "Save and Load Scenarios",
+      "userStory": "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Data Management"
+    },
+    {
+      "id": "story-008",
+      "title": "Adjustable Cost Settings",
+      "userStory": "As a user, I can adjust developer hourly rate and team size to see how they affect cost estimates in real time.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Cost Planning"
+    },
+    {
+      "id": "story-009",
+      "title": "Role-Based Permissions and Visibility",
+      "userStory": "As a system admin, I can manage user roles and restrict which parts of the interface different roles can see or interact with.",
+      "points": 5,
+      "businessValue": "Medium",
+      "category": "Access Control"
+    },
+    {
+      "id": "story-010",
+      "title": "Drag-and-Drop Interaction Hints",
+      "userStory": "As a client, I receive immediate visual or textual feedback when attempting a drop that would violate matrix rules.",
+      "points": 3,
+      "businessValue": "High",
+      "category": "UX Enhancement"
+    },
+    {
+      "id": "story-011",
+      "title": "Export Scenario to PDF or Share Link",
+      "userStory": "As a client or PM, I can export the current scope matrix and metrics as a PDF or generate a shareable link.",
+      "points": 5,
+      "businessValue": "Medium",
+      "category": "Export & Share"
+    },
+    {
+      "id": "story-012",
+      "title": "AI-Assisted Story Creation",
+      "userStory": "As a PM, I can use AI to help draft new user stories based on project requirements and existing stories.",
+      "points": 8,
+      "businessValue": "Medium",
+      "category": "Productivity Enhancement"
+    },
+    {
+      "id": "story-013",
+      "title": "Historical Comparison Dashboard",
+      "userStory": "As a client or PM, I can view how current estimates compare to historical projects with similar scope and complexity.",
+      "points": 13,
+      "businessValue": "High",
+      "category": "Cost Planning"
+    },
+    {
+      "id": "story-014",
+      "title": "Team Composition Impact Analysis",
+      "userStory": "As a PM, I can adjust the senior/mid/junior ratio of the team and see how it affects timeline and cost.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Team Planning"
+    },
+    {
+      "id": "story-015",
+      "title": "AI Factor Simulation",
+      "userStory": "As a client, I can see simulated impacts of enabling/disabling various AI productivity boosters on project timeline and cost.",
+      "points": 13,
+      "businessValue": "High",
+      "category": "AI Integration"
+    },
+    {
+      "id": "story-016",
+      "title": "Technology Stack Impact Analysis",
+      "userStory": "As a technical lead, I can compare how different technology stacks affect development complexity and timeline.",
+      "points": 8,
+      "businessValue": "Medium",
+      "category": "Technical Planning"
+    },
+    {
+      "id": "story-017",
+      "title": "Multi-Project Resource Allocation",
+      "userStory": "As a PM managing multiple projects, I can see how developer allocation across projects affects each project's timeline.",
+      "points": 13,
+      "businessValue": "High",
+      "category": "Resource Management"
+    },
+    {
+      "id": "story-018",
+      "title": "Workday Calendar Customization",
+      "userStory": "As a PM, I can customize working days calendar to account for holidays in specific regions and company-specific non-working days.",
+      "points": 5,
+      "businessValue": "Medium",
+      "category": "Schedule Planning"
+    },
+    {
+      "id": "story-019",
+      "title": "Risk Factor Adjustment",
+      "userStory": "As a PM, I can add risk factors to specific stories or the entire project and see how they affect the confidence level of estimates.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Risk Management"
+    },
+    {
+      "id": "story-020",
+      "title": "Feature Dependencies Visualization",
+      "userStory": "As a technical lead, I can define dependencies between stories and see a critical path analysis for the project timeline.",
+      "points": 13,
+      "businessValue": "Medium",
+      "category": "Project Planning"
+    },
+    {
+      "id": "story-021",
+      "title": "Scenario Comparison View",
+      "userStory": "As a client, I can view multiple saved scenarios side-by-side with visual highlighting of differences in scope, cost, and timeline.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Decision Support"
+    },
+    {
+      "id": "story-022",
+      "title": "Collaboration History Log",
+      "userStory": "As a PM, I can see a history of changes made to a scenario with timestamps and user IDs, so I can track contributions and decisions.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Collaboration"
+    },
+    {
+      "id": "story-023",
+      "title": "Story-Level Commenting",
+      "userStory": "As a user, I can add and view threaded comments on individual stories, enabling discussion and feedback.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Collaboration"
+    },
+    {
+      "id": "story-024",
+      "title": "Milestone Grouping of Stories",
+      "userStory": "As a PM, I can group scoped stories into project milestones or delivery phases for clearer roadmap planning.",
+      "points": 8,
+      "businessValue": "Medium",
+      "category": "Delivery Planning"
+    },
+    {
+      "id": "story-025",
+      "title": "Scope vs Budget/Creep Warning System",
+      "userStory": "As a user, I receive warnings when my scope exceeds a recommended cost, timeline, or resource threshold.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Scope Risk Detection"
+    },
+    {
+      "id": "story-026",
+      "title": "Weighted Scoring for Value Estimation",
+      "userStory": "As a PM, I can apply a weighted scoring formula to stories (e.g., ROI × urgency × feasibility) to better prioritize scope.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Decision Support"
+    },
+    {
+      "id": "story-027",
+      "title": "Confidence Range for Effort Estimation",
+      "userStory": "As a PM, I can label stories with a confidence level that affects how conservative or aggressive the estimate becomes.",
+      "points": 5,
+      "businessValue": "Medium",
+      "category": "Risk Management"
+    },
+    {
+      "id": "story-028",
+      "title": "Minimum Lovable Product Indicator",
+      "userStory": "As a client, I can see whether my selected scope satisfies the definition of a Minimum Lovable Product.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Launch Planning"
+    },
+    {
+      "id": "story-029",
+      "title": "ClickUp Integration for Story Import",
+      "userStory": "As a user, I can import tasks or stories from a ClickUp list or space into the Scope Playground as scoped stories.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Integrations"
+    },
+    {
+      "id": "story-030",
+      "title": "Collaboration Roles and Permissions",
+      "userStory": "As an account owner, I can assign collaborators to scenarios with read, comment, or edit access.",
+      "points": 5,
+      "businessValue": "High",
+      "category": "Permissions"
+    }
+  ],
+  "tweakableParameters": {
+    "developerCost": {
+      "minPerDay": 300,
+      "maxPerDay": 1500,
+      "default": 750,
+      "unit": "USD",
+      "description": "Cost per developer per day"
+    },
+    "scopeLimiters": {
+      "points": {
+        "min": 0,
+        "max": 200,
+        "default": 50,
+        "description": "Maximum story points to include in scope"
+      },
+      "hours": {
+        "min": 0,
+        "max": 2000,
+        "default": 500,
+        "description": "Maximum development hours"
+      },
+      "duration": {
+        "min": 0,
+        "max": 180,
+        "default": 60,
+        "unit": "days",
+        "description": "Maximum project duration"
+      }
+    },
+    "aiProductivityFactors": {
+      "uiCodeGeneration": {
+        "enabled": true,
+        "minGainPercent": 20,
+        "maxGainPercent": 50,
+        "defaultGainPercent": 35,
+        "description": "Productivity gain from AI-assisted UI code generation"
+      },
+      "schemaAndLogic": {
+        "enabled": true,
+        "minGainPercent": 20,
+        "maxGainPercent": 70,
+        "defaultGainPercent": 45,
+        "description": "Productivity gain from AI-assisted schema design and business logic"
+      },
+      "testingAndMockData": {
+        "enabled": true,
+        "minGainPercent": 50,
+        "maxGainPercent": 90,
+        "defaultGainPercent": 70,
+        "description": "Productivity gain from AI-assisted testing and mock data generation"
+      },
+      "docsAndStories": {
+        "enabled": true,
+        "minGainPercent": 80,
+        "maxGainPercent": 90,
+        "defaultGainPercent": 85,
+        "description": "Productivity gain from AI-assisted documentation and story drafting"
+      }
+    },
+    "projectFactors": {
+      "pmCoordinationOverhead": {
+        "enabled": true,
+        "minPercent": 8,
+        "maxPercent": 30,
+        "defaultPercent": 15,
+        "description": "Overhead for project management coordination"
+      },
+      "featureReuseAccelerator": {
+        "enabled": true,
+        "minPercent": -35,
+        "maxPercent": -5,
+        "defaultPercent": -20,
+        "description": "Time savings from reusing existing features and components"
+      },
+      "leanDevelopmentAccelerator": {
+        "enabled": true,
+        "minPercent": -7,
+        "maxPercent": -3,
+        "defaultPercent": -5,
+        "description": "Time savings from implementing lean development practices"
+      },
+      "techStackComplexity": {
+        "enabled": true,
+        "minPercent": -10,
+        "maxPercent": 20,
+        "defaultPercent": 5,
+        "description": "Impact of technology stack complexity on development time"
+      },
+      "qaTestingCompliance": {
+        "enabled": true,
+        "minPercent": 3,
+        "maxPercent": 15,
+        "defaultPercent": 10,
+        "description": "Additional time needed for QA, testing, and regulatory compliance"
+      }
+    },
+    "teamConfiguration": {
+      "hoursPerDay": {
+        "min": 4,
+        "max": 10,
+        "default": 8,
+        "description": "Productive hours per developer per day"
+      },
+      "developerCount": {
+        "min": 1,
+        "max": 20,
+        "default": 5,
+        "description": "Number of developers assigned to the project"
+      },
+      "developerAllocation": {
+        "min": 10,
+        "max": 100,
+        "default": 80,
+        "unit": "percent",
+        "description": "Percentage of developer time allocated to this project"
+      }
+    },
+    "workCalendar": {
+      "includeWeekends": false,
+      "holidayCalendars": {
+        "US": {
+          "enabled": true,
+          "holidays": [
+            {"date": "2025-01-01", "name": "New Year's Day"},
+            {"date": "2025-01-20", "name": "Martin Luther King Jr. Day"},
+            {"date": "2025-02-17", "name": "Presidents' Day"},
+            {"date": "2025-05-26", "name": "Memorial Day"},
+            {"date": "2025-07-04", "name": "Independence Day"},
+            {"date": "2025-09-01", "name": "Labor Day"},
+            {"date": "2025-11-11", "name": "Veterans Day"},
+            {"date": "2025-11-27", "name": "Thanksgiving Day"},
+            {"date": "2025-12-25", "name": "Christmas Day"}
+          ]
+        },
+        "India": {
+          "enabled": false,
+          "holidays": [
+            {"date": "2025-01-26", "name": "Republic Day"},
+            {"date": "2025-08-15", "name": "Independence Day"},
+            {"date": "2025-10-02", "name": "Gandhi Jayanti"},
+            {"date": "2025-11-12", "name": "Diwali"},
+            {"date": "2025-12-25", "name": "Christmas Day"}
+          ]
+        },
+        "UK": {
+          "enabled": false,
+          "holidays": [
+            {"date": "2025-01-01", "name": "New Year's Day"},
+            {"date": "2025-04-18", "name": "Good Friday"},
+            {"date": "2025-04-21", "name": "Easter Monday"},
+            {"date": "2025-05-05", "name": "Early May Bank Holiday"},
+            {"date": "2025-05-26", "name": "Spring Bank Holiday"},
+            {"date": "2025-08-25", "name": "Summer Bank Holiday"},
+            {"date": "2025-12-25", "name": "Christmas Day"},
+            {"date": "2025-12-26", "name": "Boxing Day"}
+          ]
+        },
+        "Custom": {
+          "enabled": true,
+          "holidays": []
+        }
+      }
+    },
+    "scenarioManagement": {
+      "maxSavedScenarios": 10,
+      "comparisonOptions": {
+        "cost": true,
+        "timeline": true,
+        "scope": true,
+        "resources": true,
+        "risks": true
+      },
+      "exportFormats": ["PDF", "Excel", "JSON", "ShareableLink"]
+    }
+  },
+  "calculationFormulas": {
+    "pointToHoursConversion": 8,
+    "baseEffort": "sum(story.points) * pointToHoursConversion",
+    "adjustedEffort": "baseEffort * (1 - sum(aiFactors)) * (1 + sum(projectFactors))",
+    "duration": "adjustedEffort / (developerCount * hoursPerDay * (developerAllocation/100))",
+    "cost": "duration * developerCount * dailyRate",
+    "daysWithHolidays": "duration + holidayCount(duration, selectedCalendars)"
+  },
+  "interfaceSections": [
+    {
+      "id": "stories-panel",
+      "title": "Available Stories",
+      "description": "Browse, filter, and select stories to add to your scope"
+    },
+    {
+      "id": "scope-matrix",
+      "title": "Scope Matrix",
+      "description": "Drag and drop stories into priority/value quadrants"
+    },
+    {
+      "id": "estimate-panel",
+      "title": "Estimate Details",
+      "description": "View current cost, timeline, and resource allocation"
+    },
+    {
+      "id": "productivity-factors",
+      "title": "Productivity Factors",
+      "description": "Adjust AI and project factors that impact estimates"
+    },
+    {
+      "id": "team-configuration",
+      "title": "Team Setup",
+      "description": "Configure team size, rates, and allocation"
+    },
+    {
+      "id": "scenario-manager",
+      "title": "Scenario Management",
+      "description": "Save, load, and compare different scenarios"
+    },
+    {
+      "id": "export-options",
+      "title": "Export & Share",
+      "description": "Generate reports and share scenarios with stakeholders"
+    }
+  ]
+}

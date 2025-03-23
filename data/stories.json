@@ -1,0 +1,37 @@
+[
+  {
+    "id": "story-001",
+    "title": "User Management",
+    "businessValue": "Critical",
+    "storyPoints": 13,
+    "notes": "Core system functionality. Required for login, roles, etc."
+  },
+  {
+    "id": "story-002",
+    "title": "Safety Inspections",
+    "businessValue": "Critical",
+    "storyPoints": 13,
+    "notes": "Allows recording and review of OSHA-required safety inspections."
+  },
+  {
+    "id": "story-003",
+    "title": "Training Management",
+    "businessValue": "High",
+    "storyPoints": 8,
+    "notes": "Manage assignment and completion tracking for training modules."
+  },
+  {
+    "id": "story-004",
+    "title": "Forms Management",
+    "businessValue": "High",
+    "storyPoints": 8,
+    "notes": "Submit and archive compliance-related forms and PDFs."
+  },
+  {
+    "id": "story-005",
+    "title": "Admin Dashboard",
+    "businessValue": "High",
+    "storyPoints": 13,
+    "notes": "Access controls, org-level overview, training and inspection stats."
+  }
+]
