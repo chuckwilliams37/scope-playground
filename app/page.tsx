@@ -19,6 +19,11 @@ import { ScenarioManager } from "@/components/ScenarioManager";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { EffortMismatchModal } from "../components/EffortMismatchModal";
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from "../convex/_generated/api";
+import { useMutation } from "convex/react";
+import { ImportStoriesPanel } from "../components/ImportStoriesPanel";
+import { ExportPanel } from '../components/ExportPanel';
+import { TopNavbar } from '../components/TopNavbar';
 
 // Define the Story type
 type Story = {
@@ -57,7 +62,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-003",
     title: "Scope Matrix Drag-and-Drop",
-    businessValue: "High",
+    businessValue: "Important",
     storyPoints: 8,
     notes: "Drag-and-drop with effort validation feedback",
     userStory: "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
@@ -66,7 +71,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-004",
     title: "Business Value Mismatch Explanation",
-    businessValue: "High",
+    businessValue: "Important",
     storyPoints: 5,
     notes: "Contextual messages for value mismatches",
     userStory: "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
@@ -84,7 +89,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-006",
     title: "Scenario Presets and Reset",
-    businessValue: "Medium",
+    businessValue: "Important",
     storyPoints: 3,
     notes: "Load recommended configs and reset scope",
     userStory: "As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.",
@@ -93,7 +98,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-007",
     title: "Save and Load Scenarios",
-    businessValue: "High",
+    businessValue: "Important",
     storyPoints: 5,
     notes: "Save configurations for later comparison",
     userStory: "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
@@ -102,7 +107,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-008",
     title: "AI Productivity Factor Adjustment",
-    businessValue: "High",
+    businessValue: "Important",
     storyPoints: 5,
     notes: "Adjust how AI impacts productivity",
     userStory: "As a product manager, I can adjust the estimated productivity gains from AI-assisted development in different categories to refine time and cost projections.",
@@ -111,7 +116,7 @@ const sampleStories: Story[] = [
   {
     _id: "story-009",
     title: "Scope Limiters",
-    businessValue: "Medium",
+    businessValue: "Nice to Have",
     storyPoints: 3,
     notes: "Set maximum points, hours, and duration",
     userStory: "As a client, I can set maximum limits for story points, development hours, and project duration to visualize scope constraints clearly.",
@@ -208,6 +213,11 @@ type Settings = {
     documentation: number;
   };
   aiSimulationEnabled: boolean;
+  selfManagedPartner: {
+    enabled: boolean;
+    managementReductionPercent: number;
+  };
+  pointsToHoursConversion: number;
 };
 
 // Update the default settings object to match the new structure
@@ -228,7 +238,12 @@ const defaultSettings: Settings = {
     systemDesign: 5,
     documentation: 10
   },
-  aiSimulationEnabled: true
+  aiSimulationEnabled: true,
+  selfManagedPartner: {
+    enabled: false,
+    managementReductionPercent: 0
+  },
+  pointsToHoursConversion: 8,
 };
 
 export default function ScopePlaygroundPage() {
@@ -237,6 +252,8 @@ export default function ScopePlaygroundPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [storyPositions, setStoryPositions] = useState<Record<string, { value: string, effort: string, rank?: number }>>({});
   const [showSettings, setShowSettings] = useState(false);
+  const [showImportPanel, setShowImportPanel] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
   
   // State for effort mismatch handling
   const [pendingStoryPlacement, setPendingStoryPlacement] = useState<{
@@ -312,7 +329,7 @@ export default function ScopePlaygroundPage() {
     const totalPoints = scopedStories.reduce((sum, story) => sum + (story.storyPoints || 0), 0);
     
     // Calculate total raw effort (story points * 8 hours per point as a simple conversion)
-    const rawEffort = totalPoints * 8;
+    const rawEffort = totalPoints * settings.pointsToHoursConversion;
     
     // Calculate AI productivity gain ONLY if AI simulation is enabled
     let aiProductivityGain = 0;
@@ -342,18 +359,103 @@ export default function ScopePlaygroundPage() {
       adjustedEffort = rawEffort - aiProductivityGain;
     }
     
-    // Calculate days based on team size and allocation
+    // Calculate effective team size based on diminishing returns (Brooks' Law and Metcalfe's Law)
+    const contributorCount = settings.contributorCount;
+    
+    // Base diminishing returns (square root model)
+    let effectiveContributorCount = Math.sqrt(contributorCount) + (contributorCount - Math.sqrt(contributorCount)) / 2;
+    
+    // Communication overhead: As team size increases, communication paths increase according to n(n-1)/2
+    // This is the number of communication channels in a fully connected network
+    const communicationPaths = contributorCount > 1 ? (contributorCount * (contributorCount - 1)) / 2 : 0;
+    
+    // Apply communication overhead penalty
+    // As communication paths increase, we reduce effective contributor count
+    // The factor 0.02 can be adjusted to control how much impact communication has
+    const communicationOverheadFactor = 0.02;
+    const communicationOverhead = communicationPaths * communicationOverheadFactor;
+    
+    // Calculate project management overhead
+    // Base management: Even with 1 person, we need some management overhead if not fully allocated
+    const minManagementOverhead = settings.contributorAllocation < 80 ? 0.2 : 0;
+    
+    // Additional management overhead based on span of control theory
+    // For every 6 team members, we need to allocate ~1 person to management overhead
+    const spanOfControl = 6;
+    const teamSizeManagementOverhead = contributorCount > 1 ? 
+        (contributorCount / spanOfControl) :
+        0;
+    
+    // Total management overhead is the larger of the minimum or team-size based overhead
+    let managementOverhead = Math.max(minManagementOverhead, teamSizeManagementOverhead);
+    
+    // Account Management / Client Communication overhead
+    // Base rate for white-glove treatment and transparency
+    const baseAccountManagementRate = 0.1; // 10% of a person
+    // Additional overhead based on project complexity (number of stories)
+    const accountManagementComplexityFactor = 0.01; // 1% per story
+    let accountManagementOverhead = baseAccountManagementRate + (totalStories * accountManagementComplexityFactor);
+    
+    // Apply Self-Managed Partner discount if enabled
+    let selfManagedPartnerDiscount = 0;
+    if (settings.selfManagedPartner.enabled) {
+      // Calculate the original management overhead before reduction
+      const originalManagementOverhead = managementOverhead;
+      
+      // Reduce project management overhead by the specified percentage (20-80%)
+      const reductionFactor = settings.selfManagedPartner.managementReductionPercent / 100;
+      managementOverhead = managementOverhead * (1 - reductionFactor);
+      
+      // Calculate the management overhead discount
+      const managementDiscount = originalManagementOverhead - managementOverhead;
+      
+      // Calculate the account management discount (we're eliminating it entirely)
+      const accountManagementDiscount = baseAccountManagementRate + (totalStories * accountManagementComplexityFactor);
+      
+      // Total self-managed partner discount is the sum of both discounts
+      selfManagedPartnerDiscount = managementDiscount + accountManagementDiscount;
+      
+      // Eliminate account management overhead entirely for self-managed partners
+      accountManagementOverhead = 0;
+    }
+    
+    // Calculate ramp-up and context switching penalties
+    // Ramp-up: New team members take time to become productive on a project
+    // Higher for larger teams and more complex projects (more points)
+    const rampUpFactor = 0.05; // 5% productivity loss per contributor for ramp-up
+    const complexityFactor = Math.log10(totalPoints + 1) / 10; // More points = more complexity = longer ramp-up
+    const rampUpOverhead = contributorCount * rampUpFactor * complexityFactor;
+    
+    // Context switching: When contributors work on multiple stories, they lose productivity due to switching
+    const storiesPerContributor = totalStories / Math.max(1, contributorCount);
+    const contextSwitchingThreshold = 1.5; // More than 1.5 stories per contributor leads to context switching
+    const contextSwitchingFactor = 0.03; // 3% loss per story above threshold
+    const contextSwitchingOverhead = storiesPerContributor > contextSwitchingThreshold ?
+        (storiesPerContributor - contextSwitchingThreshold) * contextSwitchingFactor * contributorCount :
+        0;
+    
+    // Total overhead from all factors
+    const totalOverhead = communicationOverhead + managementOverhead + accountManagementOverhead + rampUpOverhead + contextSwitchingOverhead;
+    
+    // Don't let the overhead reduce the team to less than 1 person equivalent
+    effectiveContributorCount = Math.max(1, effectiveContributorCount - totalOverhead);
+    
+    // Calculate days based on effective team size and allocation
     const effectiveHoursPerDay = settings.hoursPerDay * (settings.contributorAllocation / 100);
     const effectiveDaysPerContributor = adjustedEffort / effectiveHoursPerDay;
-    const totalDays = effectiveDaysPerContributor / settings.contributorCount;
+    let totalDays = effectiveDaysPerContributor / effectiveContributorCount;
     
-    // Calculate cost
-    const totalCost = totalDays * settings.contributorCost * settings.contributorCount;
+    // Account for weekends (add 2/5 more days to account for weekends)
+    // This assumes a 5-day work week and adds the proportional number of weekend days
+    totalDays = totalDays * 7/5; // Multiply by 7/5 to include weekends
     
-    // Check scope limits
-    const overPoints = totalPoints > settings.scopeLimiters.points.default;
-    const overHours = adjustedEffort > settings.scopeLimiters.hours.default;
-    const overDuration = totalDays > settings.scopeLimiters.duration.default;
+    // Calculate cost (still using actual contributor count for cost)
+    const totalCost = totalDays * settings.contributorCost * contributorCount;
+    
+    // Calculate productivity loss percentage due to team size and communication overhead
+    const productivityLossPercent = contributorCount > 1 
+      ? Math.round(((contributorCount - effectiveContributorCount) / contributorCount) * 100) 
+      : 0;
     
     return {
       totalStories,
@@ -363,11 +465,21 @@ export default function ScopePlaygroundPage() {
       totalDays,
       totalCost,
       scopeLimits: {
-        overPoints,
-        overHours,
-        overDuration
+        overPoints: totalPoints > settings.scopeLimiters.points.default,
+        overHours: adjustedEffort > settings.scopeLimiters.hours.default,
+        overDuration: totalDays > settings.scopeLimiters.duration.default
       },
-      aiProductivityGain
+      aiProductivityGain,
+      contributorCount,
+      effectiveContributorCount,
+      productivityLossPercent,
+      communicationOverhead: communicationOverhead,
+      managementOverhead: managementOverhead,
+      accountManagementOverhead: accountManagementOverhead,
+      rampUpOverhead: rampUpOverhead,
+      contextSwitchingOverhead: contextSwitchingOverhead,
+      totalOverhead: totalOverhead,
+      selfManagedPartnerDiscount: selfManagedPartnerDiscount
     };
   };
 
@@ -849,6 +961,11 @@ export default function ScopePlaygroundPage() {
     }
   }>({});
 
+  // Convex mutations
+  const adjustStoryPointsMutation = useMutation(api.stories.adjustStoryPoints);
+  const resetStoryPointsMutation = useMutation(api.stories.resetStoryPoints);
+  const saveProjectSettings = useMutation(api.settings.upsertProjectSettings);
+
   // Render the stories that have been positioned in the matrix
   const renderPositionedStories = (valueLevel: string, effortLevel: string) => {
     // Get stories in this cell
@@ -886,7 +1003,7 @@ export default function ScopePlaygroundPage() {
               key={story._id} 
               story={story} 
               position={storyPositions[story._id]}
-              isDragging 
+              isDragging={false} 
               isExpanded={expandedStoryIds.has(story._id)}
               onToggleExpand={() => toggleMatrixStoryExpansion(story._id)}
               onRemove={() => handleRemoveStory(story._id)}
@@ -899,26 +1016,20 @@ export default function ScopePlaygroundPage() {
   };
 
   return (
-    <main className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Scope Playground</h1>
-        <button 
-          onClick={() => setShowSettings(!showSettings)}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center"
-        >
-          <span className="mr-2">⚙️</span> Settings
-        </button>
-      </div>
-      
-      {showSettings && (
-        <div className="mb-6">
-          <SettingsPanel 
-            settings={settings} 
-            onUpdateSettings={handleUpdateSettings}
-            onClose={() => setShowSettings(false)}
-          />
-        </div>
-      )}
+    <main className="pb-6 max-w-7xl mx-auto">
+      <TopNavbar
+        scenarios={[...scenarioPresets, ...savedScenarios]}
+        currentScenarioName={savedScenarios.find(s => 
+          JSON.stringify(s.data?.storyPositions) === JSON.stringify(storyPositions)
+        )?.name || "Untitled Scenario"}
+        onSaveScenario={handleSaveScenario}
+        onLoadScenario={handleLoadScenario}
+        onCreatePreset={handleCreatePreset}
+        onResetScenario={handleResetScenario}
+        onShowSettings={() => setShowSettings(true)}
+        onShowImport={() => setShowImportPanel(true)}
+        onShowExport={() => setShowExportPanel(true)}
+      />
       
       <DndContext 
         sensors={sensors}
@@ -926,8 +1037,8 @@ export default function ScopePlaygroundPage() {
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Backlog and Scenario Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 pt-6">
+          {/* Left Column - Backlog only */}
           <div className="space-y-6 relative">
             <div className="sticky top-4 z-10">
               <BacklogViewer 
@@ -936,18 +1047,11 @@ export default function ScopePlaygroundPage() {
                 onToggleExpandStory={handleToggleExpandStory}
               />
             </div>
-            <ScenarioManager 
-              scenarios={[...scenarioPresets, ...savedScenarios]}
-              onSaveScenario={handleSaveScenario}
-              onLoadScenario={handleLoadScenario}
-              onCreatePreset={handleCreatePreset}
-              onResetScenario={handleResetScenario}
-            />
           </div>
           
           {/* Center and Right Columns - Matrix and Metrics */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="border p-4 rounded-lg shadow-sm">
+            <div className="border p-4 rounded-lg shadow-sm" id="scope-matrix-container">
               <h2 className="text-xl font-semibold mb-4">Scope Matrix</h2>
               <ValuesMatrix 
                 getStoriesInCell={getStoriesInCell}
@@ -959,11 +1063,48 @@ export default function ScopePlaygroundPage() {
               />
             </div>
             
+            {showSettings && (
+              <div className="mb-4">
+                <SettingsPanel 
+                  settings={settings} 
+                  onUpdateSettings={handleUpdateSettings}
+                  onClose={() => setShowSettings(false)}
+                />
+              </div>
+            )}
+            
+            {showImportPanel && (
+              <div className="mb-4">
+                <ImportStoriesPanel 
+                  onImportComplete={(importedCount: number) => {
+                    // Refresh stories list after import
+                    console.log(`Imported ${importedCount} stories`);
+                    setShowImportPanel(false);
+                  }}
+                  onClose={() => setShowImportPanel(false)}
+                />
+              </div>
+            )}
+            
+            {showExportPanel && (
+              <div className="mb-4">
+                <ExportPanel
+                  metrics={metrics}
+                  scenarioId={null}
+                  scenarioName={''}
+                  onClose={() => setShowExportPanel(false)}
+                />
+              </div>
+            )}
+            
             <MetricsPanel
               metrics={metrics}
               animatedMetrics={animatedMetrics}
               metricsChanging={metricsChanging}
               settings={settings}
+              onSettingsClick={() => setShowSettings(!showSettings)}
+              onImportStoriesClick={() => setShowImportPanel(!showImportPanel)}
+              onExportClick={() => setShowExportPanel(!showExportPanel)}
             />
           </div>
         </div>

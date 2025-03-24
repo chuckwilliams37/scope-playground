@@ -46,7 +46,16 @@ export const seedStories = mutation({
     // Insert each story into the database
     const storyIds = await Promise.all(
       stories.map(async (story) => {
-        return await db.insert("stories", story);
+        return await db.insert("stories", {
+          id: `story-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          title: story.title,
+          userStory: story.notes || "",
+          businessValue: story.businessValue,
+          category: "Initial Data",
+          points: story.storyPoints,
+          sharedWithClients: [],
+          isPublic: true
+        });
       })
     );
     

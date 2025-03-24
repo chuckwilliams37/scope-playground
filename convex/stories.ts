@@ -72,3 +72,69 @@ export const importStories = mutation({
     return storyIds;
   }
 });
+
+// Adjust story points with tracking of original estimate
+export const adjustStoryPoints = mutation({
+  args: {
+    id: v.id("stories"),
+    newPoints: v.number(),
+    adjustmentReason: v.string()
+  },
+  handler: async (ctx, args) => {
+    const story = await ctx.db.get(args.id);
+    
+    if (!story) {
+      throw new Error(`Story with ID ${args.id} not found`);
+    }
+    
+    // Store original points if this is the first adjustment
+    const originalPoints = story.originalPoints !== undefined ? 
+      story.originalPoints : 
+      story.points;
+    
+    // Update story with new points and reason
+    await ctx.db.patch(args.id, {
+      points: args.newPoints,
+      originalPoints: originalPoints,
+      adjustmentReason: args.adjustmentReason
+    });
+    
+    return {
+      success: true,
+      story: await ctx.db.get(args.id)
+    };
+  }
+});
+
+// Reset story points to original estimate
+export const resetStoryPoints = mutation({
+  args: {
+    id: v.id("stories")
+  },
+  handler: async (ctx, args) => {
+    const story = await ctx.db.get(args.id);
+    
+    if (!story) {
+      throw new Error(`Story with ID ${args.id} not found`);
+    }
+    
+    // Only reset if there's an original points value stored
+    if (story.originalPoints === undefined) {
+      return {
+        success: false,
+        message: "No original estimate found to reset to"
+      };
+    }
+    
+    // Reset points to original and clear adjustment reason
+    await ctx.db.patch(args.id, {
+      points: story.originalPoints,
+      adjustmentReason: undefined
+    });
+    
+    return {
+      success: true,
+      story: await ctx.db.get(args.id)
+    };
+  }
+});

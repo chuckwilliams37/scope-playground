@@ -27,6 +27,11 @@ export type Settings = {
     costPerDay: number;
   }[];
   aiSimulationEnabled: boolean;
+  selfManagedPartner: {
+    enabled: boolean;
+    managementReductionPercent: number;
+  };
+  pointsToHoursConversion: number;
 };
 
 type SettingsPanelProps = {
@@ -100,6 +105,26 @@ export function SettingsPanel({
     });
   };
   
+  const handleSelfManagedPartnerToggle = (enabled: boolean) => {
+    setTempSettings({
+      ...tempSettings,
+      selfManagedPartner: {
+        ...tempSettings.selfManagedPartner,
+        enabled
+      }
+    });
+  };
+  
+  const handleSelfManagedPartnerReductionChange = (value: number) => {
+    setTempSettings({
+      ...tempSettings,
+      selfManagedPartner: {
+        ...tempSettings.selfManagedPartner,
+        managementReductionPercent: value
+      }
+    });
+  };
+  
   const handleSave = () => {
     onUpdateSettings(tempSettings);
     onClose();
@@ -134,7 +159,7 @@ export function SettingsPanel({
                   <input
                     type="range"
                     min="300"
-                    max="1500"
+                    max="2500"
                     step="50"
                     value={tempSettings.contributorCost}
                     onChange={(e) => handleInputChange('contributorCost', parseInt(e.target.value))}
@@ -143,12 +168,18 @@ export function SettingsPanel({
                   <div className="w-16">
                     <input
                       type="number"
+                      min="300"
+                      max="2500"
+                      step="50"
                       value={tempSettings.contributorCost}
                       onChange={(e) => handleInputChange('contributorCost', parseInt(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       placeholder="0"
                     />
                   </div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Equivalent hourly rate: ${Math.round(tempSettings.contributorCost / tempSettings.hoursPerDay)} per hour
                 </div>
               </div>
               
@@ -180,13 +211,13 @@ export function SettingsPanel({
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hours Per Day: {tempSettings.hoursPerDay}
+                  Hours per Day: {tempSettings.hoursPerDay}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
                     min="1"
-                    max="24"
+                    max="12"
                     value={tempSettings.hoursPerDay}
                     onChange={(e) => handleInputChange('hoursPerDay', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -195,10 +226,11 @@ export function SettingsPanel({
                     <input
                       type="number"
                       min="1"
-                      max="24"
+                      max="12"
                       value={tempSettings.hoursPerDay}
                       onChange={(e) => handleInputChange('hoursPerDay', parseInt(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      placeholder="8"
                     />
                   </div>
                 </div>
@@ -206,13 +238,14 @@ export function SettingsPanel({
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contributor Allocation (%): {tempSettings.contributorAllocation}
+                  Contributor Allocation: {tempSettings.contributorAllocation}%
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
-                    min="1"
+                    min="10"
                     max="100"
+                    step="5"
                     value={tempSettings.contributorAllocation}
                     onChange={(e) => handleInputChange('contributorAllocation', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -220,12 +253,63 @@ export function SettingsPanel({
                   <div className="w-16">
                     <input
                       type="number"
-                      min="1"
+                      min="10"
                       max="100"
+                      step="5"
                       value={tempSettings.contributorAllocation}
                       onChange={(e) => handleInputChange('contributorAllocation', parseInt(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      placeholder="100"
                     />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Self-Managed Partner Section */}
+              <div className="mt-6 border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">Self-Managed Partner</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={tempSettings.selfManagedPartner.enabled}
+                      onChange={(e) => handleSelfManagedPartnerToggle(e.target.checked)}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <div className="text-xs text-gray-500 mb-3">
+                  Reduces account management overhead to zero and project management overhead by the percentage below.
+                </div>
+                
+                <div className={tempSettings.selfManagedPartner.enabled ? "" : "opacity-50 pointer-events-none"}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Management Reduction: {tempSettings.selfManagedPartner.managementReductionPercent}%
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="20"
+                      max="80"
+                      step="5"
+                      value={tempSettings.selfManagedPartner.managementReductionPercent}
+                      onChange={(e) => handleSelfManagedPartnerReductionChange(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      disabled={!tempSettings.selfManagedPartner.enabled}
+                    />
+                    <div className="w-16">
+                      <input
+                        type="number"
+                        min="20"
+                        max="80"
+                        step="5"
+                        value={tempSettings.selfManagedPartner.managementReductionPercent}
+                        onChange={(e) => handleSelfManagedPartnerReductionChange(parseInt(e.target.value))}
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        disabled={!tempSettings.selfManagedPartner.enabled}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -239,14 +323,14 @@ export function SettingsPanel({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Maximum Points: {tempSettings.scopeLimiters.points.default}
+                  Maximum Story Points: {tempSettings.scopeLimiters.points.default}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
                     min="20"
-                    max="500"
-                    step="10"
+                    max="200"
+                    step="5"
                     value={tempSettings.scopeLimiters.points.default}
                     onChange={(e) => handleScopeLimiterChange('points', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -255,9 +339,15 @@ export function SettingsPanel({
                     <input
                       type="number"
                       min="20"
-                      max="500"
+                      max="200"
+                      step="5"
                       value={tempSettings.scopeLimiters.points.default}
-                      onChange={(e) => handleScopeLimiterChange('points', parseInt(e.target.value))}
+                      onChange={(e) => {
+                        // Ensure the value snaps to the nearest 5
+                        const rawValue = parseInt(e.target.value);
+                        const snappedValue = Math.round(rawValue / 5) * 5;
+                        handleScopeLimiterChange('points', snappedValue);
+                      }}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     />
                   </div>
@@ -273,7 +363,7 @@ export function SettingsPanel({
                     type="range"
                     min="40"
                     max="1000"
-                    step="20"
+                    step="5"
                     value={tempSettings.scopeLimiters.hours.default}
                     onChange={(e) => handleScopeLimiterChange('hours', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -283,8 +373,14 @@ export function SettingsPanel({
                       type="number"
                       min="40"
                       max="1000"
+                      step="5"
                       value={tempSettings.scopeLimiters.hours.default}
-                      onChange={(e) => handleScopeLimiterChange('hours', parseInt(e.target.value))}
+                      onChange={(e) => {
+                        // Ensure the value snaps to the nearest 5
+                        const rawValue = parseInt(e.target.value);
+                        const snappedValue = Math.round(rawValue / 5) * 5;
+                        handleScopeLimiterChange('hours', snappedValue);
+                      }}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     />
                   </div>
@@ -300,6 +396,7 @@ export function SettingsPanel({
                     type="range"
                     min="5"
                     max="90"
+                    step="5"
                     value={tempSettings.scopeLimiters.duration.default}
                     onChange={(e) => handleScopeLimiterChange('duration', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -309,14 +406,48 @@ export function SettingsPanel({
                       type="number"
                       min="5"
                       max="90"
+                      step="5"
                       value={tempSettings.scopeLimiters.duration.default}
-                      onChange={(e) => handleScopeLimiterChange('duration', parseInt(e.target.value))}
+                      onChange={(e) => {
+                        // Ensure the value snaps to the nearest 5
+                        const rawValue = parseInt(e.target.value);
+                        const snappedValue = Math.round(rawValue / 5) * 5;
+                        handleScopeLimiterChange('duration', snappedValue);
+                      }}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     />
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+          
+          {/* Points to Hours Conversion Rate */}
+          <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Points to Hours Conversion</dt>
+            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <div className="flex-grow">
+                <div className="flex items-center">
+                  <input
+                    type="range"
+                    min="5"
+                    max="12"
+                    step="0.5"
+                    value={tempSettings.pointsToHoursConversion || 8}
+                    onChange={(e) => handleInputChange('pointsToHoursConversion', parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>5 hours</span>
+                  <span>{tempSettings.pointsToHoursConversion || 8} hours per point</span>
+                  <span>12 hours</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  How many hours each story point represents in effort estimation.
+                </p>
+              </div>
+            </dd>
           </div>
           
           {/* AI Productivity Section */}

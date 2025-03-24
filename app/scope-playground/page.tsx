@@ -299,12 +299,13 @@ export default function ScopePlaygroundPage() {
                 rawEffort: metrics.totalEffort,
                 adjustedEffort: metrics.totalEffort,
                 totalDays: metrics.totalEffort / 8,
-                totalCost: (metrics.totalEffort / 8) * settings.contributorCost,
+                totalCost: (metrics.totalEffort / 8) * 800,
                 scopeLimits: {
                   overPoints: false,
                   overHours: false,
                   overDuration: false
                 },
+                selfManagedPartnerDiscount: 0,
                 aiProductivityGain: 0
               }}
               animatedMetrics={{
@@ -312,7 +313,7 @@ export default function ScopePlaygroundPage() {
                 totalPoints: metrics.totalPoints,
                 adjustedEffort: metrics.totalEffort,
                 totalDays: metrics.totalEffort / 8,
-                totalCost: (metrics.totalEffort / 8) * settings.contributorCost
+                totalCost: (metrics.totalEffort / 8) * 800
               }}
               metricsChanging={{
                 totalStories: false,
@@ -322,24 +323,31 @@ export default function ScopePlaygroundPage() {
                 totalCost: false
               }}
               settings={{
-                contributorCost: settings.contributorCost,
-                contributorCount: settings.contributorCount || 1,
-                hoursPerDay: 8,
-                contributorAllocation: settings.contributorAllocation || 1,
+                contributorCost: 800,
+                contributorCount: 2,
+                contributorAllocation: 0.8,
+                hoursPerDay: 6,
                 scopeLimiters: {
-                  points: { default: 100 },
-                  hours: { default: 100 },
-                  duration: { default: 21, unit: 'days' }
+                  points: { default: 50 },
+                  hours: { default: 400 },
+                  duration: { default: 2, unit: 'months' }
                 },
                 aiProductivityFactors: {
-                  linesOfCode: 0,
-                  testing: 0,
-                  debugging: 0,
-                  systemDesign: 0,
-                  documentation: 0
+                  linesOfCode: 0.3,
+                  testing: 0.2,
+                  debugging: 0.15,
+                  systemDesign: 0.1,
+                  documentation: 0.15
                 },
-                aiSimulationEnabled: false
+                aiSimulationEnabled: true,
+                selfManagedPartner: {
+                  enabled: true,
+                  managementReductionPercent: 0.5
+                },
+                pointsToHoursConversion: 8
               }}
+              onSettingsClick={() => {}}
+              onImportStoriesClick={() => {}}
             />
           </div>
         </div>

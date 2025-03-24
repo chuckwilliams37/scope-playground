@@ -101,13 +101,12 @@ export function ValuesMatrix({
     // Map business values to expected cell values
     const valueMap: Record<string, string> = {
       'Critical': 'high',
-      'High': 'high',
-      'Medium': 'medium',
-      'Low': 'low'
+      'Important': 'medium',
+      'Nice to Have': 'low'
     };
     
     // Get expected cell value based on business value
-    const expectedCellValue = valueMap[story.businessValue || 'Low'] || 'low';
+    const expectedCellValue = valueMap[story.businessValue || 'Nice to Have'] || 'low';
     
     // Return true if there's a significant mismatch
     return expectedCellValue !== cellValue;
@@ -132,11 +131,28 @@ export function ValuesMatrix({
     'low': 'Nice to Have'
   };
 
-  // Define consistent color scheme for value levels
-  const valueColorClasses = {
-    'high': 'bg-green-100 text-green-800 border-green-200',
-    'medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'low': 'bg-red-100 text-red-800 border-red-200'
+  // Define color classes for the matrix cells
+  const getColorClass = (valueLevel: string) => {
+    // Use standardized terminology with specific colors
+    if (valueLevel === 'Critical' || valueLevel === 'High') {
+      return 'bg-green-100 border-green-300';
+    } else if (valueLevel === 'Important' || valueLevel === 'Medium') {
+      return 'bg-blue-100 border-blue-300';
+    } else {
+      // "Nice to Have" or "Low"
+      return 'bg-gray-100 border-gray-300';
+    }
+  };
+
+  // Get text color class based on value level
+  const getTextColorClass = (valueLevel: string) => {
+    if (valueLevel === 'high' || valueLevel === 'Critical') {
+      return 'text-green-800';
+    } else if (valueLevel === 'medium' || valueLevel === 'Important') {
+      return 'text-blue-800';
+    } else {
+      return 'text-gray-800'; // "Nice to Have" or "low"
+    }
   };
 
   const renderCell = (value: string, effort: string) => {
@@ -160,7 +176,7 @@ export function ValuesMatrix({
     
     // Render the cell with appropriate styling
     const cellClassName = `border rounded-lg p-3 min-h-24 h-full 
-                           ${getBackgroundColor(value, effort)}
+                           ${getColorClass(value)}
                            ${cellStories.length > 0 ? 'shadow-md' : 'shadow-sm'}
                            ${isOver ? 'border-2 border-blue-500 shadow-lg ring-2 ring-blue-300' : 'border-gray-200'}
                            ${isOver ? 'relative before:absolute before:inset-0 before:bg-blue-100 before:bg-opacity-40 before:z-0 before:rounded-lg' : ''}
@@ -202,40 +218,6 @@ export function ValuesMatrix({
     );
   };
 
-  const getBackgroundColor = (value: string, effort: string) => {
-    // Base cases - empty value or effort
-    if (!value || !effort) return 'bg-gray-50';
-    
-    // Use the consistent color scheme
-    const baseColorClass = valueColorClasses[value as keyof typeof valueColorClasses] || 'bg-gray-100';
-    
-    // Map effort to intensity/opacity
-    const effortIntensity = {
-      'low': 'bg-opacity-70',
-      'medium': 'bg-opacity-50',
-      'high': 'bg-opacity-30'
-    };
-    
-    const effortLower = effort.toLowerCase();
-    
-    // Return combined classes
-    return `${baseColorClass}
-            ${effortIntensity[effortLower as keyof typeof effortIntensity] || 'bg-opacity-50'}
-            hover:bg-opacity-30 transition-all duration-200`;
-  };
-
-  // Format the total points display
-  const formatTotalPoints = () => {
-    if (totalPoints === undefined) return '0';
-    return totalPoints.toString();
-  };
-
-  // Format the total effort display
-  const formatTotalEffort = () => {
-    if (totalEffort === undefined) return '0';
-    return totalEffort.toString();
-  };
-
   // Create a grid of droppable cells
   const grid = valueLevels.map((value, valueIndex) => (
     <div key={`row-${value}`} className="grid grid-cols-[8rem_1fr] gap-2">
@@ -244,7 +226,7 @@ export function ValuesMatrix({
         <div 
           className={`
             w-8 py-2 rounded-md text-center font-medium text-sm rotate-180
-            ${valueColorClasses[value as keyof typeof valueColorClasses]}
+            ${getTextColorClass(value)}
           `}
           style={{ writingMode: 'vertical-rl' }}
         >
@@ -262,6 +244,18 @@ export function ValuesMatrix({
       </div>
     </div>
   ));
+
+  // Format the total points display
+  const formatTotalPoints = () => {
+    if (totalPoints === undefined) return '0';
+    return totalPoints.toString();
+  };
+
+  // Format the total effort display
+  const formatTotalEffort = () => {
+    if (totalEffort === undefined) return '0';
+    return totalEffort.toString();
+  };
 
   return (
     <div className="flex flex-col space-y-4">

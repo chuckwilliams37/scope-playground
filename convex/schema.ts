@@ -12,7 +12,9 @@ export default defineSchema({
     id: v.string(), // External ID for reference (story-001, etc.)
     // Visibility controls for client-specific access
     sharedWithClients: v.array(v.string()), // Array of client IDs that can see this story
-    isPublic: v.boolean() // Whether this story is visible to all clients
+    isPublic: v.boolean(), // Whether this story is visible to all clients
+    originalPoints: v.optional(v.number()), // Original story point estimate
+    adjustmentReason: v.optional(v.string()) // Reason for point adjustment
   }),
 
   // Users table - for client-specific access
@@ -37,12 +39,79 @@ export default defineSchema({
     sharedWithClients: v.array(v.string()), // Array of client IDs that can see this scenario
     // Configuration settings
     settings: v.object({
-      developerCost: v.number(),
-      developerCount: v.number(),
+      contributorCost: v.number(),
+      contributorCount: v.number(),
       hoursPerDay: v.number(),
-      developerAllocation: v.number()
+      contributorAllocation: v.number(),
+      scopeLimiters: v.object({
+        points: v.object({
+          default: v.number()
+        }),
+        hours: v.object({
+          default: v.number()
+        }),
+        duration: v.object({
+          default: v.number(),
+          unit: v.string()
+        })
+      }),
+      pointsToHoursConversion: v.number(), // Points to hours conversion rate (between 5-12)
+      aiProductivityFactors: v.object({
+        linesOfCode: v.number(),
+        testing: v.number(),
+        debugging: v.number(),
+        systemDesign: v.number(),
+        documentation: v.number()
+      }),
+      aiSimulationEnabled: v.boolean(),
+      selfManagedPartner: v.object({
+        enabled: v.boolean(),
+        managementReductionPercent: v.number()
+      })
     }),
     // Story positions in the matrix (store as a JSON object in a string field)
-    storyPositions: v.string() // JSON string containing mapping of storyId -> position
+    storyPositions: v.string(), // JSON string containing mapping of storyId -> position
+    // Share functionality
+    shareId: v.optional(v.string()),
+    isShared: v.optional(v.boolean()),
+    lastShared: v.optional(v.string())
+  }),
+
+  // Project Settings table - for storing project-level settings
+  projectSettings: defineTable({
+    projectId: v.string(), // Identifier for the project
+    settings: v.object({
+      contributorCost: v.number(),
+      contributorCount: v.number(),
+      hoursPerDay: v.number(),
+      contributorAllocation: v.number(),
+      scopeLimiters: v.object({
+        points: v.object({
+          default: v.number()
+        }),
+        hours: v.object({
+          default: v.number()
+        }),
+        duration: v.object({
+          default: v.number(),
+          unit: v.string()
+        })
+      }),
+      pointsToHoursConversion: v.number(), // Points to hours conversion rate (between 5-12)
+      aiProductivityFactors: v.object({
+        linesOfCode: v.number(),
+        testing: v.number(),
+        debugging: v.number(),
+        systemDesign: v.number(),
+        documentation: v.number()
+      }),
+      aiSimulationEnabled: v.boolean(),
+      selfManagedPartner: v.object({
+        enabled: v.boolean(),
+        managementReductionPercent: v.number()
+      })
+    }),
+    createdAt: v.number(), // Timestamp
+    lastModified: v.number() // Timestamp
   })
 });

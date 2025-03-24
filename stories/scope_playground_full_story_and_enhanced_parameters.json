@@ -363,6 +363,15 @@
       "points": 5,
       "businessValue": "High",
       "category": "Permissions"
+    },
+    {
+      "id": "story-045",
+      "title": "Team Size Diminishing Returns Model",
+      "userStory": "As a project manager, I want the system to account for the law of diminishing returns when calculating timelines with larger teams, so I can make more realistic projections based on Parkinson's Law.",
+      "points": 8,
+      "businessValue": "High",
+      "category": "Resource Management",
+      "status": "Complete"
     }
   ],
   "tweakableParameters": {

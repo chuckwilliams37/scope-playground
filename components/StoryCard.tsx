@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { Id } from '../convex/_generated/dataModel';
 
 type StoryCardProps = {
   story: {
@@ -36,8 +39,23 @@ export function StoryCard({
   const [adjustmentReason, setAdjustmentReason] = useState(story.adjustmentReason || '');
   const [adjustedPoints, setAdjustedPoints] = useState(story.storyPoints || story.points || 0);
   
+  // Convex mutations
+  const resetStoryPointsMutation = useMutation(api.stories.resetStoryPoints);
+  const adjustStoryPointsMutation = useMutation(api.stories.adjustStoryPoints);
+  
+  // Helper to safely cast string ID to Convex ID
+  const getConvexId = (id: any): Id<"stories"> | null => {
+    if (id && typeof id === 'object' && '_id' in id) {
+      return id._id as Id<"stories">;
+    }
+    if (id && typeof id === 'object' && '__id' in id) {
+      return id as Id<"stories">;
+    }
+    return null;
+  };
+
   // Use the internal or external ID, whichever is available
-  const storyId = story._id || story.id;
+  const storyId = getConvexId(story) || story.id;
   const storyPoints = story.storyPoints || story.points;
   const originalPoints = story.originalPoints;
   const hasAdjustment = originalPoints !== undefined && originalPoints !== storyPoints;
@@ -52,11 +70,12 @@ export function StoryCard({
 
   // Define badge colors based on business value - make consistent with matrix
   const valueBadgeColors = {
-    Critical: 'bg-green-100 text-green-800 border-green-200',
-    Important: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'Nice to Have': 'bg-red-100 text-red-800 border-red-200',
-    Low: 'bg-red-100 text-red-800 border-red-200',
+    'Critical': 'bg-green-100 text-green-800 border-green-200',
+    'High': 'bg-green-100 text-green-800 border-green-200',
+    'Important': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Medium': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Nice to Have': 'bg-gray-100 text-gray-800 border-gray-200',
+    'Low': 'bg-gray-100 text-gray-800 border-gray-200',
   };
 
   // Define badge colors based on story points
@@ -81,10 +100,45 @@ export function StoryCard({
     : 'bg-gray-100 text-gray-800';
     
   const handleSaveAdjustment = () => {
-    if (onAdjustPoints && storyId) {
+    if (onAdjustPoints && adjustmentReason.trim()) {
+      // Call the parent component's handler
       onAdjustPoints(storyId as string, adjustedPoints, adjustmentReason);
+      
+      // If we have a Convex ID, also update in the database
+      if (story._id) {
+        const convexId = getConvexId(story);
+        if (convexId) {
+          adjustStoryPointsMutation({
+            id: convexId,
+            newPoints: adjustedPoints,
+            adjustmentReason: adjustmentReason
+          });
+        }
+      }
+      
+      setShowAdjustmentDialog(false);
     }
-    setShowAdjustmentDialog(false);
+  };
+  
+  const handleResetToOriginal = () => {
+    if (originalPoints !== undefined) {
+      setAdjustedPoints(originalPoints);
+      setAdjustmentReason('Reset to original estimate');
+      
+      // If we have a Convex ID, also reset in the database
+      const convexId = getConvexId(story);
+      if (convexId) {
+        resetStoryPointsMutation({ id: convexId }).then(result => {
+          if (result?.success && onAdjustPoints) {
+            // Call the parent component's handler to update UI
+            onAdjustPoints(storyId as string, originalPoints, '');
+          }
+        });
+      } else if (onAdjustPoints) {
+        // Just use the local handler if no Convex ID
+        onAdjustPoints(storyId as string, originalPoints, '');
+      }
+    }
   };
   
   const commonAdjustmentReasons = [
@@ -117,7 +171,7 @@ export function StoryCard({
         {...listeners}
         className={`
           bg-white shadow-sm rounded-lg p-3 cursor-grab border-2
-          ${isDragging ? 'opacity-50' : 'opacity-100'}
+          ${isDragging ? 'opacity-50' : ''}
           ${position ? 'border-blue-400' : 'border-transparent'}
           ${hasAdjustment ? 'ring-2 ring-purple-300' : ''}
           hover:border-blue-200 transition-colors
@@ -215,6 +269,14 @@ export function StoryCard({
             )}
           </div>
           
+          {/* Display formula/calculation more prominently */}
+          {position && (
+            <div className="mt-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">
+              <span className="font-medium">Formula: </span>
+              {position.value}/{position.effort} = {storyPoints || '?'} points
+            </div>
+          )}
+          
           {isExpanded && (
             <div className="mt-2 text-sm text-gray-700">
               {story.userStory && (
@@ -238,10 +300,15 @@ export function StoryCard({
             <h3 className="text-lg font-medium mb-4">Adjust Story Points</h3>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Story Points
-              </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center mb-1">
+                <label className="block text-sm font-medium text-gray-700">Story Points</label>
+                {originalPoints !== undefined && originalPoints !== adjustedPoints && (
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    {adjustedPoints > originalPoints ? 'Increased' : 'Decreased'}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
                 <input
                   type="range"
                   min={1}
@@ -262,23 +329,47 @@ export function StoryCard({
                 </select>
               </div>
               {originalPoints && (
-                <div className="text-xs text-gray-500 mt-1">
-                  Original: {originalPoints} points
+                <div className="text-xs text-gray-500 mt-1 flex items-center">
+                  <span>Original: {originalPoints} points</span>
+                  <button 
+                    className="ml-2 text-blue-600 hover:text-blue-800 text-xs underline" 
+                    onClick={handleResetToOriginal}
+                  >
+                    Reset to original
+                  </button>
                 </div>
               )}
             </div>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reason for Adjustment
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Reason for Adjustment
+                  </label>
+                  <span className="ml-1 text-red-500 font-medium">*</span>
+                </div>
+                {originalPoints !== undefined && originalPoints !== adjustedPoints && !adjustmentReason.trim() && (
+                  <span className="text-xs text-red-500 font-medium">Required</span>
+                )}
+              </div>
               <textarea
                 value={adjustmentReason}
                 onChange={(e) => setAdjustmentReason(e.target.value)}
-                className="w-full p-2 border rounded text-sm"
+                className={`w-full p-2 border rounded text-sm ${
+                  !adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints 
+                    ? 'border-red-500 ring-1 ring-red-500 bg-red-50' 
+                    : 'border-gray-300'
+                }`}
                 rows={3}
                 placeholder="Explain why you're adjusting the story points..."
+                aria-required="true"
               />
+              {!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints && (
+                <p className="text-xs text-red-500 mt-1">
+                  <span className="font-bold">⚠️</span> A reason is required when adjusting story points
+                </p>
+              )}
               
               <div className="mt-3">
                 <div className="text-xs font-medium text-gray-700 mb-1">Common reasons:</div>
@@ -306,8 +397,8 @@ export function StoryCard({
               </button>
               <button 
                 onClick={handleSaveAdjustment}
-                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
-                disabled={!adjustmentReason.trim() && originalPoints !== adjustedPoints}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed"
+                disabled={!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints}
               >
                 Save Adjustment
               </button>
