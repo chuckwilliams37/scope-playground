@@ -18,30 +18,39 @@ type BacklogViewerProps = {
   categoryFilter?: string;
   valueFilter?: string;
   pointsFilter?: number;
+  expandedStoryIds?: string[];
+  onToggleExpandStory?: (storyId: string) => void;
 };
 
 export function BacklogViewer({ 
   stories, 
   categoryFilter, 
   valueFilter, 
-  pointsFilter 
+  pointsFilter,
+  expandedStoryIds: externalExpandedStoryIds,
+  onToggleExpandStory
 }: BacklogViewerProps) {
-  const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
+  // Local state for expanded stories when not provided externally
+  const [internalExpandedStoryIds, setInternalExpandedStoryIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(categoryFilter);
   const [selectedValue, setSelectedValue] = useState<string | undefined>(valueFilter);
 
-  // Toggle story expansion
+  // Toggle story expansion (use external handler if provided)
   const toggleStoryExpansion = (storyId: string) => {
-    setExpandedStoryIds(prevState => {
-      const newState = new Set(prevState);
-      if (newState.has(storyId)) {
-        newState.delete(storyId);
-      } else {
-        newState.add(storyId);
-      }
-      return newState;
-    });
+    if (onToggleExpandStory) {
+      onToggleExpandStory(storyId);
+    } else {
+      setInternalExpandedStoryIds(prevState => {
+        const newState = new Set(prevState);
+        if (newState.has(storyId)) {
+          newState.delete(storyId);
+        } else {
+          newState.add(storyId);
+        }
+        return newState;
+      });
+    }
   };
   
   // Extract all unique categories from stories
@@ -165,7 +174,9 @@ export function BacklogViewer({
                 key={story._id || story.id}
                 story={story}
                 position={null}
-                isExpanded={expandedStoryIds.has(story._id || story.id || '')}
+                isExpanded={externalExpandedStoryIds 
+                  ? externalExpandedStoryIds.includes(story._id || story.id || '') 
+                  : internalExpandedStoryIds.has(story._id || story.id || '')}
                 onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
               />
             ))

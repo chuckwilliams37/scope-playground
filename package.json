@@ -13,6 +13,7 @@
     "@dnd-kit/sortable": "^7.0.2",
     "@dnd-kit/utilities": "^3.2.2",
     "convex": "^1.10.0",
+    "framer-motion": "^12.5.0",
     "next": "^15.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

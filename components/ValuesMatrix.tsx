@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { StoryCard } from './StoryCard';
-import { useState } from 'react';
+import { MismatchAlert } from './MismatchAlert';
+import React, { useState, useCallback, ReactNode } from 'react';
 
 type Story = {
   _id?: string;
@@ -12,133 +13,282 @@ type Story = {
   notes?: string;
   userStory?: string;
   category?: string;
+  [key: string]: any;
 };
+
+type RenderPositionedStoriesFunction = (
+  value: string,
+  effort: string
+) => JSX.Element | null;
 
 type ValueMatrixProps = {
-  getStoriesInCell: (value: string, effort: string) => Story[];
+  getStoriesInCell: (value: string, effort: string) => any[];
+  expandedStoryIds: Set<string>;
+  toggleStoryExpansion: (storyId: string) => void;
   totalPoints?: number;
   totalEffort?: number;
+  renderPositionedStories?: RenderPositionedStoriesFunction;
 };
 
-export function ValuesMatrix({ getStoriesInCell, totalPoints = 0, totalEffort = 0 }: ValueMatrixProps) {
-  // Track which stories are expanded
-  const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
+// Function to fix any React node rendering issues
+function safeRender(content: React.ReactNode): React.ReactNode {
+  return content;
+}
 
-  // Toggle story expansion
-  const toggleStoryExpansion = (storyId: string) => {
-    setExpandedStoryIds(prevState => {
+// Type for cell stories
+type CellStories = {
+  renderContent: (value: string, effort: string) => JSX.Element | null;
+};
+
+// Cell component to help with typing
+const MatrixCell = ({ 
+  value, 
+  effort, 
+  className, 
+  showAlert, 
+  isDismissed, 
+  onDismiss,
+  children,
+  setNodeRef 
+}: {
+  value: string;
+  effort: string;
+  className: string;
+  showAlert: boolean;
+  isDismissed: boolean;
+  onDismiss: () => void;
+  children: React.ReactNode;
+  setNodeRef?: (element: HTMLElement | null) => void;
+}) => {
+  return (
+    <div ref={setNodeRef} className={className}>
+      {showAlert && !isDismissed && (
+        <MismatchAlert 
+          storyValue={value}
+          cellValue={effort}
+          onDismiss={onDismiss}
+        />
+      )}
+      <div className="space-y-2 mt-2">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export function ValuesMatrix({ 
+  getStoriesInCell, 
+  expandedStoryIds,
+  toggleStoryExpansion,
+  totalPoints,
+  totalEffort,
+  renderPositionedStories 
+}: ValueMatrixProps) {
+  // Track which mismatch alerts are dismissed
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+
+  // Dismiss a mismatch alert
+  const handleDismissAlert = (storyId: string) => {
+    setDismissedAlerts(prevState => {
       const newState = new Set(prevState);
-      if (newState.has(storyId)) {
-        newState.delete(storyId);
-      } else {
-        newState.add(storyId);
-      }
+      newState.add(storyId);
       return newState;
     });
+  };
+
+  // Check if there's a value mismatch between story's business value and cell's value
+  const hasMismatch = (story: Story, cellValue: string) => {
+    // Map business values to expected cell values
+    const valueMap: Record<string, string> = {
+      'Critical': 'high',
+      'High': 'high',
+      'Medium': 'medium',
+      'Low': 'low'
+    };
+    
+    // Get expected cell value based on business value
+    const expectedCellValue = valueMap[story.businessValue || 'Low'] || 'low';
+    
+    // Return true if there's a significant mismatch
+    return expectedCellValue !== cellValue;
   };
 
   // Define the value and effort levels
   const valueLevels = ['high', 'medium', 'low'];
   const effortLevels = ['low', 'medium', 'high'];
+  const businessValueLevels = ['high', 'medium', 'low'];
+  
+  // Define point ranges for effort levels
+  const pointRanges = {
+    'low': '1-3',
+    'medium': '5-8',
+    'high': '13-21'
+  };
+  
+  // Map business value to readable labels
+  const businessValueLabels = {
+    'high': 'Critical',
+    'medium': 'Important',
+    'low': 'Nice to Have'
+  };
+
+  // Define consistent color scheme for value levels
+  const valueColorClasses = {
+    'high': 'bg-green-100 text-green-800 border-green-200',
+    'medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'low': 'bg-red-100 text-red-800 border-red-200'
+  };
+
+  const renderCell = (value: string, effort: string) => {
+    const { setNodeRef, isOver } = useDroppable({
+      id: `cell-${value}-${effort}`,
+    });
+    
+    const cellStories = getStoriesInCell(value, effort);
+    const valueKey = valueLevels.indexOf(value);
+    const effortKey = effortLevels.indexOf(effort);
+    
+    // Check for business value mismatches
+    const storiesWithMismatches = cellStories
+      .filter(story => story.businessValue && hasMismatch(story, value))
+      .map(story => ({
+        storyId: story._id || story.id || '',
+        storyValue: story.businessValue || '',
+        cellValue: value,
+        storyTitle: story.title
+      }));
+    
+    // Render the cell with appropriate styling
+    const cellClassName = `border rounded-lg p-3 min-h-24 h-full 
+                           ${getBackgroundColor(value, effort)}
+                           ${cellStories.length > 0 ? 'shadow-md' : 'shadow-sm'}
+                           ${isOver ? 'border-2 border-blue-500 shadow-lg ring-2 ring-blue-300' : 'border-gray-200'}
+                           ${isOver ? 'relative before:absolute before:inset-0 before:bg-blue-100 before:bg-opacity-40 before:z-0 before:rounded-lg' : ''}
+                           transition-all duration-200 hover:shadow-lg`;
+    return (
+      <MatrixCell
+        key={`cell-${value}-${effort}`}
+        value={value}
+        effort={effort}
+        className={cellClassName}
+        showAlert={storiesWithMismatches.length > 0}
+        isDismissed={dismissedAlerts.has(`${value}-${effort}`)}
+        onDismiss={() => handleDismissAlert(`${value}-${effort}`)}
+        setNodeRef={setNodeRef}
+      >
+        {isOver && (
+          <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+            <div className="border-2 border-blue-400 border-dashed rounded-lg w-full h-full animate-pulse"></div>
+          </div>
+        )}
+        <div className="text-xs text-gray-500 mb-2 relative z-10">
+          {valueLevels[valueKey]} / {effortLevels[effortKey]}
+        </div>
+        <div className="relative z-10">
+          {renderPositionedStories 
+            ? renderPositionedStories(value, effort)
+            : cellStories.map(story => (
+                <StoryCard 
+                  key={story._id || story.id || `story-${Math.random()}`}
+                  story={story} 
+                  position={{ value, effort }}
+                  isExpanded={expandedStoryIds.has(story._id || story.id || '')}
+                  onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
+                />
+              ))
+          }
+        </div>
+      </MatrixCell>
+    );
+  };
+
+  const getBackgroundColor = (value: string, effort: string) => {
+    // Base cases - empty value or effort
+    if (!value || !effort) return 'bg-gray-50';
+    
+    // Use the consistent color scheme
+    const baseColorClass = valueColorClasses[value as keyof typeof valueColorClasses] || 'bg-gray-100';
+    
+    // Map effort to intensity/opacity
+    const effortIntensity = {
+      'low': 'bg-opacity-70',
+      'medium': 'bg-opacity-50',
+      'high': 'bg-opacity-30'
+    };
+    
+    const effortLower = effort.toLowerCase();
+    
+    // Return combined classes
+    return `${baseColorClass}
+            ${effortIntensity[effortLower as keyof typeof effortIntensity] || 'bg-opacity-50'}
+            hover:bg-opacity-30 transition-all duration-200`;
+  };
+
+  // Format the total points display
+  const formatTotalPoints = () => {
+    if (totalPoints === undefined) return '0';
+    return totalPoints.toString();
+  };
+
+  // Format the total effort display
+  const formatTotalEffort = () => {
+    if (totalEffort === undefined) return '0';
+    return totalEffort.toString();
+  };
 
   // Create a grid of droppable cells
-  const grid = valueLevels.map(value => (
-    <div key={`row-${value}`} className="grid grid-cols-3 gap-2">
-      {effortLevels.map(effort => {
-        // Get the droppable properties for this cell
-        const { isOver, setNodeRef } = useDroppable({
-          id: `cell-${value}-${effort}`,
-        });
-
-        // Get stories for this cell
-        const stories = getStoriesInCell(value, effort);
-
-        // Determine cell styling based on value and effort
-        const getCellStyle = () => {
-          // Value determines the base color
-          const valueColors = {
-            high: 'bg-green-50 border-green-200',
-            medium: 'bg-yellow-50 border-yellow-200',
-            low: 'bg-red-50 border-red-200',
-          };
-
-          // Effort adjusts the intensity (darker for high effort)
-          const effortModifier = isOver ? 'ring-2 ring-blue-400' : '';
-
-          return `${valueColors[value as keyof typeof valueColors]} ${effortModifier}`;
-        };
-
-        // Get the label for this cell
-        const getCellLabel = () => {
-          const valueLabels = {
-            high: 'High Value',
-            medium: 'Medium Value',
-            low: 'Low Value',
-          };
-
-          const effortLabels = {
-            low: 'Low Effort',
-            medium: 'Medium Effort',
-            high: 'High Effort',
-          };
-
-          return {
-            value: valueLabels[value as keyof typeof valueLabels],
-            effort: effortLabels[effort as keyof typeof effortLabels],
-          };
-        };
-
-        const labels = getCellLabel();
-
-        return (
-          <div
-            key={`cell-${value}-${effort}`}
-            ref={setNodeRef}
-            className={`p-3 border rounded-lg ${getCellStyle()} min-h-[200px] transition-all`}
-          >
-            <div className="flex flex-col h-full">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold uppercase text-gray-500">
-                  {labels.value} / {labels.effort}
-                </span>
-                <span className="text-xs bg-white rounded-full px-2 py-0.5 shadow-sm">
-                  {stories.length} stories
-                </span>
-              </div>
-              <div className="space-y-2 overflow-y-auto flex-grow">
-                {stories.map(story => (
-                  <StoryCard
-                    key={story._id || story.id}
-                    story={story}
-                    position={{ value, effort }}
-                    isExpanded={expandedStoryIds.has(story._id || story.id || '')}
-                    onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
-                  />
-                ))}
-              </div>
-            </div>
+  const grid = valueLevels.map((value, valueIndex) => (
+    <div key={`row-${value}`} className="grid grid-cols-[8rem_1fr] gap-2">
+      {/* Business value indicator */}
+      <div className="flex items-center justify-end pr-2 h-full">
+        <div 
+          className={`
+            w-8 py-2 rounded-md text-center font-medium text-sm rotate-180
+            ${valueColorClasses[value as keyof typeof valueColorClasses]}
+          `}
+          style={{ writingMode: 'vertical-rl' }}
+        >
+          {businessValueLabels[value as keyof typeof businessValueLabels]}
+        </div>
+      </div>
+      
+      {/* Cells for this row */}
+      <div className="grid grid-cols-3 gap-2">
+        {effortLevels.map(effort => (
+          <div key={`cell-${value}-${effort}`}>
+            {renderCell(value, effort)}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   ));
 
   return (
     <div className="flex flex-col space-y-4">
-      <div className="grid grid-cols-3 gap-2 mb-1">
-        <div className="text-center text-sm font-medium text-gray-500">Low Effort</div>
-        <div className="text-center text-sm font-medium text-gray-500">Medium Effort</div>
-        <div className="text-center text-sm font-medium text-gray-500">High Effort</div>
+      <div className="grid grid-cols-[auto_1fr] gap-2 mb-1">
+        {/* Empty space for alignment with business value column */}
+        <div></div>
+        
+        {/* Effort headers with point ranges */}
+        <div className="grid grid-cols-3 gap-2">
+          {effortLevels.map(effort => (
+            <div key={`header-${effort}`} className="text-center">
+              <div className="text-sm font-medium text-gray-700">{effort.charAt(0).toUpperCase() + effort.slice(1)} Effort</div>
+              <div className="text-xs text-gray-500">({pointRanges[effort as keyof typeof pointRanges]} points)</div>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="space-y-2">
         {grid}
       </div>
-      <div className="flex justify-between mt-4 text-sm text-gray-700">
-        <div>
-          <span className="font-medium">Total Points:</span> {totalPoints}
+      {/* Total Points/Effort display */}
+      <div className="mt-4 flex justify-between text-sm font-medium">
+        <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
+          Total Points: {formatTotalPoints()}
         </div>
-        <div>
-          <span className="font-medium">Total Effort:</span> {totalEffort} hours
+        <div className="bg-purple-50 text-purple-700 px-2 py-1 rounded">
+          Total Effort: {formatTotalEffort()}
         </div>
       </div>
     </div>

@@ -113,11 +113,27 @@ export default function ScopePlaygroundPage() {
   
   // Project settings
   const [settings, setSettings] = useState({
-    developerCost: 750, // USD per day
-    developerCount: 3,
+    contributorCost: 750, // USD per day
+    contributorCount: 3,
     hoursPerDay: 8,
-    developerAllocation: 80, // percentage
+    contributorAllocation: 80, // percentage
   });
+
+  // Set up state for expanded stories in the matrix
+  const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
+
+  // Toggle story expansion in matrix
+  const toggleMatrixStoryExpansion = (storyId: string) => {
+    setExpandedStoryIds(prevState => {
+      const newState = new Set(prevState);
+      if (newState.has(storyId)) {
+        newState.delete(storyId);
+      } else {
+        newState.add(storyId);
+      }
+      return newState;
+    });
+  };
 
   // Calculate metrics
   const calculateMetrics = () => {
@@ -271,17 +287,59 @@ export default function ScopePlaygroundPage() {
                 getStoriesInCell={getStoriesInCell} 
                 totalPoints={metrics.totalPoints}
                 totalEffort={metrics.totalEffort}
+                expandedStoryIds={expandedStoryIds}
+                toggleStoryExpansion={toggleMatrixStoryExpansion}
               />
             </div>
             
             <MetricsPanel
-              totalStories={metrics.totalStories}
-              totalPoints={metrics.totalPoints}
-              totalEffort={metrics.totalEffort}
-              developerCost={settings.developerCost}
-              developerCount={settings.developerCount}
-              hoursPerDay={settings.hoursPerDay}
-              developerAllocation={settings.developerAllocation}
+              metrics={{
+                totalStories: metrics.totalStories,
+                totalPoints: metrics.totalPoints,
+                rawEffort: metrics.totalEffort,
+                adjustedEffort: metrics.totalEffort,
+                totalDays: metrics.totalEffort / 8,
+                totalCost: (metrics.totalEffort / 8) * settings.contributorCost,
+                scopeLimits: {
+                  overPoints: false,
+                  overHours: false,
+                  overDuration: false
+                },
+                aiProductivityGain: 0
+              }}
+              animatedMetrics={{
+                totalStories: metrics.totalStories,
+                totalPoints: metrics.totalPoints,
+                adjustedEffort: metrics.totalEffort,
+                totalDays: metrics.totalEffort / 8,
+                totalCost: (metrics.totalEffort / 8) * settings.contributorCost
+              }}
+              metricsChanging={{
+                totalStories: false,
+                totalPoints: false,
+                adjustedEffort: false,
+                totalDays: false,
+                totalCost: false
+              }}
+              settings={{
+                contributorCost: settings.contributorCost,
+                contributorCount: settings.contributorCount || 1,
+                hoursPerDay: 8,
+                contributorAllocation: settings.contributorAllocation || 1,
+                scopeLimiters: {
+                  points: { default: 100 },
+                  hours: { default: 100 },
+                  duration: { default: 21, unit: 'days' }
+                },
+                aiProductivityFactors: {
+                  linesOfCode: 0,
+                  testing: 0,
+                  debugging: 0,
+                  systemDesign: 0,
+                  documentation: 0
+                },
+                aiSimulationEnabled: false
+              }}
             />
           </div>
         </div>

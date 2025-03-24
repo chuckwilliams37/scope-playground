@@ -8,15 +8,34 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverEvent,
+  closestCenter
 } from "@dnd-kit/core";
 import { StoryCard } from "@/components/StoryCard";
 import { ValuesMatrix } from "@/components/ValuesMatrix";
 import { BacklogViewer } from "@/components/BacklogViewer";
 import { MetricsPanel } from "@/components/MetricsPanel";
 import { ScenarioManager } from "@/components/ScenarioManager";
+import { SettingsPanel } from "../components/SettingsPanel";
+import { EffortMismatchModal } from "../components/EffortMismatchModal";
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Define the Story type
+type Story = {
+  _id: string;
+  title: string;
+  businessValue: string;
+  storyPoints: number;
+  points?: number;
+  notes: string;
+  userStory: string;
+  category: string;
+  adjustmentReason?: string;
+  originalPoints?: number;
+};
 
 // Sample data to use instead of Convex API until it's fully set up
-const sampleStories = [
+const sampleStories: Story[] = [
   {
     _id: "story-001",
     title: "Client-Specific Story Access",
@@ -79,6 +98,24 @@ const sampleStories = [
     notes: "Save configurations for later comparison",
     userStory: "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
     category: "Data Management"
+  },
+  {
+    _id: "story-008",
+    title: "AI Productivity Factor Adjustment",
+    businessValue: "High",
+    storyPoints: 5,
+    notes: "Adjust how AI impacts productivity",
+    userStory: "As a product manager, I can adjust the estimated productivity gains from AI-assisted development in different categories to refine time and cost projections.",
+    category: "Planning"
+  },
+  {
+    _id: "story-009",
+    title: "Scope Limiters",
+    businessValue: "Medium",
+    storyPoints: 3,
+    notes: "Set maximum points, hours, and duration",
+    userStory: "As a client, I can set maximum limits for story points, development hours, and project duration to visualize scope constraints clearly.",
+    category: "Planning"
   }
 ];
 
@@ -104,19 +141,166 @@ const scenarioPresets = [
   }
 ];
 
+// Default tweakable parameters from the JSON
+const defaultTweakableParams = {
+  contributorCost: {
+    minPerDay: 300,
+    maxPerDay: 1500,
+    default: 750,
+    unit: "USD",
+    description: "Average cost per contributor per day"
+  },
+  scopeLimiters: {
+    points: {
+      min: 0,
+      max: 200,
+      default: 50,
+      description: "Maximum story points to include in scope"
+    },
+    hours: {
+      min: 0,
+      max: 2000,
+      default: 500,
+      description: "Maximum development hours"
+    },
+    duration: {
+      min: 0,
+      max: 180,
+      default: 60,
+      unit: "days",
+      description: "Maximum project duration"
+    }
+  },
+  aiProductivityFactors: {
+    uiCodeGeneration: {
+      enabled: true,
+      minGainPercent: 20,
+      maxGainPercent: 50,
+      defaultGainPercent: 35,
+      description: "Productivity gain from AI-assisted UI code generation"
+    },
+    schemaAndLogic: {
+      enabled: true,
+      minGainPercent: 20,
+      maxGainPercent: 70,
+      defaultGainPercent: 45,
+      description: "Productivity gain from AI-assisted schema design and business logic"
+    }
+  }
+};
+
+// Update the settings interface to match the new MetricsPanel props structure
+type Settings = {
+  contributorCost: number;
+  contributorCount: number;
+  hoursPerDay: number;
+  contributorAllocation: number;
+  scopeLimiters: {
+    points: { default: number };
+    hours: { default: number };
+    duration: { default: number, unit: string };
+  };
+  aiProductivityFactors: {
+    linesOfCode: number;
+    testing: number;
+    debugging: number;
+    systemDesign: number;
+    documentation: number;
+  };
+  aiSimulationEnabled: boolean;
+};
+
+// Update the default settings object to match the new structure
+const defaultSettings: Settings = {
+  contributorCost: 500,
+  contributorCount: 2,
+  hoursPerDay: 8,
+  contributorAllocation: 80,
+  scopeLimiters: {
+    points: { default: 100 },
+    hours: { default: 160 },
+    duration: { default: 20, unit: 'days' }
+  },
+  aiProductivityFactors: {
+    linesOfCode: 20,
+    testing: 15,
+    debugging: 15,
+    systemDesign: 5,
+    documentation: 10
+  },
+  aiSimulationEnabled: true
+};
+
 export default function ScopePlaygroundPage() {
   // Use sample data instead of Convex API for now
-  const stories = sampleStories;
+  const [stories, setStories] = useState<Story[]>(sampleStories);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [storyPositions, setStoryPositions] = useState<Record<string, { value: string, effort: string }>>({});
+  const [storyPositions, setStoryPositions] = useState<Record<string, { value: string, effort: string, rank?: number }>>({});
+  const [showSettings, setShowSettings] = useState(false);
   
-  // Project settings
-  const [settings, setSettings] = useState({
-    developerCost: 750, // USD per day
-    developerCount: 3,
-    hoursPerDay: 8,
-    developerAllocation: 80, // percentage
-  });
+  // State for effort mismatch handling
+  const [pendingStoryPlacement, setPendingStoryPlacement] = useState<{
+    storyId: string;
+    cellValue: string;
+    cellEffort: string;
+    suggestedPoints: number;
+  } | null>(null);
+
+  // State for point adjustment
+  const [isAdjustingPoints, setIsAdjustingPoints] = useState(false);
+  const [currentStory, setCurrentStory] = useState<Story | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    adjustmentReason?: string;
+  }>({});
+  
+  // State for drag and drop reordering
+  const [activeCell, setActiveCell] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  
+  // Project settings with tweakable parameters
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+
+  // Set up state for expanded stories
+  const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
+  // Track stories that should be expanded in the backlog
+  const [expandedBacklogStoryIds, setExpandedBacklogStoryIds] = useState<string[]>([]);
+
+  // State to track saved scenarios from localStorage
+  const [savedScenarios, setSavedScenarios] = useState<any[]>([]);
+
+  // Load saved scenarios from localStorage
+  useEffect(() => {
+    try {
+      const storedScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      setSavedScenarios(storedScenarios);
+    } catch (error) {
+      console.error('Error loading saved scenarios:', error);
+    }
+  }, []);
+
+  // Toggle story expansion in matrix
+  const toggleMatrixStoryExpansion = (storyId: string) => {
+    setExpandedStoryIds(prevState => {
+      const newState = new Set(prevState);
+      if (newState.has(storyId)) {
+        newState.delete(storyId);
+      } else {
+        newState.add(storyId);
+      }
+      return newState;
+    });
+  };
+
+  // Toggle expansion of a story in the backlog
+  const handleToggleExpandStory = (storyId: string) => {
+    setExpandedBacklogStoryIds(prevIds => {
+      if (prevIds.includes(storyId)) {
+        return prevIds.filter(id => id !== storyId);
+      } else {
+        return [...prevIds, storyId];
+      }
+    });
+  };
 
   // Calculate metrics
   const calculateMetrics = () => {
@@ -127,18 +311,118 @@ export default function ScopePlaygroundPage() {
     // Calculate total points
     const totalPoints = scopedStories.reduce((sum, story) => sum + (story.storyPoints || 0), 0);
     
-    // Calculate total effort (story points * 8 hours per point as a simple conversion)
-    const totalEffort = totalPoints * 8;
+    // Calculate total raw effort (story points * 8 hours per point as a simple conversion)
+    const rawEffort = totalPoints * 8;
+    
+    // Calculate AI productivity gain ONLY if AI simulation is enabled
+    let aiProductivityGain = 0;
+    let adjustedEffort = rawEffort;
+    
+    if (settings.aiSimulationEnabled) {
+      // Calculate weighted AI productivity gain percentage (max 30%)
+      const factors = settings.aiProductivityFactors;
+      const categories = [
+        factors.linesOfCode,
+        factors.testing,
+        factors.debugging, 
+        factors.systemDesign,
+        factors.documentation
+      ];
+      
+      // Calculate average gain percentage (0-100 scale)
+      const avgGainPercent = categories.reduce((sum, val) => sum + Math.max(0, val), 0) / categories.length;
+      
+      // Convert to a multiplier between 0-0.3 (cap at 30% max efficiency gain)
+      const efficiencyMultiplier = Math.min(0.3, avgGainPercent / 100);
+      
+      // Calculate hours saved due to AI
+      aiProductivityGain = rawEffort * efficiencyMultiplier;
+      
+      // Apply productivity gain to effort hours
+      adjustedEffort = rawEffort - aiProductivityGain;
+    }
+    
+    // Calculate days based on team size and allocation
+    const effectiveHoursPerDay = settings.hoursPerDay * (settings.contributorAllocation / 100);
+    const effectiveDaysPerContributor = adjustedEffort / effectiveHoursPerDay;
+    const totalDays = effectiveDaysPerContributor / settings.contributorCount;
+    
+    // Calculate cost
+    const totalCost = totalDays * settings.contributorCost * settings.contributorCount;
+    
+    // Check scope limits
+    const overPoints = totalPoints > settings.scopeLimiters.points.default;
+    const overHours = adjustedEffort > settings.scopeLimiters.hours.default;
+    const overDuration = totalDays > settings.scopeLimiters.duration.default;
     
     return {
       totalStories,
       totalPoints,
-      totalEffort
+      rawEffort,
+      adjustedEffort,
+      totalDays,
+      totalCost,
+      scopeLimits: {
+        overPoints,
+        overHours,
+        overDuration
+      },
+      aiProductivityGain
     };
   };
 
   const metrics = calculateMetrics();
-  
+
+  // Add animation states
+  const [animatedMetrics, setAnimatedMetrics] = useState({
+    totalStories: 0,
+    totalPoints: 0,
+    adjustedEffort: 0,
+    totalDays: 0,
+    totalCost: 0
+  });
+
+  const [metricsChanging, setMetricsChanging] = useState({
+    totalStories: false,
+    totalPoints: false,
+    adjustedEffort: false,
+    totalDays: false,
+    totalCost: false
+  });
+
+  // Updates for metrics with animation
+  useEffect(() => {
+    const newMetrics = calculateMetrics();
+    
+    // Determine which metrics have changed
+    const changedMetrics = {
+      totalStories: newMetrics.totalStories !== animatedMetrics.totalStories,
+      totalPoints: newMetrics.totalPoints !== animatedMetrics.totalPoints,
+      adjustedEffort: newMetrics.adjustedEffort !== animatedMetrics.adjustedEffort,
+      totalDays: newMetrics.totalDays !== animatedMetrics.totalDays,
+      totalCost: newMetrics.totalCost !== animatedMetrics.totalCost
+    };
+    
+    // Set changing state for animation
+    setMetricsChanging(changedMetrics);
+    
+    // Update animated metrics after a short delay
+    setTimeout(() => {
+      setAnimatedMetrics(newMetrics);
+      
+      // Reset changing state after animation duration
+      setTimeout(() => {
+        setMetricsChanging({
+          totalStories: false,
+          totalPoints: false,
+          adjustedEffort: false,
+          totalDays: false,
+          totalCost: false
+        });
+      }, 750);
+    }, 50);
+  }, [stories, storyPositions, settings]);
+
   // Set up sensors for drag interactions
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -149,7 +433,38 @@ export default function ScopePlaygroundPage() {
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const { active } = event;
+    setActiveId(active.id as string);
+    
+    // Check if this is a reordering operation within a cell
+    const storyId = active.id as string;
+    const story = stories.find(s => s._id === storyId);
+    
+    if (story && storyPositions[storyId]) {
+      setReordering(true);
+      const { value, effort } = storyPositions[storyId];
+      setActiveCell(`cell-${value}-${effort}`);
+    } else {
+      setReordering(false);
+      setActiveCell(null);
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    // Handle matrix cell drag over - only handle visualization and position tracking
+    // but don't trigger the effort mismatch modal here
+    if (active.id.toString().startsWith('story-') && over.id.toString().includes('-')) {
+      // Track the current cell being dragged over for visual feedback
+      // but don't perform effort mismatch checking until dragEnd
+      const overId = over.id.toString();
+      if (overId.startsWith('cell-')) {
+        // Update UI feedback for drag-over, if needed
+      }
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -157,22 +472,214 @@ export default function ScopePlaygroundPage() {
     
     if (over && active.id !== over.id) {
       const storyId = active.id as string;
-      const cellId = over.id as string;
       
-      if (cellId.includes('cell-')) {
+      // Handle reordering finish
+      if (reordering) {
+        // Reordering is handled in dragOver, just reset states
+        setReordering(false);
+        setActiveCell(null);
+      }
+      // Handle story placement in a cell
+      else if (over.id.toString().includes('cell-')) {
+        const cellId = over.id as string;
         const [_, valueLevel, effortLevel] = cellId.split('-');
+        const story = stories.find(s => s._id === storyId);
         
-        setStoryPositions({
-          ...storyPositions,
-          [storyId]: {
-            value: valueLevel,
-            effort: effortLevel,
-          },
-        });
+        if (story) {
+          // Check if story points match the effort level they're being placed in
+          const storyPoints = story.storyPoints || story.points || 0;
+          const hasEffortMismatch = checkEffortMismatch(storyPoints, effortLevel);
+          
+          if (hasEffortMismatch) {
+            // Don't immediately reset activeId - keep the card visually in the target position
+            // until the user makes a decision in the mismatch dialog
+            setPendingStoryPlacement({
+              storyId,
+              cellValue: valueLevel,
+              cellEffort: effortLevel,
+              suggestedPoints: getSuggestedPointsForEffort(effortLevel)
+            });
+            
+            // We don't set activeId to null here to prevent the card from bouncing back
+            return; // Return early to maintain the dragging state
+          } else {
+            // No mismatch, proceed with placement
+            
+            // Get highest rank in target cell
+            const highestRank = Object.entries(storyPositions)
+              .filter(([_, pos]) => pos.value === valueLevel && pos.effort === effortLevel)
+              .reduce((max, [_, pos]) => Math.max(max, pos.rank || 0), -1);
+            
+            // Place at end of list
+            setStoryPositions(prev => ({
+              ...prev,
+              [storyId]: {
+                value: valueLevel,
+                effort: effortLevel,
+                rank: highestRank + 1
+              },
+            }));
+            
+            // Trigger drop animation
+            setDropAnimations(prev => ({
+              ...prev,
+              [storyId]: {
+                active: true,
+                timestamp: Date.now()
+              }
+            }));
+            
+            // Reset animation after duration
+            setTimeout(() => {
+              setDropAnimations(prev => ({
+                ...prev,
+                [storyId]: {
+                  active: false,
+                  timestamp: prev[storyId]?.timestamp || 0
+                }
+              }));
+            }, 1000);
+          }
+        }
       }
     }
     
+    if (!pendingStoryPlacement) {
+      setActiveId(null);
+      setReordering(false);
+      setActiveCell(null);
+    }
+  };
+
+  // Check if there's an effort mismatch
+  const checkEffortMismatch = (points: number, effort: string): boolean => {
+    switch (effort) {
+      case 'low':
+        return points > 3;
+      case 'medium':
+        return points < 3 || points > 8;
+      case 'high':
+        return points < 8;
+      default:
+        return false;
+    }
+  };
+  
+  // Get suggested points for an effort level
+  const getSuggestedPointsForEffort = (effort: string): number => {
+    switch (effort) {
+      case 'low':
+        return 2;
+      case 'medium':
+        return 5;
+      case 'high':
+        return 13;
+      default:
+        return 3;
+    }
+  };
+  
+  // Handle effort level mismatch for story placement
+  const handleAdjustStoryPoints = (newPoints: number, adjustmentReason: string) => {
+    if (!pendingStoryPlacement) return;
+    
+    if (!adjustmentReason.trim()) {
+      setValidationErrors({
+        adjustmentReason: 'Please provide a reason for adjustment'
+      });
+      return;
+    }
+    
+    setValidationErrors({});
+    
+    const { storyId, cellValue, cellEffort } = pendingStoryPlacement;
+    
+    // Update the story points
+    const updatedStories = stories.map(story => {
+      if (story._id === storyId) {
+        return {
+          ...story,
+          storyPoints: newPoints,
+          points: newPoints,
+          adjustmentReason,
+          originalPoints: story.originalPoints || story.storyPoints
+        };
+      }
+      return story;
+    });
+    
+    // Update story positions
+    // Get the current highest rank in that cell
+    const storiesInCell = Object.entries(storyPositions)
+      .filter(([_, pos]) => pos.value === cellValue && pos.effort === cellEffort)
+      .map(([id, pos]) => ({ id, rank: pos.rank || 0 }));
+    
+    const maxRank = storiesInCell.length > 0 
+      ? Math.max(...storiesInCell.map(s => s.rank)) 
+      : -1;
+    
+    setStoryPositions(prev => ({
+      ...prev,
+      [storyId]: {
+        value: cellValue,
+        effort: cellEffort,
+        rank: maxRank + 1
+      }
+    }));
+    
+    // Update stories
+    setStories(updatedStories);
+    
+    // Clear pending placement
+    setPendingStoryPlacement(null);
+  };
+
+  // Handle keeping existing points
+  const handleKeepStoryPoints = () => {
+    if (!pendingStoryPlacement) return;
+    
+    const { storyId, cellValue, cellEffort } = pendingStoryPlacement;
+    
+    // Place story in the cell with original points
+    setStoryPositions({
+      ...storyPositions,
+      [storyId]: {
+        value: cellValue,
+        effort: cellEffort,
+      },
+    });
+    
+    // Clear pending placement
+    setPendingStoryPlacement(null);
+  };
+
+  // Handle canceling placement
+  const handleCancelPlacement = () => {
+    setPendingStoryPlacement(null);
     setActiveId(null);
+    setReordering(false);
+    setActiveCell(null);
+  };
+
+  // Handle custom adjustment of story points
+  const handleCustomAdjustPoints = (storyId: string, newPoints: number, reason: string) => {
+    // Update story points with the custom adjustment and reason
+    const updatedStories = stories.map(story => {
+      if (story._id === storyId) {
+        return {
+          ...story,
+          storyPoints: newPoints,
+          points: newPoints,
+          adjustmentReason: reason,
+          originalPoints: story.originalPoints || story.storyPoints
+        };
+      }
+      return story;
+    });
+    
+    // In a real app, we would persist this to the database
+    // For now, update our local state
+    setStories(updatedStories);
   };
 
   const activeStory = activeId ? stories.find(story => story._id === activeId) : null;
@@ -191,40 +698,123 @@ export default function ScopePlaygroundPage() {
   // Handle scenario management
   const handleSaveScenario = async (name: string, description: string) => {
     console.log(`Saving scenario: ${name}`);
+    
+    // Create scenario data
+    const scenarioData = {
+      name,
+      description,
+      storyPositions,
+      settings,
+      stories: stories.map(story => ({
+        _id: story._id,
+        storyPoints: story.storyPoints,
+        originalPoints: story.originalPoints,
+        adjustmentReason: story.adjustmentReason
+      }))
+    };
+    
+    // Store in localStorage for demo purposes
+    try {
+      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      const newScenario = {
+        _id: `scenario-${Date.now()}`,
+        name,
+        description,
+        createdBy: 'user',
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        isPreset: false,
+        data: scenarioData
+      };
+      
+      localStorage.setItem('scenarios', JSON.stringify([...existingScenarios, newScenario]));
+      console.log('Scenario saved successfully:', newScenario);
+      alert(`Scenario "${name}" saved successfully!`);
+    } catch (error) {
+      console.error('Error saving scenario:', error);
+      alert('Failed to save scenario. Please try again.');
+    }
+    
     // In a real app, this would save to Convex
     return Promise.resolve();
   };
 
   const handleLoadScenario = async (scenarioId: string) => {
     console.log(`Loading scenario: ${scenarioId}`);
-    // In a real app, this would load from Convex
     
-    // For demo purposes, if it's the MVP preset, place critical stories in high value/low effort
-    if (scenarioId === 'preset-mvp') {
-      const newPositions: Record<string, { value: string, effort: string }> = {};
+    // Handle built-in presets
+    if (scenarioId === 'preset-mvp' || scenarioId === 'preset-lovable') {
+      // For demo purposes, if it's the MVP preset, place critical stories in high value/low effort
+      if (scenarioId === 'preset-mvp') {
+        const newPositions: Record<string, { value: string, effort: string, rank: number }> = {};
+        
+        stories.forEach((story, index) => {
+          if (story.businessValue === 'Critical') {
+            newPositions[story._id] = { value: 'high', effort: 'low', rank: index };
+          }
+        });
+        
+        setStoryPositions(newPositions);
+      }
       
-      stories.forEach(story => {
-        if (story.businessValue === 'Critical') {
-          newPositions[story._id] = { value: 'high', effort: 'low' };
+      // For demo purposes, if it's the lovable preset, place critical and high value stories
+      if (scenarioId === 'preset-lovable') {
+        const newPositions: Record<string, { value: string, effort: string, rank: number }> = {};
+        
+        stories.forEach((story, index) => {
+          if (story.businessValue === 'Critical') {
+            newPositions[story._id] = { value: 'high', effort: 'low', rank: index };
+          } else if (story.businessValue === 'High') {
+            newPositions[story._id] = { value: 'high', effort: 'medium', rank: index };
+          }
+        });
+        
+        setStoryPositions(newPositions);
+      }
+    } else {
+      // Load user-saved scenario from localStorage
+      try {
+        // Find the scenario in localStorage
+        const scenario = savedScenarios.find(s => s._id === scenarioId);
+        
+        if (scenario && scenario.data) {
+          // Restore story positions
+          setStoryPositions(scenario.data.storyPositions || {});
+          
+          // Restore settings if present
+          if (scenario.data.settings) {
+            setSettings(scenario.data.settings);
+          }
+          
+          // Restore story adjustments if present
+          if (scenario.data.stories && scenario.data.stories.length > 0) {
+            const updatedStories = stories.map(story => {
+              const savedStory = scenario.data.stories.find((s: any) => s._id === story._id);
+              if (savedStory) {
+                return {
+                  ...story,
+                  storyPoints: savedStory.storyPoints || story.storyPoints,
+                  points: savedStory.storyPoints || story.points,
+                  originalPoints: savedStory.originalPoints || story.originalPoints,
+                  adjustmentReason: savedStory.adjustmentReason || story.adjustmentReason
+                };
+              }
+              return story;
+            });
+            
+            setStories(updatedStories);
+          }
+          
+          console.log(`Scenario "${scenario.name}" loaded successfully!`);
+          alert(`Scenario "${scenario.name}" loaded successfully!`);
+        } else {
+          console.error('Scenario not found:', scenarioId);
+          alert('Scenario not found. It may have been deleted.');
         }
-      });
-      
-      setStoryPositions(newPositions);
-    }
-    
-    // For demo purposes, if it's the lovable preset, place critical and high value stories
-    if (scenarioId === 'preset-lovable') {
-      const newPositions: Record<string, { value: string, effort: string }> = {};
-      
-      stories.forEach(story => {
-        if (story.businessValue === 'Critical') {
-          newPositions[story._id] = { value: 'high', effort: 'low' };
-        } else if (story.businessValue === 'High') {
-          newPositions[story._id] = { value: 'high', effort: 'medium' };
-        }
-      });
-      
-      setStoryPositions(newPositions);
+      } catch (error) {
+        console.error('Error loading scenario:', error);
+        alert('Failed to load scenario. Please try again.');
+      }
     }
     
     return Promise.resolve();
@@ -238,23 +828,116 @@ export default function ScopePlaygroundPage() {
     setStoryPositions({});
   };
 
+  const handleUpdateSettings = (newSettings: any) => {
+    setSettings(newSettings);
+    setShowSettings(false);
+  };
+
+  // Handle removing a story from the matrix
+  const handleRemoveStory = (storyId: string) => {
+    // Create a new storyPositions object without the removed story
+    const newPositions = { ...storyPositions };
+    delete newPositions[storyId];
+    setStoryPositions(newPositions);
+  };
+
+  // Add a state for drop animations
+  const [dropAnimations, setDropAnimations] = useState<{
+    [key: string]: {
+      active: boolean;
+      timestamp: number;
+    }
+  }>({});
+
+  // Render the stories that have been positioned in the matrix
+  const renderPositionedStories = (valueLevel: string, effortLevel: string) => {
+    // Get stories in this cell
+    const cellStories = stories.filter(story => {
+      const position = storyPositions[story._id];
+      return position && position.value === valueLevel && position.effort === effortLevel;
+    });
+
+    // If no stories in this cell, return null
+    if (cellStories.length === 0) {
+      return null;
+    }
+
+    // Sort stories by rank if available
+    const sortedStories = [...cellStories].sort((a, b) => {
+      const rankA = storyPositions[a._id]?.rank || 0;
+      const rankB = storyPositions[b._id]?.rank || 0;
+      return rankA - rankB;
+    });
+
+    // Otherwise return the stories
+    return (
+      <div className="space-y-2 w-full">
+        {sortedStories.map((story, index) => (
+          <div 
+            key={story._id}
+            className={`relative ${index > 0 ? 'mt-4' : ''}`}
+          >
+            {index > 0 && (
+              <div className="absolute -top-2 left-0 right-0 flex justify-center">
+                <div className="w-3/4 border-t border-dashed border-gray-300"></div>
+              </div>
+            )}
+            <StoryCard 
+              key={story._id} 
+              story={story} 
+              position={storyPositions[story._id]}
+              isDragging 
+              isExpanded={expandedStoryIds.has(story._id)}
+              onToggleExpand={() => toggleMatrixStoryExpansion(story._id)}
+              onRemove={() => handleRemoveStory(story._id)}
+              onAdjustPoints={handleCustomAdjustPoints}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <main className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Scope Playground</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Scope Playground</h1>
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center"
+        >
+          <span className="mr-2">⚙️</span> Settings
+        </button>
+      </div>
+      
+      {showSettings && (
+        <div className="mb-6">
+          <SettingsPanel 
+            settings={settings} 
+            onUpdateSettings={handleUpdateSettings}
+            onClose={() => setShowSettings(false)}
+          />
+        </div>
+      )}
       
       <DndContext 
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Backlog and Scenario Management */}
-          <div className="space-y-6">
-            <BacklogViewer 
-              stories={stories.filter(story => !storyPositions[story._id])} 
-            />
+          <div className="space-y-6 relative">
+            <div className="sticky top-4 z-10">
+              <BacklogViewer 
+                stories={stories.filter(story => !storyPositions[story._id])} 
+                expandedStoryIds={expandedBacklogStoryIds}
+                onToggleExpandStory={handleToggleExpandStory}
+              />
+            </div>
             <ScenarioManager 
-              scenarios={scenarioPresets}
+              scenarios={[...scenarioPresets, ...savedScenarios]}
               onSaveScenario={handleSaveScenario}
               onLoadScenario={handleLoadScenario}
               onCreatePreset={handleCreatePreset}
@@ -267,20 +950,20 @@ export default function ScopePlaygroundPage() {
             <div className="border p-4 rounded-lg shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Scope Matrix</h2>
               <ValuesMatrix 
-                getStoriesInCell={getStoriesInCell} 
+                getStoriesInCell={getStoriesInCell}
                 totalPoints={metrics.totalPoints}
-                totalEffort={metrics.totalEffort}
+                totalEffort={metrics.adjustedEffort}
+                expandedStoryIds={expandedStoryIds}
+                toggleStoryExpansion={toggleMatrixStoryExpansion}
+                renderPositionedStories={renderPositionedStories}
               />
             </div>
             
             <MetricsPanel
-              totalStories={metrics.totalStories}
-              totalPoints={metrics.totalPoints}
-              totalEffort={metrics.totalEffort}
-              developerCost={settings.developerCost}
-              developerCount={settings.developerCount}
-              hoursPerDay={settings.hoursPerDay}
-              developerAllocation={settings.developerAllocation}
+              metrics={metrics}
+              animatedMetrics={animatedMetrics}
+              metricsChanging={metricsChanging}
+              settings={settings}
             />
           </div>
         </div>
@@ -296,6 +979,20 @@ export default function ScopePlaygroundPage() {
             </div>
           ) : null}
         </DragOverlay>
+        
+        {/* Effort Mismatch Modal */}
+        {pendingStoryPlacement && (
+          <EffortMismatchModal
+            storyTitle={stories.find(s => s._id === pendingStoryPlacement.storyId)?.title || ''}
+            storyPoints={stories.find(s => s._id === pendingStoryPlacement.storyId)?.storyPoints || 0}
+            cellEffort={pendingStoryPlacement.cellEffort}
+            suggestedPoints={pendingStoryPlacement.suggestedPoints}
+            onAdjustPoints={handleAdjustStoryPoints}
+            onKeepAsIs={handleKeepStoryPoints}
+            onCancel={handleCancelPlacement}
+            validationErrors={validationErrors}
+          />
+        )}
       </DndContext>
     </main>
   );
