@@ -45,10 +45,22 @@ export function BacklogViewer({
   };
   
   // Extract all unique categories from stories
-  const categories = [...new Set(stories.map(story => story.category).filter(Boolean))];
+  const categories = Array.from(
+    new Set(
+      stories
+        .map(story => story.category)
+        .filter((category): category is string => Boolean(category))
+    )
+  );
   
   // Extract all unique business values from stories
-  const businessValues = [...new Set(stories.map(story => story.businessValue).filter(Boolean))];
+  const businessValues = Array.from(
+    new Set(
+      stories
+        .map(story => story.businessValue)
+        .filter((value): value is string => Boolean(value))
+    )
+  );
   
   // Filter stories based on search and filters
   const filteredStories = stories.filter(story => {
@@ -69,9 +81,9 @@ export function BacklogViewer({
     
     return matchesSearch && matchesCategory && matchesValue && matchesPoints;
   });
-  
+
   // Sort stories by businessValue priority (Critical, High, Medium, Low)
-  const sortedStories = [...filteredStories].sort((a, b) => {
+  const sortedStories = Array.from(filteredStories).sort((a, b) => {
     const priorityOrder: Record<string, number> = {
       'Critical': 0,
       'High': 1,

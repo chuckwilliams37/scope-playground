@@ -1,18 +1,9 @@
+/* Import Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
-}
-
-/* Custom classes for the Scope Playground */
+/* Additional custom styles for the Scope Playground */
 .story-card {
   @apply bg-white rounded-md shadow-sm border p-3 transition-all;
 }
