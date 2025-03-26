@@ -17,9 +17,10 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "next": "^15.0.0",
+    "next": "^15.2.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "stripe": "^14.17.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -27,7 +28,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.16",
-    "concurrently": "^7.5.0",
+    "concurrently": "^8.2.2",
     "eslint": "^8",
     "eslint-config-next": "^15.0.0",
     "postcss": "^8.4.33",

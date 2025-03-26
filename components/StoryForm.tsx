@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-type Story = {
-  _id?: string;
-  id?: string;
-  title: string;
-  businessValue?: string;
-  storyPoints?: number;
-  points?: number;
-  notes?: string;
-  userStory?: string;
-  category?: string;
-  effortCategory?: string;
-};
+import { Story } from '@/types';
 
 type StoryFormProps = {
   story?: Story;
@@ -51,16 +39,12 @@ export function StoryForm({
       newErrors.title = 'Title is required';
     }
     
-    if (!userStory.trim()) {
-      newErrors.userStory = 'User story is required';
+    if (!category) {
+      newErrors.category = 'Category is required';
     }
     
     if (!businessValue) {
       newErrors.businessValue = 'Business value is required';
-    }
-    
-    if (!category) {
-      newErrors.category = 'Category is required';
     }
     
     setErrors(newErrors);
@@ -70,19 +54,18 @@ export function StoryForm({
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (validateForm()) {
       const updatedStory: Story = {
-        ...story,
+        _id: story?._id || 'temp-id', // This will be replaced by the backend
         title,
-        userStory,
-        points,
-        businessValue,
-        category,
-        effortCategory,
-        notes
+        userStory: userStory || '',
+        points: points,
+        storyPoints: points,
+        businessValue: businessValue || 'Important', // Default to "Important" if not specified
+        category: category || 'Feature', // Default to "Feature" if not specified
+        effortCategory: effortCategory || 'Medium',
+        notes: notes || ''
       };
-      
       onSave(updatedStory);
     }
   };
@@ -109,7 +92,7 @@ export function StoryForm({
   }, [isNewEffortCategory]);
   
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
+    <div className="bg-white p-4 rounded-lg shadow-md relative z-[100]">
       <h2 className="text-xl font-semibold mb-4">{story ? 'Edit Story' : 'Create New Story'}</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +116,7 @@ export function StoryForm({
         {/* User Story input */}
         <div>
           <label htmlFor="userStory" className="block text-sm font-medium text-gray-700">
-            User Story <span className="text-red-500">*</span>
+            User Story
           </label>
           <textarea
             id="userStory"
@@ -141,23 +124,20 @@ export function StoryForm({
             onChange={(e) => setUserStory(e.target.value)}
             rows={3}
             placeholder="As a [role], I want [feature] so that [benefit]"
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-              errors.userStory ? 'border-red-500' : ''
-            }`}
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
           />
-          {errors.userStory && <p className="mt-1 text-sm text-red-500">{errors.userStory}</p>}
         </div>
         
         {/* Points input */}
-        <div>
+        <div className="relative">
           <label htmlFor="points" className="block text-sm font-medium text-gray-700">
-            Story Points <span className="text-red-500">*</span>
+            Story Points
           </label>
           <select
             id="points"
             value={points}
             onChange={(e) => setPoints(Number(e.target.value))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110]"
           >
             {pointOptions.map((option) => (
               <option key={option} value={option}>
@@ -168,7 +148,7 @@ export function StoryForm({
         </div>
         
         {/* Business Value input */}
-        <div>
+        <div className="relative">
           <label htmlFor="businessValue" className="block text-sm font-medium text-gray-700">
             Business Value <span className="text-red-500">*</span>
           </label>
@@ -176,7 +156,7 @@ export function StoryForm({
             id="businessValue"
             value={businessValue}
             onChange={(e) => setBusinessValue(e.target.value)}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110] ${
               errors.businessValue ? 'border-red-500' : ''
             }`}
           >
@@ -190,7 +170,7 @@ export function StoryForm({
         </div>
         
         {/* Category input */}
-        <div>
+        <div className="relative">
           <label htmlFor="category" className="block text-sm font-medium text-gray-700">
             Category <span className="text-red-500">*</span>
           </label>
@@ -220,7 +200,7 @@ export function StoryForm({
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110] ${
                   errors.category ? 'border-red-500' : ''
                 }`}
               >
@@ -243,7 +223,7 @@ export function StoryForm({
         </div>
         
         {/* Effort Category input */}
-        <div>
+        <div className="relative">
           <label htmlFor="effortCategory" className="block text-sm font-medium text-gray-700">
             Effort Category
           </label>
@@ -273,7 +253,7 @@ export function StoryForm({
                 id="effortCategory"
                 value={effortCategory}
                 onChange={(e) => setEffortCategory(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110]"
               >
                 {effortCategories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -301,7 +281,7 @@ export function StoryForm({
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            rows={2}
+            rows={3}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>

@@ -22,9 +22,11 @@ type RenderPositionedStoriesFunction = (
 ) => JSX.Element | null;
 
 type ValueMatrixProps = {
-  getStoriesInCell: (value: string, effort: string) => any[];
-  expandedStoryIds: Set<string>;
-  toggleStoryExpansion: (storyId: string) => void;
+  stories: Story[];
+  onUpdateStory?: (story: Story) => Promise<boolean>;
+  readOnly?: boolean;
+  expandedStoryIds?: Set<string>;
+  toggleStoryExpansion?: (storyId: string) => void;
   totalPoints?: number;
   totalEffort?: number;
   renderPositionedStories?: RenderPositionedStoriesFunction;
@@ -77,9 +79,11 @@ const MatrixCell = ({
 };
 
 export function ValuesMatrix({ 
-  getStoriesInCell, 
-  expandedStoryIds,
-  toggleStoryExpansion,
+  stories = [], 
+  onUpdateStory,
+  readOnly = false,
+  expandedStoryIds = new Set(),
+  toggleStoryExpansion = () => {},
   totalPoints,
   totalEffort,
   renderPositionedStories 
@@ -155,6 +159,36 @@ export function ValuesMatrix({
     }
   };
 
+  // Function to get stories for a specific cell
+  const getStoriesInCell = (value: string, effort: string) => {
+    if (!stories || !Array.isArray(stories)) return [];
+    
+    // Map business values to matrix values
+    const businessValueMap: Record<string, string> = {
+      'Critical': 'high',
+      'Important': 'medium',
+      'Nice to Have': 'low'
+    };
+    
+    // Map effort categories to matrix effort levels
+    const effortCategoryMap: Record<string, string> = {
+      'Small': 'low',
+      'Medium': 'medium',
+      'Large': 'high'
+    };
+    
+    return stories.filter(story => {
+      // Get the matrix value that corresponds to the story's business value
+      const storyValue = businessValueMap[story.businessValue || ''] || value;
+      
+      // Get the matrix effort that corresponds to the story's effort category
+      const storyEffort = effortCategoryMap[story.effortCategory || ''] || effort;
+      
+      // Return true if both match the cell's value and effort
+      return storyValue === value && storyEffort === effort;
+    });
+  };
+
   const renderCell = (value: string, effort: string) => {
     const { setNodeRef, isOver } = useDroppable({
       id: `cell-${value}-${effort}`,
@@ -176,11 +210,11 @@ export function ValuesMatrix({
     
     // Render the cell with appropriate styling
     const cellClassName = `border rounded-lg p-3 min-h-24 h-full 
-                           ${getColorClass(value)}
-                           ${cellStories.length > 0 ? 'shadow-md' : 'shadow-sm'}
-                           ${isOver ? 'border-2 border-blue-500 shadow-lg ring-2 ring-blue-300' : 'border-gray-200'}
-                           ${isOver ? 'relative before:absolute before:inset-0 before:bg-blue-100 before:bg-opacity-40 before:z-0 before:rounded-lg' : ''}
-                           transition-all duration-200 hover:shadow-lg`;
+                          ${getColorClass(value)}
+                          ${cellStories.length > 0 ? 'shadow-md' : 'shadow-sm'}
+                          ${isOver ? 'border-2 border-blue-500 shadow-lg ring-2 ring-blue-300' : 'border-gray-200'}
+                          ${isOver ? 'relative before:absolute before:inset-0 before:bg-blue-100 before:bg-opacity-40 before:z-0 before:rounded-lg' : ''}
+                          transition-all duration-200 hover:shadow-lg`;
     return (
       <MatrixCell
         key={`cell-${value}-${effort}`}
@@ -200,107 +234,104 @@ export function ValuesMatrix({
         <div className="text-xs text-gray-500 mb-2 relative z-10">
           {valueLevels[valueKey]} / {effortLevels[effortKey]}
         </div>
-        <div className="relative z-10">
-          {renderPositionedStories 
-            ? renderPositionedStories(value, effort)
-            : cellStories.map(story => (
-                <StoryCard 
-                  key={story._id || story.id || `story-${Math.random()}`}
-                  story={story} 
-                  position={{ value, effort }}
-                  isExpanded={expandedStoryIds.has(story._id || story.id || '')}
-                  onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
-                />
-              ))
-          }
-        </div>
+        
+        {renderPositionedStories ? (
+          renderPositionedStories(value, effort)
+        ) : (
+          <div className="space-y-2">
+            {cellStories.map(story => (
+              <StoryCard
+                key={story._id || story.id}
+                story={story}
+                position={{ value, effort }}
+                isExpanded={expandedStoryIds.has(story._id || story.id || '')}
+                onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
+                onAdjustPoints={!readOnly && onUpdateStory ? 
+                  (storyId, points, reason) => {
+                    const updatedStory = { ...story, points, adjustmentReason: reason };
+                    return onUpdateStory(updatedStory);
+                  } : undefined
+                }
+              />
+            ))}
+          </div>
+        )}
       </MatrixCell>
     );
   };
 
-  // Create a grid of droppable cells
-  const grid = valueLevels.map((value, valueIndex) => (
-    <div key={`row-${value}`} className="grid grid-cols-[8rem_1fr] gap-2">
-      {/* Business value indicator */}
-      <div className="flex items-center justify-end pr-2 h-full">
-        <div 
-          className={`
-            w-8 py-2 rounded-md text-center font-medium text-sm rotate-180
-            ${getTextColorClass(value)}
-          `}
-          style={{ writingMode: 'vertical-rl' }}
-        >
-          {businessValueLabels[value as keyof typeof businessValueLabels]}
-        </div>
+  // Handle rendering of the matrix header
+  const renderValueHeader = (value: string, index: number) => {
+    const valueLabel = businessValueLabels[value as keyof typeof businessValueLabels] || value;
+    return (
+      <div 
+        key={`value-header-${index}`} 
+        className={`p-2 text-center font-semibold ${getTextColorClass(value)}`}
+      >
+        {valueLabel}
       </div>
-      
-      {/* Cells for this row */}
-      <div className="grid grid-cols-3 gap-2">
-        {effortLevels.map(effort => (
-          <div key={`cell-${value}-${effort}`}>
-            {renderCell(value, effort)}
-          </div>
-        ))}
-      </div>
-    </div>
-  ));
-
-  // Format the total points display
-  const formatTotalPoints = () => {
-    if (totalPoints === undefined) return '0';
-    return totalPoints.toString();
+    );
   };
 
-  // Format the total effort display
-  const formatTotalEffort = () => {
-    if (totalEffort === undefined) return '0';
-    return totalEffort.toString();
+  // Handle rendering of the matrix effort row headers
+  const renderEffortHeader = (effort: string, index: number) => {
+    return (
+      <div 
+        key={`effort-header-${index}`} 
+        className="p-2 text-right text-gray-700 font-medium"
+      >
+        {effort} <span className="text-xs">({pointRanges[effort as keyof typeof pointRanges]})</span>
+      </div>
+    );
   };
 
+  // Structure of the matrix - main grid wrapper with header row, header column, and cells
   return (
-    <div className="flex flex-col space-y-4">
-      {/* Drag and Drop Interaction Hints */}
-      <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-        <div className="flex items-center mb-1">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="font-medium text-blue-700">Matrix Interaction Guide</h3>
-        </div>
-        <ul className="list-disc list-inside pl-2 text-blue-700">
-          <li>Drag stories from the backlog into the matrix to prioritize them</li>
-          <li>Position stories based on their business value (Critical, Important, Nice to Have) and effort</li>
-          <li>Click on a story card to expand/collapse details</li>
-          <li>Warning indicators appear when a story's business value doesn't match its position</li>
-        </ul>
-      </div>
-      
-      <div className="grid grid-cols-[auto_1fr] gap-2 mb-1">
-        {/* Empty space for alignment with business value column */}
-        <div></div>
+    <div className="bg-white border rounded-lg shadow-sm p-4">
+      <div className="grid grid-cols-4 gap-3 mb-4">
+        {/* Header row - empty corner cell */}
+        <div className="col-span-1"></div>
         
-        {/* Effort headers with point ranges */}
-        <div className="grid grid-cols-3 gap-2">
-          {effortLevels.map(effort => (
-            <div key={`header-${effort}`} className="text-center">
-              <div className="text-sm font-medium text-gray-700">{effort.charAt(0).toUpperCase() + effort.slice(1)} Effort</div>
-              <div className="text-xs text-gray-500">({pointRanges[effort as keyof typeof pointRanges]} points)</div>
+        {/* Value headers */}
+        <div className="col-span-3 grid grid-cols-3 gap-3">
+          {valueLevels.map((value, index) => renderValueHeader(value, index))}
+        </div>
+      </div>
+
+      {/* Main grid - effort rows with cells */}
+      {effortLevels.map((effort, effortIndex) => (
+        <div key={`row-${effortIndex}`} className="grid grid-cols-4 gap-3 mb-3">
+          {/* Effort header */}
+          <div className="col-span-1">
+            {renderEffortHeader(effort, effortIndex)}
+          </div>
+          
+          {/* Value cells for this effort level */}
+          <div className="col-span-3 grid grid-cols-3 gap-3">
+            {valueLevels.map((value, valueIndex) => (
+              <div key={`cell-${effortIndex}-${valueIndex}`} className="min-h-[120px]">
+                {renderCell(value, effort)}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      
+      {/* Footer with totals */}
+      {(totalPoints || totalEffort) && (
+        <div className="mt-4 border-t pt-4 grid grid-cols-2 gap-4">
+          {totalPoints && (
+            <div className="text-sm">
+              <span className="font-semibold">Total Points:</span> {totalPoints}
             </div>
-          ))}
+          )}
+          {totalEffort && (
+            <div className="text-sm text-right">
+              <span className="font-semibold">Total Effort:</span> {totalEffort}
+            </div>
+          )}
         </div>
-      </div>
-      <div className="space-y-2">
-        {grid}
-      </div>
-      {/* Total Points/Effort display */}
-      <div className="mt-4 flex justify-between text-sm font-medium">
-        <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
-          Total Points: {formatTotalPoints()}
-        </div>
-        <div className="bg-purple-50 text-purple-700 px-2 py-1 rounded">
-          Total Effort: {formatTotalEffort()}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

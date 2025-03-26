@@ -147,7 +147,11 @@ export const deleteStory = mutation({
     try {
       // Delete the story
       await ctx.db.delete(args.id);
-      return { success: true };
+      return { 
+        success: true,
+        deletedId: args.id,
+        message: "Story deleted successfully"
+      };
     } catch (error) {
       throw new Error(`Failed to delete story: ${error}`);
     }

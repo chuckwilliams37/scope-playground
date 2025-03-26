@@ -17,6 +17,22 @@ function ensureSettingsComplete(settings: any) {
     });
   }
   
+  // Ensure selfManagedPartner is properly set up
+  if (!completeSettings.selfManagedPartner || typeof completeSettings.selfManagedPartner !== 'object') {
+    completeSettings.selfManagedPartner = {
+      enabled: false,
+      managementReductionPercent: 0
+    };
+  } else {
+    // Make sure all required properties are present
+    if (completeSettings.selfManagedPartner.enabled === undefined) {
+      completeSettings.selfManagedPartner.enabled = false;
+    }
+    if (completeSettings.selfManagedPartner.managementReductionPercent === undefined) {
+      completeSettings.selfManagedPartner.managementReductionPercent = 0;
+    }
+  }
+  
   return completeSettings;
 }
 
@@ -165,18 +181,22 @@ export const updateScenario = mutation({
       throw new Error("Scenario not found");
     }
     
+    // Create a copy of updates to modify safely
+    const updatesCopy = { ...updates };
+    
     // If settings are being updated, ensure they're complete
-    if (updates.settings) {
-      updates.settings = ensureSettingsComplete(updates.settings);
+    if (updatesCopy.settings) {
+      updatesCopy.settings = ensureSettingsComplete(updatesCopy.settings);
     }
     
     // Create the update object with lastModified
     const updateObj = {
-      ...updates,
+      ...updatesCopy,
       lastModified: Date.now()
     };
     
-    await ctx.db.patch(id, updateObj);
+    // Type assertion to assure TypeScript that the structure matches
+    await ctx.db.patch(id, updateObj as Partial<Doc<"scenarios">>);
     return id;
   }
 });

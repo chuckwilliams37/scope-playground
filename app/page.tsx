@@ -20,11 +20,13 @@ import { SettingsPanel } from "../components/SettingsPanel";
 import { EffortMismatchModal } from "../components/EffortMismatchModal";
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from "../convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
+import { Id } from "../convex/_generated/dataModel";
 import { ImportStoriesPanel } from "../components/ImportStoriesPanel";
 import { ExportPanel } from '../components/ExportPanel';
 import { TopNavbar } from '../components/TopNavbar';
 import { Notification, NotificationType } from "../components/Notification";
+import { ShareProject } from "../components/ShareProject";
 
 // Define the Story type
 type Story = {
@@ -36,6 +38,7 @@ type Story = {
   notes: string;
   userStory: string;
   category: string;
+  effortCategory?: string;
   adjustmentReason?: string;
   originalPoints?: number;
 };
@@ -251,6 +254,12 @@ export default function ScopePlaygroundPage() {
   // Fetch stories from Convex instead of using sample data
   const fetchedStories = useQuery(api.stories.listAccessibleStories, { clientId: undefined }) || [];
   
+  // Convex mutations for story CRUD operations
+  const createStoryMutation = useMutation(api.stories.createStory);
+  const updateStoryMutation = useMutation(api.stories.updateStory);
+  const deleteStoryMutation = useMutation(api.stories.deleteStory);
+  const adjustStoryPointsMutation = useMutation(api.stories.adjustStoryPoints);
+  
   // Convert Convex stories to the expected Story type format
   const convertedStories: Story[] = fetchedStories.map((story: any) => ({
     _id: story._id,
@@ -258,9 +267,10 @@ export default function ScopePlaygroundPage() {
     businessValue: story.businessValue,
     storyPoints: story.points,
     points: story.points,
-    notes: story.adjustmentReason || "",
+    notes: story.notes || "",
     userStory: story.userStory || "",
     category: story.category || "Imported",
+    effortCategory: story.effortCategory || "",
     adjustmentReason: story.adjustmentReason,
     originalPoints: story.originalPoints
   }));
@@ -872,6 +882,130 @@ export default function ScopePlaygroundPage() {
     });
   };
 
+  // Handler for creating a new story
+  const handleCreateStory = async (story: Story): Promise<Story | undefined> => {
+    try {
+      // Generate a proper story ID
+      const storyNum = Math.max(
+        ...stories.map(s => {
+          const match = (s._id.startsWith('story-') ? s._id : '').match(/story-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        }),
+        0
+      ) + 1;
+      
+      const storyId = `story-${String(storyNum).padStart(3, '0')}`;
+      
+      // Call the createStory mutation
+      const newStory = await createStoryMutation({
+        id: storyId,
+        title: story.title || "New Story",
+        userStory: story.userStory || "",
+        businessValue: story.businessValue || "Important",
+        category: story.category || "Feature",
+        points: story.storyPoints || story.points || 3,
+        effortCategory: story.effortCategory || "Medium",
+        notes: story.notes || "",
+        isPublic: true,
+        sharedWithClients: []
+      });
+      
+      // Add notification
+      setNotification({
+        type: "success",
+        message: `Story "${story.title}" created successfully`
+      });
+      
+      // Convert the returned Convex story to the Story type
+      if (newStory) {
+        return {
+          _id: newStory._id.toString(),
+          title: newStory.title,
+          businessValue: newStory.businessValue,
+          storyPoints: newStory.points,
+          points: newStory.points,
+          notes: newStory.notes || "",
+          userStory: newStory.userStory || "",
+          category: newStory.category || "Feature",
+          effortCategory: newStory.effortCategory || ""
+        };
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error creating story:', error);
+      
+      // Add error notification
+      setNotification({
+        type: "error",
+        message: `Failed to create story: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+      
+      return undefined;
+    }
+  };
+  
+  // Handler for updating an existing story
+  const handleUpdateStory = async (storyId: string, updatedStory: Story): Promise<boolean> => {
+    try {
+      // Call the updateStory mutation
+      await updateStoryMutation({
+        id: storyId,
+        title: updatedStory.title,
+        userStory: updatedStory.userStory || "",
+        businessValue: updatedStory.businessValue || "Important",
+        category: updatedStory.category || "Feature",
+        points: updatedStory.storyPoints || updatedStory.points || 3,
+        effortCategory: updatedStory.effortCategory || "Medium",
+        notes: updatedStory.notes || ""
+      });
+      
+      // Add notification
+      setNotification({
+        type: "success",
+        message: `Story updated successfully`
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating story:', error);
+      
+      // Add error notification
+      setNotification({
+        type: "error",
+        message: `Failed to update story: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+      
+      return false;
+    }
+  };
+  
+  // Handler for deleting a story
+  const handleDeleteStory = async (storyId: string): Promise<boolean> => {
+    try {
+      // Call the deleteStory mutation with proper type conversion
+      await deleteStoryMutation({
+        id: storyId as unknown as Id<"stories">,
+      });
+      
+      // Update local state to remove the deleted story
+      setStories((prevStories) => 
+        prevStories.filter((story) => story._id !== storyId)
+      );
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      // Check if it's a Convex error related to not finding the function
+      if (String(error).includes("Could not find public function")) {
+        alert("Server function not found. The server may need to be restarted.");
+      } else {
+        alert("Failed to delete story. Please try again later.");
+      }
+      return false;
+    }
+  };
+
   // Handle scenario management
   const handleSaveScenario = async (name: string, description: string) => {
     console.log(`Saving scenario: ${name}`);
@@ -1027,8 +1161,6 @@ export default function ScopePlaygroundPage() {
   }>({});
 
   // Convex mutations
-  const adjustStoryPointsMutation = useMutation(api.stories.adjustStoryPoints);
-  const resetStoryPointsMutation = useMutation(api.stories.resetStoryPoints);
   const saveProjectSettings = useMutation(api.settings.upsertProjectSettings);
 
   // Notification state
@@ -1036,6 +1168,9 @@ export default function ScopePlaygroundPage() {
     type: NotificationType; 
     message: string; 
   } | null>(null);
+
+  // State for Share Project modal
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Render the stories that have been positioned in the matrix
   const renderPositionedStories = (valueLevel: string, effortLevel: string) => {
@@ -1087,7 +1222,7 @@ export default function ScopePlaygroundPage() {
   };
 
   return (
-    <main className="pb-6 max-w-7xl mx-auto">
+    <>
       <TopNavbar
         scenarios={[...scenarioPresets, ...savedScenarios]}
         currentScenarioName={savedScenarios.find(s => 
@@ -1100,6 +1235,7 @@ export default function ScopePlaygroundPage() {
         onShowSettings={() => setShowSettings(true)}
         onShowImport={() => setShowImportPanel(true)}
         onShowExport={() => setShowExportPanel(true)}
+        onShowShare={() => setShowShareModal(true)}
       />
       
       <DndContext 
@@ -1116,6 +1252,9 @@ export default function ScopePlaygroundPage() {
                 stories={stories.filter(story => !storyPositions[story._id])} 
                 expandedStoryIds={expandedBacklogStoryIds}
                 onToggleExpandStory={handleToggleExpandStory}
+                onCreateStory={handleCreateStory}
+                onUpdateStory={handleUpdateStory}
+                onDeleteStory={handleDeleteStory}
               />
             </div>
           </div>
@@ -1229,6 +1368,19 @@ export default function ScopePlaygroundPage() {
           />
         )}
         
+        {/* Share Project Modal */}
+        {showShareModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <ShareProject
+              stories={stories}
+              businessValues={["Critical", "Important", "Nice to Have"]}
+              categories={["Feature", "Bug", "Tech Debt", "Security", "UI/UX", "Documentation"]}
+              effortCategories={["Low", "Medium", "High"]}
+              onClose={() => setShowShareModal(false)}
+            />
+          </div>
+        )}
+        
         {/* Notification */}
         {notification && (
           <Notification
@@ -1238,6 +1390,6 @@ export default function ScopePlaygroundPage() {
           />
         )}
       </DndContext>
-    </main>
+    </>
   );
 }

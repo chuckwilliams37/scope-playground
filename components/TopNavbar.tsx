@@ -22,6 +22,7 @@ type TopNavbarProps = {
   onShowSettings: () => void;
   onShowImport: () => void;
   onShowExport: () => void;
+  onShowShare?: () => void;
 };
 
 export function TopNavbar({
@@ -33,7 +34,8 @@ export function TopNavbar({
   onResetScenario,
   onShowSettings,
   onShowImport,
-  onShowExport
+  onShowExport,
+  onShowShare
 }: TopNavbarProps) {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioMenuOpen, setScenarioMenuOpen] = useState(false);
@@ -299,6 +301,17 @@ export function TopNavbar({
                       >
                         Export / Share
                       </button>
+                      {onShowShare && (
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => {
+                            onShowShare();
+                            setToolsMenuOpen(false);
+                          }}
+                        >
+                          Share
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

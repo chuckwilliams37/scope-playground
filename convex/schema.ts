@@ -16,7 +16,8 @@ export default defineSchema({
     originalPoints: v.optional(v.number()), // Original story point estimate
     adjustmentReason: v.optional(v.string()), // Reason for point adjustment
     effortCategory: v.optional(v.string()), // Effort category (e.g., Core Functionality, Development, etc.)
-    notes: v.optional(v.string()) // Additional notes about the story
+    notes: v.optional(v.string()), // Additional notes about the story
+    isTemporary: v.optional(v.boolean()) // Whether this story is temporary and should be cleaned up
   }),
 
   // Users table - for client-specific access
@@ -115,5 +116,116 @@ export default defineSchema({
     }),
     createdAt: v.number(), // Timestamp
     lastModified: v.number() // Timestamp
+  }),
+
+  // Schema for shared projects
+  sharedProjects: defineTable({
+    // Unique identifier for the URL (will be used in the URL path)
+    slug: v.string(),
+    // Name of the project
+    name: v.string(),
+    // Project description
+    description: v.optional(v.string()),
+    // Creator user ID
+    createdBy: v.optional(v.string()),
+    // Creation timestamp
+    createdAt: v.number(),
+    // Last updated timestamp
+    updatedAt: v.number(),
+    // Project settings
+    settings: v.object({
+      businessValues: v.array(v.string()),
+      categories: v.array(v.string()),
+      effortCategories: v.array(v.string()),
+      // Additional project settings can be added here
+    }),
+    // Project metrics
+    metrics: v.object({
+      visits: v.number(),
+      shares: v.number(),
+      currentViewers: v.number(),
+    }),
+    // Security options
+    security: v.object({
+      isLocked: v.boolean(),
+      hasPassword: v.boolean(),
+      passwordHash: v.optional(v.string()), // Hashed password
+      requires2FA: v.optional(v.boolean()),
+      paymentTier: v.optional(v.string()), // "free", "basic", "premium", "enterprise"
+      paymentCompleted: v.optional(v.boolean()),
+    }),
+    // Total points - used for pricing tier calculation
+    totalPoints: v.number(),
   })
+  .index("by_slug", ["slug"]),
+
+  // Schema for project viewers and access
+  projectAccess: defineTable({
+    projectId: v.id("sharedProjects"),
+    userId: v.string(), // Could be anonymous session ID or authenticated user ID
+    accessGranted: v.boolean(),
+    lastAccessTime: v.number(),
+    accessCount: v.number(),
+    ipAddress: v.optional(v.string()), // For analytics
+  })
+  .index("by_project", ["projectId"]),
+
+  // Schema for shared stories (linked to projects)
+  sharedStories: defineTable({
+    projectId: v.id("sharedProjects"),
+    // Story content
+    title: v.string(),
+    userStory: v.optional(v.string()),
+    businessValue: v.string(), // Using standardized values: "Critical", "Important", "Nice to Have"
+    category: v.optional(v.string()),
+    points: v.number(),
+    storyPoints: v.optional(v.number()),
+    effortCategory: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    // Matrix position (if placed on matrix)
+    matrixPosition: v.optional(v.object({
+      value: v.string(),
+      effort: v.string(),
+    })),
+    isPublic: v.boolean(),
+    sharedWithClients: v.array(v.string()),
+    // For undo/redo functionality
+    history: v.optional(v.array(v.object({
+      timestamp: v.number(),
+      changeType: v.string(), // "create", "update", "delete", "move"
+      previousState: v.object({}),
+    }))),
+  })
+  .index("by_project", ["projectId"]),
+
+  // Schema for promo codes
+  promoCodes: defineTable({
+    code: v.string(), // The promo code string (hashed version)
+    originalCode: v.string(), // The original promo code string (for comparison)
+    type: v.string(), // "percentage", "fixed", "unlimited"
+    discount: v.number(), // Discount amount (percentage or fixed)
+    expirationDate: v.number(), // When the code expires
+    isTeamCode: v.boolean(), // Whether this is a team-specific code
+    maxUses: v.number(), // Maximum number of times this code can be used
+    usageCount: v.number(), // Current usage count
+    isActive: v.boolean(), // Whether this code is currently active
+    createdAt: v.number(), // When this code was created
+    description: v.optional(v.string()) // Description of the promo code
+  })
+  .index("by_code", ["code"]),
+
+  // Schema for payment sessions
+  paymentSessions: defineTable({
+    sessionId: v.string(), // Unique session ID for this payment attempt
+    projectId: v.id("sharedProjects"), // Reference to the shared project
+    userId: v.optional(v.string()), // User ID if authenticated
+    amount: v.number(), // Payment amount
+    currency: v.string(), // Payment currency
+    status: v.string(), // "pending", "completed", "failed"
+    promoCodeId: v.optional(v.id("promoCodes")), // Reference to the promo code if used
+    paymentMethod: v.optional(v.string()), // Payment method used
+    createdAt: v.number(), // When this session was created
+    completedAt: v.optional(v.number()) // When the payment was completed
+  })
+  .index("by_session_id", ["sessionId"]),
 });
