@@ -36,6 +36,124 @@ export const getStory = query({
   }
 });
 
+// Create a new story
+export const createStory = mutation({
+  args: {
+    title: v.string(),
+    userStory: v.string(),
+    businessValue: v.string(),
+    category: v.string(),
+    points: v.number(),
+    id: v.string(),
+    effortCategory: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    isPublic: v.optional(v.boolean()),
+    sharedWithClients: v.optional(v.array(v.string()))
+  },
+  handler: async (ctx, args) => {
+    // Validate business value
+    const validBusinessValues = ["Critical", "Important", "Nice to Have"];
+    if (!validBusinessValues.includes(args.businessValue)) {
+      throw new Error(`Invalid business value: ${args.businessValue}. Must be one of: ${validBusinessValues.join(", ")}`);
+    }
+
+    try {
+      // Insert the new story
+      const id = await ctx.db.insert("stories", {
+        title: args.title,
+        userStory: args.userStory,
+        businessValue: args.businessValue,
+        category: args.category,
+        points: args.points,
+        id: args.id,
+        effortCategory: args.effortCategory,
+        notes: args.notes,
+        isPublic: args.isPublic ?? true,
+        sharedWithClients: args.sharedWithClients ?? []
+      });
+
+      // Return the newly created story
+      const newStory = await ctx.db.get(id);
+      return newStory;
+    } catch (error) {
+      throw new Error(`Failed to create story: ${error}`);
+    }
+  }
+});
+
+// Update an existing story
+export const updateStory = mutation({
+  args: {
+    id: v.id("stories"),
+    title: v.optional(v.string()),
+    userStory: v.optional(v.string()),
+    businessValue: v.optional(v.string()),
+    category: v.optional(v.string()),
+    points: v.optional(v.number()),
+    effortCategory: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    isPublic: v.optional(v.boolean()),
+    sharedWithClients: v.optional(v.array(v.string()))
+  },
+  handler: async (ctx, args) => {
+    // Get the existing story
+    const story = await ctx.db.get(args.id);
+    if (!story) {
+      throw new Error(`Story with ID ${args.id} not found`);
+    }
+
+    // Validate business value if provided
+    if (args.businessValue) {
+      const validBusinessValues = ["Critical", "Important", "Nice to Have"];
+      if (!validBusinessValues.includes(args.businessValue)) {
+        throw new Error(`Invalid business value: ${args.businessValue}. Must be one of: ${validBusinessValues.join(", ")}`);
+      }
+    }
+
+    // Build update object with only the fields that were provided
+    const updateFields: Partial<Doc<"stories">> = {};
+    if (args.title !== undefined) updateFields.title = args.title;
+    if (args.userStory !== undefined) updateFields.userStory = args.userStory;
+    if (args.businessValue !== undefined) updateFields.businessValue = args.businessValue;
+    if (args.category !== undefined) updateFields.category = args.category;
+    if (args.points !== undefined) updateFields.points = args.points;
+    if (args.effortCategory !== undefined) updateFields.effortCategory = args.effortCategory;
+    if (args.notes !== undefined) updateFields.notes = args.notes;
+    if (args.isPublic !== undefined) updateFields.isPublic = args.isPublic;
+    if (args.sharedWithClients !== undefined) updateFields.sharedWithClients = args.sharedWithClients;
+
+    try {
+      // Update the story
+      await ctx.db.patch(args.id, updateFields);
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update story: ${error}`);
+    }
+  }
+});
+
+// Delete a story
+export const deleteStory = mutation({
+  args: {
+    id: v.id("stories")
+  },
+  handler: async (ctx, args) => {
+    // Check if the story exists
+    const story = await ctx.db.get(args.id);
+    if (!story) {
+      throw new Error(`Story with ID ${args.id} not found`);
+    }
+
+    try {
+      // Delete the story
+      await ctx.db.delete(args.id);
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to delete story: ${error}`);
+    }
+  }
+});
+
 // Import stories from a JSON file (admin function)
 export const importStories = mutation({
   args: {
@@ -48,28 +166,63 @@ export const importStories = mutation({
         category: v.string(),
         points: v.number(),
         isPublic: v.optional(v.boolean()),
-        sharedWithClients: v.optional(v.array(v.string()))
+        sharedWithClients: v.optional(v.array(v.string())),
+        position: v.optional(v.object({
+          value: v.string(),
+          effort: v.string(),
+          rank: v.optional(v.number())
+        }))
       })
-    )
+    ),
+    updatePositions: v.optional(v.boolean())
   },
   handler: async (ctx, args) => {
     const storyIds = [];
+    const validBusinessValues = ["Critical", "Important", "Nice to Have"];
+    const importResults = {
+      success: 0,
+      errors: [] as string[],
+      storyIds: [] as string[],
+      positions: {} as Record<string, { value: string, effort: string, rank?: number }>
+    };
     
     for (const story of args.stories) {
-      const id = await ctx.db.insert("stories", {
-        id: story.id,
-        title: story.title,
-        userStory: story.userStory,
-        businessValue: story.businessValue,
-        category: story.category,
-        points: story.points,
-        isPublic: story.isPublic ?? true,
-        sharedWithClients: story.sharedWithClients ?? []
-      });
-      storyIds.push(id);
+      try {
+        // Validate business value
+        if (!validBusinessValues.includes(story.businessValue)) {
+          importResults.errors.push(`Story "${story.title}" has invalid business value: ${story.businessValue}. Must be one of: ${validBusinessValues.join(", ")}`);
+          continue;
+        }
+        
+        const id = await ctx.db.insert("stories", {
+          id: story.id,
+          title: story.title,
+          userStory: story.userStory,
+          businessValue: story.businessValue,
+          category: story.category,
+          points: story.points,
+          isPublic: story.isPublic ?? true,
+          sharedWithClients: story.sharedWithClients ?? []
+        });
+        
+        importResults.success++;
+        importResults.storyIds.push(id);
+        storyIds.push(id);
+        
+        // Store position if provided
+        if (story.position) {
+          importResults.positions[id] = {
+            value: story.position.value,
+            effort: story.position.effort,
+            rank: story.position.rank || 0
+          };
+        }
+      } catch (error) {
+        importResults.errors.push(`Failed to import story "${story.title}": ${error}`);
+      }
     }
     
-    return storyIds;
+    return importResults;
   }
 });
 

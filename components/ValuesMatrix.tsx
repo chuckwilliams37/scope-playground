@@ -259,6 +259,22 @@ export function ValuesMatrix({
 
   return (
     <div className="flex flex-col space-y-4">
+      {/* Drag and Drop Interaction Hints */}
+      <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+        <div className="flex items-center mb-1">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 className="font-medium text-blue-700">Matrix Interaction Guide</h3>
+        </div>
+        <ul className="list-disc list-inside pl-2 text-blue-700">
+          <li>Drag stories from the backlog into the matrix to prioritize them</li>
+          <li>Position stories based on their business value (Critical, Important, Nice to Have) and effort</li>
+          <li>Click on a story card to expand/collapse details</li>
+          <li>Warning indicators appear when a story's business value doesn't match its position</li>
+        </ul>
+      </div>
+      
       <div className="grid grid-cols-[auto_1fr] gap-2 mb-1">
         {/* Empty space for alignment with business value column */}
         <div></div>

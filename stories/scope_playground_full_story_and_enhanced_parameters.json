@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-23",
+  "lastUpdated": "2025-03-25",
   "stories": [
     {
       "id": "story-001",
@@ -8,7 +8,8 @@
       "userStory": "As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.",
       "points": 5,
       "businessValue": "Critical",
-      "category": "Access Control"
+      "category": "Access Control",
+      "effortCategory": "Security"
     },
     {
       "id": "story-002",
@@ -16,23 +17,26 @@
       "userStory": "As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.",
       "points": 3,
       "businessValue": "Critical",
-      "category": "Story Management"
+      "category": "Story Management",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-003",
       "title": "Scope Matrix Drag-and-Drop (Effort Validated)",
       "userStory": "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
       "points": 8,
-      "businessValue": "High",
-      "category": "UI Interaction"
+      "businessValue": "Critical",
+      "category": "UI Interaction",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-004",
       "title": "Business Value Mismatch Explanation",
       "userStory": "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
       "points": 5,
-      "businessValue": "High",
-      "category": "UX Enhancement"
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "effortCategory": "User Guidance"
     },
     {
       "id": "story-005",
@@ -40,218 +44,244 @@
       "userStory": "As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.",
       "points": 8,
       "businessValue": "Critical",
-      "category": "Analytics"
+      "category": "Analytics",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-006",
       "title": "Scenario Presets and Reset",
       "userStory": "As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.",
       "points": 3,
-      "businessValue": "Medium",
-      "category": "Configuration"
+      "businessValue": "Important",
+      "category": "Configuration",
+      "effortCategory": "Usability"
     },
     {
       "id": "story-007",
       "title": "Save and Load Scenarios",
       "userStory": "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
       "points": 5,
-      "businessValue": "High",
-      "category": "Data Management"
+      "businessValue": "Critical",
+      "category": "Data Management",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-008",
       "title": "Adjustable Cost Settings",
       "userStory": "As a user, I can adjust developer hourly rate and team size to see how they affect cost estimates in real time.",
       "points": 5,
-      "businessValue": "High",
-      "category": "Cost Planning"
+      "businessValue": "Critical",
+      "category": "Cost Planning",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-009",
       "title": "Role-Based Permissions and Visibility",
       "userStory": "As a system admin, I can manage user roles and restrict which parts of the interface different roles can see or interact with.",
       "points": 5,
-      "businessValue": "Medium",
-      "category": "Access Control"
+      "businessValue": "Important",
+      "category": "Access Control",
+      "effortCategory": "Security"
     },
     {
       "id": "story-010",
       "title": "Drag-and-Drop Interaction Hints",
       "userStory": "As a client, I receive immediate visual or textual feedback when attempting a drop that would violate matrix rules.",
       "points": 3,
-      "businessValue": "High",
-      "category": "UX Enhancement"
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "effortCategory": "User Guidance"
     },
     {
       "id": "story-011",
       "title": "Export Scenario to PDF or Share Link",
       "userStory": "As a client or PM, I can export the current scope matrix and metrics as a PDF or generate a shareable link.",
       "points": 5,
-      "businessValue": "Medium",
-      "category": "Export & Share"
+      "businessValue": "Important",
+      "category": "Export & Share",
+      "effortCategory": "Data Export"
     },
     {
       "id": "story-012",
       "title": "AI-Assisted Story Creation",
       "userStory": "As a PM, I can use AI to help draft new user stories based on project requirements and existing stories.",
       "points": 8,
-      "businessValue": "Medium",
-      "category": "Productivity Enhancement"
+      "businessValue": "Important",
+      "category": "Productivity Enhancement",
+      "effortCategory": "AI Assistance"
     },
     {
       "id": "story-013",
       "title": "Historical Comparison Dashboard",
       "userStory": "As a client or PM, I can view how current estimates compare to historical projects with similar scope and complexity.",
       "points": 13,
-      "businessValue": "High",
-      "category": "Cost Planning"
+      "businessValue": "Critical",
+      "category": "Cost Planning",
+      "effortCategory": "Analytics"
     },
     {
       "id": "story-014",
       "title": "Team Composition Impact Analysis",
       "userStory": "As a PM, I can adjust the senior/mid/junior ratio of the team and see how it affects timeline and cost.",
       "points": 8,
-      "businessValue": "High",
-      "category": "Team Planning"
+      "businessValue": "Critical",
+      "category": "Team Planning",
+      "effortCategory": "Resource Management"
     },
     {
       "id": "story-015",
       "title": "AI Factor Simulation",
       "userStory": "As a client, I can see simulated impacts of enabling/disabling various AI productivity boosters on project timeline and cost.",
       "points": 13,
-      "businessValue": "High",
-      "category": "AI Integration"
+      "businessValue": "Critical",
+      "category": "AI Integration",
+      "effortCategory": "AI Assistance"
     },
     {
       "id": "story-016",
       "title": "Remove Stories from Matrix",
       "userStory": "As a product manager, I want to be able to remove stories from the matrix and return them to the backlog when priorities change or stories are incorrectly placed.",
       "points": 3,
-      "businessValue": "High",
+      "businessValue": "Critical",
       "category": "UX Enhancement",
-      "status": "Complete"
+      "status": "Complete",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-017",
       "title": "Multi-Project Resource Allocation",
       "userStory": "As a PM managing multiple projects, I can see how developer allocation across projects affects each project's timeline.",
       "points": 13,
-      "businessValue": "High",
-      "category": "Resource Management"
+      "businessValue": "Critical",
+      "category": "Resource Management",
+      "effortCategory": "Advanced Planning"
     },
     {
       "id": "story-018",
       "title": "Workday Calendar Customization",
       "userStory": "As a PM, I can customize working days calendar to account for holidays in specific regions and company-specific non-working days.",
       "points": 5,
-      "businessValue": "Medium",
-      "category": "Schedule Planning"
+      "businessValue": "Important",
+      "category": "Schedule Planning",
+      "effortCategory": "Time Management"
     },
     {
       "id": "story-019",
       "title": "Risk Factor Adjustment",
       "userStory": "As a PM, I can add risk factors to specific stories or the entire project and see how they affect the confidence level of estimates.",
       "points": 8,
-      "businessValue": "High",
-      "category": "Risk Management"
+      "businessValue": "Critical",
+      "category": "Risk Management",
+      "effortCategory": "Planning"
     },
     {
       "id": "story-020",
       "title": "Story Card Ranking",
       "userStory": "As a product manager, I want to rank story cards within a matrix cell to indicate priority order for implementation within the same value and effort bucket.",
       "points": 5,
-      "businessValue": "High",
+      "businessValue": "Critical",
       "category": "UX Enhancement",
-      "status": "Complete"
+      "status": "Complete",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-021",
       "title": "Drag and Drop Visual Feedback",
       "userStory": "As a user, I want clear visual feedback during drag and drop operations so I can easily see valid drop zones and story placement options.",
       "points": 3,
-      "businessValue": "Medium",
+      "businessValue": "Important",
       "category": "UX Enhancement",
-      "status": "Complete"
+      "status": "Complete",
+      "effortCategory": "Visual Feedback"
     },
     {
       "id": "story-022",
       "title": "Scenario Saving Enhancement",
       "userStory": "As a product manager, I want to save my scenario configurations including story positions, rankings, and adjustments so I can revisit them later.",
       "points": 5,
-      "businessValue": "High",
+      "businessValue": "Critical",
       "category": "Data Management",
-      "status": "Complete"
+      "status": "Complete",
+      "effortCategory": "Core Functionality"
     },
     {
       "id": "story-023",
       "title": "Holiday Calendar Integration",
       "userStory": "As a project manager, I want to see a timeline visualization with holidays and non-working days clearly marked so I can better estimate project completion dates.",
       "points": 8,
-      "businessValue": "High",
-      "category": "Schedule Planning"
+      "businessValue": "Critical",
+      "category": "Schedule Planning",
+      "effortCategory": "Time Management"
     },
     {
       "id": "story-024",
       "title": "Contributor Detail Management",
       "userStory": "As a project manager, I want to specify details for each contributor including name, allocation percentage, superpower, and vulnerability to better plan resource allocation.",
       "points": 5,
-      "businessValue": "Medium",
-      "category": "Resource Management"
+      "businessValue": "Important",
+      "category": "Resource Management",
+      "effortCategory": "Team Planning"
     },
     {
       "id": "story-025",
       "title": "Terminology Update",
       "userStory": "As a user, I want the terminology to use 'contributor' instead of 'developer' to better reflect diverse team roles in modern software development.",
       "points": 1,
-      "businessValue": "Low",
-      "category": "UX Enhancement"
+      "businessValue": "Nice to Have",
+      "category": "UX Enhancement",
+      "effortCategory": "Content"
     },
     {
       "id": "story-026",
       "title": "Weighted Scoring for Value Estimation",
       "userStory": "As a PM, I can apply a weighted scoring formula to stories (e.g., ROI × urgency × feasibility) to better prioritize scope.",
       "points": 8,
-      "businessValue": "High",
-      "category": "Decision Support"
+      "businessValue": "Critical",
+      "category": "Decision Support",
+      "effortCategory": "Advanced Planning"
     },
     {
       "id": "story-027",
       "title": "Confidence Range for Effort Estimation",
       "userStory": "As a PM, I can label stories with a confidence level that affects how conservative or aggressive the estimate becomes.",
       "points": 5,
-      "businessValue": "Medium",
-      "category": "Risk Management"
+      "businessValue": "Important",
+      "category": "Risk Management",
+      "effortCategory": "Planning"
     },
     {
       "id": "story-028",
       "title": "Minimum Lovable Product Indicator",
       "userStory": "As a client, I can see whether my selected scope satisfies the definition of a Minimum Lovable Product.",
       "points": 5,
-      "businessValue": "High",
-      "category": "Launch Planning"
+      "businessValue": "Critical",
+      "category": "Launch Planning",
+      "effortCategory": "Advanced Planning"
     },
     {
       "id": "story-029",
       "title": "ClickUp Integration for Story Import",
       "userStory": "As a user, I can import tasks or stories from a ClickUp list or space into the Scope Playground as scoped stories.",
       "points": 8,
-      "businessValue": "High",
-      "category": "Integrations"
+      "businessValue": "Critical",
+      "category": "Integrations",
+      "effortCategory": "External Integration"
     },
     {
       "id": "story-030",
       "title": "Collaboration Roles and Permissions",
       "userStory": "As an account owner, I can assign collaborators to scenarios with read, comment, or edit access.",
       "points": 5,
-      "businessValue": "High",
-      "category": "Permissions"
+      "businessValue": "Critical",
+      "category": "Permissions",
+      "effortCategory": "Security"
     },
     {
       "id": "story-031",
       "title": "Dropdown Point Selection",
       "userStory": "As a product owner, I want a dropdown to select story points when adjusting estimates, so that I can more easily select the correct point value.",
       "points": 3,
-      "businessValue": 5,
+      "businessValue": "Important",
       "category": "UX Improvements",
       "effortCategory": "Points"
     },
@@ -260,7 +290,7 @@
       "title": "Contextual Point Options",
       "userStory": "As a product owner, I want to see clickable prefill options for adjustment reasons, so that I can quickly provide consistent rationales for my adjustments.",
       "points": 3,
-      "businessValue": 4,
+      "businessValue": "Important",
       "category": "UX Improvements",
       "effortCategory": "Points"
     },
@@ -269,7 +299,7 @@
       "title": "Direct Matrix Repositioning",
       "userStory": "As a product owner, I want to drag stories directly from one matrix position to another, so that I can more efficiently organize stories without removing and re-adding them.",
       "points": 5,
-      "businessValue": 8,
+      "businessValue": "Critical",
       "category": "UX Improvements",
       "effortCategory": "Matrix Management"
     },
@@ -278,7 +308,7 @@
       "title": "Animated Feedback for Changes",
       "userStory": "As a product owner, I want animations for drop events and adjustments, so that I receive visual feedback when moving or changing stories.",
       "points": 5,
-      "businessValue": 6,
+      "businessValue": "Important",
       "category": "UX Improvements",
       "effortCategory": "Visual Feedback"
     },
@@ -287,7 +317,7 @@
       "title": "Color-Coded Metric Changes",
       "userStory": "As a product owner, I want to see color-coded changes to metrics when I modify my scope, so that I can quickly understand the positive or negative impact of my changes.",
       "points": 3,
-      "businessValue": 7,
+      "businessValue": "Important",
       "category": "UX Improvements",
       "effortCategory": "Visual Feedback"
     },
@@ -296,82 +326,28 @@
       "title": "Required Field Validation",
       "userStory": "As a product owner, I want clear validation for required fields when adjusting story points, so that I'm required to provide a reason for my adjustments.",
       "points": 2,
-      "businessValue": 4,
+      "businessValue": "Important",
       "category": "UX Improvements", 
       "effortCategory": "Form Validation"
     },
     {
-      "id": "story-037",
-      "title": "Holiday Calendar Integration",
-      "userStory": "As a project manager, I want to see a timeline visualization with holidays and non-working days clearly marked so I can better estimate project completion dates.",
-      "points": 8,
-      "businessValue": "High",
-      "category": "Schedule Planning"
-    },
-    {
-      "id": "story-038",
-      "title": "Contributor Detail Management",
-      "userStory": "As a project manager, I want to specify details for each contributor including name, allocation percentage, superpower, and vulnerability to better plan resource allocation.",
-      "points": 5,
-      "businessValue": "Medium",
-      "category": "Resource Management"
-    },
-    {
-      "id": "story-039",
-      "title": "Terminology Update",
-      "userStory": "As a user, I want the terminology to use 'contributor' instead of 'developer' to better reflect diverse team roles in modern software development.",
-      "points": 1,
-      "businessValue": "Low",
-      "category": "UX Enhancement"
-    },
-    {
-      "id": "story-040",
-      "title": "Weighted Scoring for Value Estimation",
-      "userStory": "As a PM, I can apply a weighted scoring formula to stories (e.g., ROI × urgency × feasibility) to better prioritize scope.",
-      "points": 8,
-      "businessValue": "High",
-      "category": "Decision Support"
-    },
-    {
-      "id": "story-041",
-      "title": "Confidence Range for Effort Estimation",
-      "userStory": "As a PM, I can label stories with a confidence level that affects how conservative or aggressive the estimate becomes.",
-      "points": 5,
-      "businessValue": "Medium",
-      "category": "Risk Management"
-    },
-    {
-      "id": "story-042",
-      "title": "Minimum Lovable Product Indicator",
-      "userStory": "As a client, I can see whether my selected scope satisfies the definition of a Minimum Lovable Product.",
-      "points": 5,
-      "businessValue": "High",
-      "category": "Launch Planning"
-    },
-    {
-      "id": "story-043",
-      "title": "ClickUp Integration for Story Import",
-      "userStory": "As a user, I can import tasks or stories from a ClickUp list or space into the Scope Playground as scoped stories.",
-      "points": 8,
-      "businessValue": "High",
-      "category": "Integrations"
-    },
-    {
       "id": "story-044",
-      "title": "Collaboration Roles and Permissions",
-      "userStory": "As an account owner, I can assign collaborators to scenarios with read, comment, or edit access.",
-      "points": 5,
-      "businessValue": "High",
-      "category": "Permissions"
-    },
-    {
-      "id": "story-045",
       "title": "Team Size Diminishing Returns Model",
       "userStory": "As a project manager, I want the system to account for the law of diminishing returns when calculating timelines with larger teams, so I can make more realistic projections based on Parkinson's Law.",
       "points": 8,
-      "businessValue": "High",
+      "businessValue": "Critical",
       "category": "Resource Management",
-      "status": "Complete"
+      "status": "Complete",
+      "effortCategory": "Advanced Planning"
+    },
+    {
+      "id": "story-045",
+      "title": "Backlog Story Management",
+      "userStory": "As a product manager, I want to create, edit, and delete user stories directly in the backlog, so I can efficiently manage the product backlog without leaving the application.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Story Management",
+      "effortCategory": "Core Functionality"
     }
   ],
   "tweakableParameters": {

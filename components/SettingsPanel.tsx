@@ -76,9 +76,25 @@ export function SettingsPanel({
   const [tempSettings, setTempSettings] = useState<Settings>({...settings});
   
   const handleInputChange = (key: keyof Settings, value: any) => {
+    // Apply value constraints for specific inputs
+    let adjustedValue = value;
+    
+    // Make hours per day snap to the nearest 0.25 hr
+    if (key === 'hoursPerDay') {
+      adjustedValue = Math.round(value * 4) / 4; // Snap to nearest 0.25
+    }
+    // Make contributors snap to the nearest 0.5
+    else if (key === 'contributorCount') {
+      adjustedValue = Math.round(value * 2) / 2; // Snap to nearest 0.5
+    }
+    // Cap contributor allocation at 95%
+    else if (key === 'contributorAllocation') {
+      adjustedValue = Math.min(95, value);
+    }
+    
     setTempSettings({
       ...tempSettings,
-      [key]: value
+      [key]: adjustedValue
     });
   };
   
@@ -192,8 +208,9 @@ export function SettingsPanel({
                     type="range"
                     min="1"
                     max="20"
+                    step="0.5"
                     value={tempSettings.contributorCount}
-                    onChange={(e) => handleInputChange('contributorCount', parseInt(e.target.value))}
+                    onChange={(e) => handleInputChange('contributorCount', parseFloat(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="w-16">
@@ -201,8 +218,9 @@ export function SettingsPanel({
                       type="number"
                       min="1"
                       max="20"
+                      step="0.5"
                       value={tempSettings.contributorCount}
-                      onChange={(e) => handleInputChange('contributorCount', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('contributorCount', parseFloat(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     />
                   </div>
@@ -218,8 +236,9 @@ export function SettingsPanel({
                     type="range"
                     min="1"
                     max="12"
+                    step="0.25"
                     value={tempSettings.hoursPerDay}
-                    onChange={(e) => handleInputChange('hoursPerDay', parseInt(e.target.value))}
+                    onChange={(e) => handleInputChange('hoursPerDay', parseFloat(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="w-16">
@@ -227,8 +246,9 @@ export function SettingsPanel({
                       type="number"
                       min="1"
                       max="12"
+                      step="0.25"
                       value={tempSettings.hoursPerDay}
-                      onChange={(e) => handleInputChange('hoursPerDay', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('hoursPerDay', parseFloat(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       placeholder="8"
                     />
@@ -244,7 +264,7 @@ export function SettingsPanel({
                   <input
                     type="range"
                     min="10"
-                    max="100"
+                    max="95"
                     step="5"
                     value={tempSettings.contributorAllocation}
                     onChange={(e) => handleInputChange('contributorAllocation', parseInt(e.target.value))}
@@ -254,14 +274,16 @@ export function SettingsPanel({
                     <input
                       type="number"
                       min="10"
-                      max="100"
+                      max="95"
                       step="5"
                       value={tempSettings.contributorAllocation}
                       onChange={(e) => handleInputChange('contributorAllocation', parseInt(e.target.value))}
                       className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      placeholder="100"
                     />
                   </div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  100% allocation is unrealistic - maximum is capped at 95% to account for meetings, emails, etc.
                 </div>
               </div>
               

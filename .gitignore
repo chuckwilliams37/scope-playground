@@ -13,4 +13,5 @@ package-lock.json
 [diff_block_end]
 
 .next
+*.key
 

@@ -170,7 +170,7 @@ export function StoryCard({
         {...attributes}
         {...listeners}
         className={`
-          bg-white shadow-sm rounded-lg p-3 cursor-grab border-2
+          bg-white shadow-sm rounded-lg p-1 cursor-grab border-2
           ${isDragging ? 'opacity-50' : ''}
           ${position ? 'border-blue-400' : 'border-transparent'}
           ${hasAdjustment ? 'ring-2 ring-purple-300' : ''}
@@ -178,10 +178,9 @@ export function StoryCard({
         `}
         style={style}
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-start">
-            <h3 className="font-medium text-gray-900 flex-1">{story.title}</h3>
-            <div className="flex space-x-1">
+        <div className="flex flex-col gap-2 m-0 p-0">
+          <div className="m-0 p-0 bg-gradient-to-b from-gray-100 to-white rounded-lg">
+            <div className="flex space-x-1 items-center justify-end z-20 -mt-1">
               {position && onRemove && (
                 <button 
                   onClick={(e) => {
@@ -230,9 +229,10 @@ export function StoryCard({
                 )}
               </button>
             </div>
+            <h3 className="font-medium text-gray-900 leading-[0.85] tracking-tight pl-2 -mt-2 z-10">{story.title}</h3>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 transition-size">
             <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${valueBadgeColor}`}>
               {story.businessValue || 'Unrated'}
             </span>
@@ -278,7 +278,7 @@ export function StoryCard({
           )}
           
           {isExpanded && (
-            <div className="mt-2 text-sm text-gray-700">
+            <div className="mt-2 text-sm text-gray-700  transition-all">
               {story.userStory && (
                 <div className="mb-2 italic border-l-2 border-gray-200 pl-2">
                   "{story.userStory}"

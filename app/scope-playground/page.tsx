@@ -15,6 +15,7 @@ import { ValuesMatrix } from "@/components/ValuesMatrix";
 import { BacklogViewer } from "@/components/BacklogViewer";
 import { MetricsPanel } from "@/components/MetricsPanel";
 import { ScenarioManager } from "@/components/ScenarioManager";
+import { Settings, SettingsPanel } from "@/components/SettingsPanel";
 
 // Sample data to use instead of Convex API until it's fully set up
 const sampleStories = [
@@ -116,7 +117,25 @@ export default function ScopePlaygroundPage() {
     contributorCost: 750, // USD per day
     contributorCount: 3,
     hoursPerDay: 8,
-    contributorAllocation: 80, // percentage
+    contributorAllocation: 0.8, // percentage (as decimal)
+    scopeLimiters: {
+      points: { default: 100 },
+      hours: { default: 800 },
+      duration: { default: 3, unit: "months" }
+    },
+    aiProductivityFactors: {
+      linesOfCode: 30,
+      testing: 40,
+      debugging: 35,
+      systemDesign: 20,
+      documentation: 45
+    },
+    aiSimulationEnabled: false,
+    selfManagedPartner: {
+      enabled: false,
+      managementReductionPercent: 15
+    },
+    pointsToHoursConversion: 8
   });
 
   // Set up state for expanded stories in the matrix
@@ -236,7 +255,7 @@ export default function ScopePlaygroundPage() {
       stories.forEach(story => {
         if (story.businessValue === 'Critical') {
           newPositions[story._id] = { value: 'high', effort: 'low' };
-        } else if (story.businessValue === 'High') {
+        } else if (story.businessValue === 'Important') {
           newPositions[story._id] = { value: 'high', effort: 'medium' };
         }
       });
@@ -333,16 +352,16 @@ export default function ScopePlaygroundPage() {
                   duration: { default: 2, unit: 'months' }
                 },
                 aiProductivityFactors: {
-                  linesOfCode: 0.3,
-                  testing: 0.2,
-                  debugging: 0.15,
-                  systemDesign: 0.1,
-                  documentation: 0.15
+                  linesOfCode: 30,
+                  testing: 20,
+                  debugging: 15,
+                  systemDesign: 10,
+                  documentation: 15
                 },
                 aiSimulationEnabled: true,
                 selfManagedPartner: {
                   enabled: true,
-                  managementReductionPercent: 0.5
+                  managementReductionPercent: 15
                 },
                 pointsToHoursConversion: 8
               }}

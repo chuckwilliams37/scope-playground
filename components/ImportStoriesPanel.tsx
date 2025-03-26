@@ -3,7 +3,7 @@ import { useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 
 type ImportStoriesPanelProps = {
-  onImportComplete: (importedStories: number) => void;
+  onImportComplete: (importedStories: number, positions?: Record<string, any>) => void;
   onClose: () => void;
 };
 
@@ -12,10 +12,71 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
   const [error, setError] = useState<string | null>(null);
   const [fileSelected, setFileSelected] = useState(false);
   const [preview, setPreview] = useState<any[] | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [importResults, setImportResults] = useState<any>(null);
+  const [updatePositions, setUpdatePositions] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Convex mutation for importing stories
   const importStories = useMutation(api.stories.importStories);
+  
+  // Sample JSON structure for import
+  const sampleJSON = {
+    "stories": [
+      {
+        "id": "sample-001",
+        "title": "User Authentication",
+        "userStory": "As a user, I want to create an account and log in securely.",
+        "points": 5,
+        "businessValue": "Critical",
+        "category": "Security",
+        "position": {
+          "value": "Critical",
+          "effort": "Medium",
+          "rank": 1
+        }
+      },
+      {
+        "id": "sample-002",
+        "title": "Dashboard View",
+        "userStory": "As a user, I want a dashboard that shows me key metrics and information at a glance.",
+        "points": 8,
+        "businessValue": "Important",
+        "category": "UI/UX",
+        "position": {
+          "value": "Important",
+          "effort": "High",
+          "rank": 2
+        }
+      },
+      {
+        "id": "sample-003",
+        "title": "Export to PDF",
+        "userStory": "As a user, I want to export reports to PDF format.",
+        "points": 3,
+        "businessValue": "Nice to Have",
+        "category": "Reporting",
+        "position": {
+          "value": "Nice to Have",
+          "effort": "Low",
+          "rank": 3
+        }
+      }
+    ]
+  };
+  
+  // Function to copy sample JSON to clipboard
+  const handleCopySample = () => {
+    navigator.clipboard.writeText(JSON.stringify(sampleJSON, null, 2))
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+        setError('Failed to copy sample to clipboard');
+      });
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -27,6 +88,7 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
     
     setFileSelected(true);
     setError(null);
+    setImportResults(null);
     
     // Parse and preview the file
     const reader = new FileReader();
@@ -70,7 +132,7 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
       const content = await file.text();
       const jsonData = JSON.parse(content);
       
-      // Import stories via Convex
+      // Import stories via Convex without the updatePositions parameter
       const result = await importStories({ 
         stories: jsonData.stories.map((story: any) => ({
           id: story.id,
@@ -80,13 +142,25 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
           category: story.category || 'Imported',
           points: story.points || story.storyPoints || 0,
           isPublic: story.isPublic !== undefined ? story.isPublic : true,
-          sharedWithClients: story.sharedWithClients || []
+          sharedWithClients: story.sharedWithClients || [],
+          position: story.position ? {
+            value: story.position.value,
+            effort: story.position.effort,
+            rank: story.position.rank || 0
+          } : undefined
         }))
       });
       
-      // Report success
-      onImportComplete(result.length);
-      onClose();
+      // Show results
+      setImportResults(result);
+      
+      // If there are no errors, report success and close
+      if (!result.errors || result.errors.length === 0) {
+        onImportComplete(result.success, result.positions);
+        setTimeout(() => onClose(), 2000);
+      } else {
+        setIsLoading(false);
+      }
     } catch (err) {
       setError(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
@@ -113,7 +187,21 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
         </p>
         <p className="text-sm text-gray-500 mb-4">
           Each story should have: id, title, userStory, points, businessValue, and category fields.
+          For matrix positioning, include a "position" object with "value", "effort", and optional "rank" fields.
         </p>
+        
+        <div className="mb-4">
+          <button
+            onClick={handleCopySample}
+            className="px-3 py-1 text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition duration-150 inline-flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            {copySuccess ? 'Copied!' : 'Copy JSON Example'}
+          </button>
+          <span className="text-xs text-gray-500 ml-2">Click to copy a sample JSON format to your clipboard</span>
+        </div>
         
         <div className="flex items-center justify-center w-full">
           <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
@@ -135,6 +223,19 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
             />
           </label>
         </div>
+        
+        <div className="mt-4">
+          <label className="inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={updatePositions} 
+              onChange={() => setUpdatePositions(!updatePositions)}
+              className="sr-only peer"
+            />
+            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <span className="ms-3 text-sm font-medium text-gray-900">Update matrix positions from import</span>
+          </label>
+        </div>
       </div>
       
       {error && (
@@ -143,7 +244,33 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
         </div>
       )}
       
-      {preview && (
+      {importResults && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-2">Import Results</h3>
+          <div className="p-4 mb-2 text-sm rounded-lg bg-blue-50 text-blue-700">
+            Successfully imported {importResults.success} stories
+          </div>
+          
+          {importResults.errors && importResults.errors.length > 0 && (
+            <div className="border rounded p-3 mb-3 bg-red-50">
+              <h4 className="font-medium text-red-700 mb-1">Errors ({importResults.errors.length})</h4>
+              <ul className="list-disc list-inside text-xs text-red-700">
+                {importResults.errors.map((err: string, i: number) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {updatePositions && importResults.positions && Object.keys(importResults.positions).length > 0 && (
+            <p className="text-sm text-gray-600">
+              {Object.keys(importResults.positions).length} stories positioned in the matrix
+            </p>
+          )}
+        </div>
+      )}
+      
+      {preview && !importResults && (
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Preview</h3>
           <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-60">

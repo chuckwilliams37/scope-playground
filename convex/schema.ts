@@ -14,7 +14,9 @@ export default defineSchema({
     sharedWithClients: v.array(v.string()), // Array of client IDs that can see this story
     isPublic: v.boolean(), // Whether this story is visible to all clients
     originalPoints: v.optional(v.number()), // Original story point estimate
-    adjustmentReason: v.optional(v.string()) // Reason for point adjustment
+    adjustmentReason: v.optional(v.string()), // Reason for point adjustment
+    effortCategory: v.optional(v.string()), // Effort category (e.g., Core Functionality, Development, etc.)
+    notes: v.optional(v.string()) // Additional notes about the story
   }),
 
   // Users table - for client-specific access
