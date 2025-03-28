@@ -1,0 +1,345 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-23",
+  "baseStories": [
+    {
+      "id": "story-001",
+      "title": "User Management",
+      "businessValue": "Critical",
+      "storyPoints": 13,
+      "notes": "Core system functionality. Required for login, roles, etc."
+    },
+    {
+      "id": "story-002",
+      "title": "Safety Inspections",
+      "businessValue": "Critical",
+      "storyPoints": 13,
+      "notes": "Allows recording and review of OSHA-required safety inspections."
+    },
+    {
+      "id": "story-003",
+      "title": "Training Management",
+      "businessValue": "High",
+      "storyPoints": 8,
+      "notes": "Manage assignment and completion tracking for training modules."
+    },
+    {
+      "id": "story-004",
+      "title": "Forms Management",
+      "businessValue": "High",
+      "storyPoints": 8,
+      "notes": "Submit and archive compliance-related forms and PDFs."
+    },
+    {
+      "id": "story-005",
+      "title": "Admin Dashboard",
+      "businessValue": "High",
+      "storyPoints": 13,
+      "notes": "Access controls, org-level overview, training and inspection stats."
+    }
+  ],
+  "scopeConfiguration": {
+    "developerParameters": {
+      "costRange": {
+        "min": 300,
+        "max": 1500,
+        "default": 750,
+        "unit": "USD per day"
+      },
+      "workingHours": {
+        "min": 6,
+        "max": 10,
+        "default": 8,
+        "unit": "hours per day"
+      },
+      "teamSize": {
+        "min": 1,
+        "max": 20,
+        "default": 5,
+        "unit": "developers"
+      },
+      "allocation": {
+        "min": 25,
+        "max": 100,
+        "default": 80,
+        "unit": "percent"
+      },
+      "workCalendar": {
+        "includeWeekends": false,
+        "holidays": {
+          "US": ["2025-01-01", "2025-01-20", "2025-02-17", "2025-05-26", "2025-07-04", "2025-09-01", "2025-11-11", "2025-11-27", "2025-12-25"],
+          "India": ["2025-01-26", "2025-03-10", "2025-04-14", "2025-05-01", "2025-08-15", "2025-09-02", "2025-10-02", "2025-10-24", "2025-11-12", "2025-12-25"],
+          "EU": ["2025-01-01", "2025-04-18", "2025-04-21", "2025-05-01", "2025-05-29", "2025-06-09", "2025-12-25", "2025-12-26"],
+          "custom": []
+        },
+        "defaultRegion": "US"
+      }
+    },
+    "scopeLimiters": {
+      "byPoints": {
+        "enabled": true,
+        "min": 0,
+        "max": 500,
+        "default": 100
+      },
+      "byHours": {
+        "enabled": true,
+        "min": 0,
+        "max": 5000,
+        "default": 1000
+      },
+      "byDuration": {
+        "enabled": true,
+        "min": 0,
+        "max": 180,
+        "default": 90,
+        "unit": "days"
+      },
+      "byBudget": {
+        "enabled": true,
+        "min": 0,
+        "max": 1000000,
+        "default": 250000,
+        "currency": "USD"
+      }
+    },
+    "aiProductivityFactors": {
+      "uiCodeGeneration": {
+        "enabled": true,
+        "gainRange": {
+          "min": 20,
+          "max": 50,
+          "default": 35,
+          "unit": "percent"
+        },
+        "description": "Productivity boost from AI-assisted UI code generation"
+      },
+      "schemaAndLogic": {
+        "enabled": true,
+        "gainRange": {
+          "min": 20,
+          "max": 70,
+          "default": 45,
+          "unit": "percent"
+        },
+        "description": "Productivity boost from AI-assisted schema design and business logic implementation"
+      },
+      "testingAndMockData": {
+        "enabled": true,
+        "gainRange": {
+          "min": 50,
+          "max": 90,
+          "default": 70,
+          "unit": "percent"
+        },
+        "description": "Productivity boost from AI-assisted test writing and mock data generation"
+      },
+      "docsAndStories": {
+        "enabled": true,
+        "gainRange": {
+          "min": 80,
+          "max": 90,
+          "default": 85,
+          "unit": "percent"
+        },
+        "description": "Productivity boost from AI-assisted documentation, comments, and story drafting"
+      }
+    },
+    "projectFactors": {
+      "pmCoordinationOverhead": {
+        "enabled": true,
+        "range": {
+          "min": 8,
+          "max": 30,
+          "default": 15,
+          "unit": "percent"
+        },
+        "description": "Additional time needed for project management and coordination"
+      },
+      "featureReuseAccelerator": {
+        "enabled": true,
+        "range": {
+          "min": -35,
+          "max": -5,
+          "default": -20,
+          "unit": "percent"
+        },
+        "description": "Time savings from reusing existing features and components"
+      },
+      "leanDevelopmentAccelerator": {
+        "enabled": true,
+        "range": {
+          "min": -7,
+          "max": -3,
+          "default": -5,
+          "unit": "percent"
+        },
+        "description": "Time savings from implementing lean development practices"
+      },
+      "techStackComplexity": {
+        "enabled": true,
+        "range": {
+          "min": -10,
+          "max": 20,
+          "default": 5,
+          "unit": "percent"
+        },
+        "description": "Impact of technology stack complexity on development time"
+      },
+      "qaAndCompliance": {
+        "enabled": true,
+        "range": {
+          "min": 3,
+          "max": 15,
+          "default": 8,
+          "unit": "percent"
+        },
+        "description": "Additional time needed for QA, testing, and regulatory compliance"
+      }
+    }
+  },
+  "additionalFeatures": [
+    {
+      "id": "feature-001",
+      "title": "Scenario Management",
+      "description": "Allow users to save, name, and reload different estimation scenarios",
+      "implementation": {
+        "storyPoints": 5,
+        "businessValue": "High",
+        "notes": "Enables users to compare different project configurations and assumptions"
+      }
+    },
+    {
+      "id": "feature-002",
+      "title": "Monte Carlo Simulation",
+      "description": "Run multiple simulations with varying parameters to show probability distributions of outcomes",
+      "implementation": {
+        "storyPoints": 8,
+        "businessValue": "Medium",
+        "notes": "Provides statistical confidence intervals for project estimates"
+      }
+    },
+    {
+      "id": "feature-003",
+      "title": "Historical Data Integration",
+      "description": "Import and leverage historical project data to improve estimation accuracy",
+      "implementation": {
+        "storyPoints": 13,
+        "businessValue": "High",
+        "notes": "Learning from past projects dramatically improves future estimates"
+      }
+    },
+    {
+      "id": "feature-004",
+      "title": "Team Skill Matrix",
+      "description": "Factor in team expertise levels for different technologies and domains",
+      "implementation": {
+        "storyPoints": 8,
+        "businessValue": "Medium",
+        "notes": "Accounts for learning curves and specialized expertise"
+      }
+    },
+    {
+      "id": "feature-005",
+      "title": "Dependency Visualization",
+      "description": "Show critical path and dependency relationships between stories",
+      "implementation": {
+        "storyPoints": 13,
+        "businessValue": "Medium",
+        "notes": "Helps identify bottlenecks and parallel work opportunities"
+      }
+    },
+    {
+      "id": "feature-006",
+      "title": "Risk Assessment Module",
+      "description": "Identify and quantify project risks and their potential impact",
+      "implementation": {
+        "storyPoints": 8,
+        "businessValue": "High",
+        "notes": "Allows for contingency planning based on identified risks"
+      }
+    },
+    {
+      "id": "feature-007",
+      "title": "Export and Reporting",
+      "description": "Generate detailed PDF/Excel reports with charts and tables",
+      "implementation": {
+        "storyPoints": 5,
+        "businessValue": "Medium",
+        "notes": "Facilitates sharing estimates with stakeholders"
+      }
+    },
+    {
+      "id": "feature-008",
+      "title": "Integration with Project Management Tools",
+      "description": "Connect with JIRA, Azure DevOps, GitHub, etc.",
+      "implementation": {
+        "storyPoints": 13,
+        "businessValue": "High",
+        "notes": "Streamlines workflow between estimation and project execution"
+      }
+    },
+    {
+      "id": "feature-009",
+      "title": "Team Availability Calendar",
+      "description": "Account for planned time off, part-time availability, and multi-project assignments",
+      "implementation": {
+        "storyPoints": 8,
+        "businessValue": "Medium",
+        "notes": "More accurate resource allocation across timeline"
+      }
+    },
+    {
+      "id": "feature-010",
+      "title": "What-If Analysis Dashboard",
+      "description": "Interactive dashboard to see real-time changes based on parameter adjustments",
+      "implementation": {
+        "storyPoints": 13,
+        "businessValue": "High",
+        "notes": "Enables quick exploration of different scenarios"
+      }
+    }
+  ],
+  "calculationFormulas": {
+    "baseEffort": "sum(storyPoints)",
+    "adjustedEffort": "baseEffort * (1 - aiFactors) * (1 + projectFactors)",
+    "duration": "adjustedEffort / (devCount * hoursPerDay * allocation)",
+    "cost": "duration * devCount * dailyRate",
+    "aiFactors": "sum of enabled AI productivity gains weighted by activity distribution",
+    "projectFactors": "sum of enabled project factors"
+  },
+  "userInterface": {
+    "dashboardSections": [
+      {
+        "id": "project-overview",
+        "title": "Project Overview",
+        "components": ["project name", "description", "start date", "target end date"]
+      },
+      {
+        "id": "story-management",
+        "title": "User Stories",
+        "components": ["story list", "import/export", "filtering", "bulk edit"]
+      },
+      {
+        "id": "team-configuration",
+        "title": "Team Setup",
+        "components": ["team size", "allocation", "rates", "working calendar"]
+      },
+      {
+        "id": "productivity-factors",
+        "title": "Productivity Factors",
+        "components": ["AI enablers", "project factors", "tech complexity"]
+      },
+      {
+        "id": "results-visualization",
+        "title": "Results",
+        "components": ["timeline chart", "cost breakdown", "resource allocation", "risk indicators"]
+      },
+      {
+        "id": "scenario-manager",
+        "title": "Scenarios",
+        "components": ["save scenario", "load scenario", "compare scenarios", "share scenario"]
+      }
+    ]
+  }
+}

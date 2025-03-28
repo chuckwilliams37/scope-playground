@@ -31,7 +31,7 @@ export function EffortMismatchModal({
   const pointOptions = {
     low: [1, 2, 3],
     medium: [5, 8],
-    high: [13, 21]
+    high: [8, 13, 21]
   };
 
   // Common adjustment reasons for quick selection
@@ -55,8 +55,12 @@ export function EffortMismatchModal({
 
   // Set initial selected points based on effort level
   useEffect(() => {
-    setSelectedPoints(suggestedPoints);
-  }, [suggestedPoints]);
+    if (cellEffort === 'high' && storyPoints >= 8) {
+      setSelectedPoints(storyPoints);
+    } else {
+      setSelectedPoints(suggestedPoints);
+    }
+  }, [suggestedPoints, storyPoints, cellEffort]);
 
   const getEffortColor = () => {
     switch (cellEffort) {
@@ -71,7 +75,7 @@ export function EffortMismatchModal({
     switch (cellEffort) {
       case 'low': return 'Low Effort (1-3 points)';
       case 'medium': return 'Medium Effort (5-8 points)';
-      case 'high': return 'High Effort (13+ points)';
+      case 'high': return 'High Effort (8+ points)';
       default: return 'Unknown Effort';
     }
   };
@@ -85,7 +89,7 @@ export function EffortMismatchModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 m-4">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Effort Mismatch Detected</h3>
@@ -120,28 +124,18 @@ export function EffortMismatchModal({
                       <label className="block text-xs text-green-700 mb-1">
                         New Point Value:
                       </label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {pointOptions[cellEffort as keyof typeof pointOptions].map(points => (
-                          <button
-                            key={points}
-                            onClick={() => setSelectedPoints(points)}
-                            className={`px-2 py-1 text-xs rounded transition-all duration-200 ${
-                              selectedPoints === points 
-                                ? 'bg-green-600 text-white' 
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                          >
-                            {points}
-                          </button>
-                        ))}
-                      </div>
                       <select
                         value={selectedPoints}
                         onChange={(e) => setSelectedPoints(Number(e.target.value))}
-                        className="w-full p-1.5 text-sm border rounded bg-white text-gray-800"
+                        className="w-full p-2 text-sm border rounded bg-white text-gray-800"
                       >
+                        {!pointOptions[cellEffort as keyof typeof pointOptions].includes(storyPoints) && 
+                          cellEffort === 'high' && 
+                          storyPoints > 8 && (
+                            <option key={storyPoints} value={storyPoints}>{storyPoints} points (current)</option>
+                        )}
                         {pointOptions[cellEffort as keyof typeof pointOptions].map(points => (
-                          <option key={points} value={points}>{points} points</option>
+                          <option key={points} value={points}>{points} points{points === storyPoints ? ' (current)' : ''}</option>
                         ))}
                       </select>
                     </div>

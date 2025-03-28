@@ -26,10 +26,34 @@ export function StoryForm({
   const [category, setCategory] = useState(story?.category || (categories.length > 0 ? categories[0] : ''));
   const [effortCategory, setEffortCategory] = useState(story?.effortCategory || (effortCategories.length > 0 ? effortCategories[0] : ''));
   const [notes, setNotes] = useState(story?.notes || '');
+  const [acceptanceCriteria, setAcceptanceCriteria] = useState<string[]>(story?.acceptanceCriteria || []);
+  const [newCriterion, setNewCriterion] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Default point options following Fibonacci sequence
   const pointOptions = [1, 2, 3, 5, 8, 13, 21];
+  
+  // Map points to default effort categories
+  const getDefaultEffortCategoryForPoints = (points: number): string => {
+    if (points <= 3) {
+      return 'Low';
+    } else if (points <= 8) {
+      return 'Medium';
+    } else {
+      return 'High';
+    }
+  };
+  
+  // Update effort category when points change
+  useEffect(() => {
+    if (!story?.effortCategory) { // Only auto-adjust if not editing a story with an existing category
+      const defaultCategory = getDefaultEffortCategoryForPoints(points);
+      // Check if the default category exists in the available options
+      if (effortCategories.includes(defaultCategory)) {
+        setEffortCategory(defaultCategory);
+      }
+    }
+  }, [points, effortCategories]);
   
   // Validate form fields
   const validateForm = () => {
@@ -64,7 +88,8 @@ export function StoryForm({
         businessValue: businessValue || 'Important', // Default to "Important" if not specified
         category: category || 'Feature', // Default to "Feature" if not specified
         effortCategory: effortCategory || 'Medium',
-        notes: notes || ''
+        notes: notes || '',
+        acceptanceCriteria: acceptanceCriteria.length > 0 ? acceptanceCriteria : undefined
       };
       onSave(updatedStory);
     }
@@ -141,10 +166,11 @@ export function StoryForm({
           >
             {pointOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {option} {option <= 3 ? "(Low Effort)" : option <= 8 ? "(Medium Effort)" : "(High Effort)"}
               </option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-gray-500">The effort category will automatically update based on points, but can be manually changed.</p>
         </div>
         
         {/* Business Value input */}
@@ -284,6 +310,57 @@ export function StoryForm({
             rows={3}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
+        </div>
+        
+        {/* Acceptance Criteria */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Acceptance Criteria
+          </label>
+          <div className="mt-2">
+            <ul className="space-y-2 max-h-48 overflow-y-auto">
+              {acceptanceCriteria.map((criterion, index) => (
+                <li key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
+                  <span className="flex-1">{criterion}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updatedCriteria = [...acceptanceCriteria];
+                      updatedCriteria.splice(index, 1);
+                      setAcceptanceCriteria(updatedCriteria);
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 flex space-x-2">
+              <input
+                type="text"
+                value={newCriterion}
+                onChange={(e) => setNewCriterion(e.target.value)}
+                placeholder="Add a new acceptance criterion"
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (newCriterion.trim()) {
+                    setAcceptanceCriteria([...acceptanceCriteria, newCriterion.trim()]);
+                    setNewCriterion('');
+                  }
+                }}
+                className="px-3 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Add
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">Add criteria that must be met for this story to be considered complete.</p>
+          </div>
         </div>
         
         {/* Form actions */}

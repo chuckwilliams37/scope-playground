@@ -17,6 +17,8 @@ type StoryCardProps = {
     category?: string;
     adjustmentReason?: string;
     originalPoints?: number;
+    acceptanceCriteria?: string[];
+    businessValueMismatch?: string;
   };
   position: { value: string; effort: string } | null;
   isDragging?: boolean;
@@ -24,6 +26,7 @@ type StoryCardProps = {
   onToggleExpand?: () => void;
   onRemove?: () => void;
   onAdjustPoints?: (storyId: string, points: number, reason: string) => void;
+  inMatrix?: boolean;
 };
 
 export function StoryCard({ 
@@ -33,7 +36,8 @@ export function StoryCard({
   isExpanded, 
   onToggleExpand, 
   onRemove,
-  onAdjustPoints 
+  onAdjustPoints,
+  inMatrix = false
 }: StoryCardProps) {
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [adjustmentReason, setAdjustmentReason] = useState(story.adjustmentReason || '');
@@ -233,12 +237,40 @@ export function StoryCard({
           </div>
           
           <div className="flex flex-wrap gap-2 transition-size">
-            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${valueBadgeColor}`}>
+            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${valueBadgeColor} ${story.businessValueMismatch ? 'border border-red-400' : ''}`}>
               {story.businessValue || 'Unrated'}
             </span>
+            
+            {/* Business Value Mismatch Badge */}
+            {story.businessValueMismatch && (
+              <div className="relative group">
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                  </svg>
+                  Mismatch
+                </span>
+                
+                <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
+                  <div className="font-medium text-gray-900 mb-1">Business Value Mismatch</div>
+                  <div className="text-gray-700 mb-1">
+                    Card's value: <span className="font-medium">{story.businessValue}</span><br/>
+                    Matrix position suggests: <span className="font-medium">{story.businessValueMismatch}</span>
+                  </div>
+                  <div className="mt-1 text-red-600">
+                    Consider moving this story to a more appropriate position or adjusting its business value.
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="relative group">
               <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${pointsBadgeColor} ${hasAdjustment ? 'border border-purple-400' : ''}`}>
-                {storyPoints || '?'} points {hasAdjustment && <span className="ml-1">*</span>}
+                {storyPoints || '?'} points {hasAdjustment && (
+                  <span className="ml-1 text-purple-700" title="Points adjusted from original estimate">
+                    *
+                  </span>
+                )}
               </span>
               
               {hasAdjustment && originalPoints !== undefined && (
@@ -262,29 +294,37 @@ export function StoryCard({
                 {story.category}
               </span>
             )}
-            {position && (
+            {/* Only show position badge outside of matrix */}
+            {position && !inMatrix && (
               <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
                 {`${position.value}/${position.effort}`}
               </span>
             )}
           </div>
           
-          {/* Display formula/calculation more prominently */}
-          {position && (
-            <div className="mt-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-              <span className="font-medium">Formula: </span>
-              {position.value}/{position.effort} = {storyPoints || '?'} points
-            </div>
-          )}
-          
           {isExpanded && (
-            <div className="mt-2 text-sm text-gray-700  transition-all">
+            <div className="mt-2 text-sm text-gray-700 transition-all">
               {story.userStory && (
                 <div className="mb-2 italic border-l-2 border-gray-200 pl-2">
                   "{story.userStory}"
                 </div>
               )}
               {story.notes && <p className="text-gray-600">{story.notes}</p>}
+              
+              {/* Acceptance Criteria Section */}
+              {story.acceptanceCriteria && story.acceptanceCriteria.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Acceptance Criteria
+                  </h4>
+                  <ul className="list-disc pl-5 text-sm space-y-1">
+                    {story.acceptanceCriteria.map((criterion, index) => (
+                      <li key={index} className="text-gray-700">{criterion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <div className="mt-2 text-xs text-gray-500 flex items-center">
                 <span>ID: {storyId}</span>
               </div>
@@ -295,7 +335,7 @@ export function StoryCard({
       
       {/* Adjustment Dialog */}
       {showAdjustmentDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium mb-4">Adjust Story Points</h3>
             

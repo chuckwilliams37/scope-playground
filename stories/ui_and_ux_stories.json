@@ -1,0 +1,64 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-27",
+  "description": "User Interface and User Experience related stories",
+  "stories": [
+    {
+      "id": "story-003",
+      "title": "Scope Matrix Drag-and-Drop (Effort Validated)",
+      "userStory": "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "UI Interaction",
+      "effortCategory": "Core Functionality"
+    },
+    {
+      "id": "story-004",
+      "title": "Business Value Mismatch Explanation",
+      "userStory": "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "effortCategory": "User Guidance"
+    },
+    {
+      "id": "story-010",
+      "title": "Drag-and-Drop Interaction Hints",
+      "userStory": "As a client, I receive immediate visual or textual feedback when attempting a drop that would violate matrix rules.",
+      "points": 3,
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "effortCategory": "User Guidance"
+    },
+    {
+      "id": "story-016",
+      "title": "Remove Stories from Matrix",
+      "userStory": "As a product manager, I want to be able to remove stories from the matrix and return them to the backlog when priorities change or stories are incorrectly placed.",
+      "points": 3,
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "status": "Complete",
+      "effortCategory": "Core Functionality"
+    },
+    {
+      "id": "story-020",
+      "title": "Story Card Ranking",
+      "userStory": "As a product manager, I want to rank story cards within a matrix cell to indicate priority order for implementation within the same value and effort bucket.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "UX Enhancement",
+      "status": "Complete",
+      "effortCategory": "Core Functionality"
+    },
+    {
+      "id": "story-021",
+      "title": "Drag and Drop Visual Feedback",
+      "userStory": "As a user, I want clear visual feedback during drag and drop operations so I can easily see valid drop zones and story placement options.",
+      "points": 3,
+      "businessValue": "Important",
+      "category": "UX Enhancement",
+      "status": "Complete",
+      "effortCategory": "Visual Feedback"
+    }
+  ]
+}

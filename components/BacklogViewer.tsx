@@ -12,7 +12,8 @@ export function BacklogViewer({
   onToggleExpandStory,
   onCreateStory,
   onUpdateStory,
-  onDeleteStory
+  onDeleteStory,
+  onAssignAllToDefaultCells
 }: BacklogViewerProps) {
   // Local state for expanded stories when not provided externally
   const [internalExpandedStoryIds, setInternalExpandedStoryIds] = useState<Set<string>>(new Set());
@@ -26,6 +27,12 @@ export function BacklogViewer({
   const [deletingStory, setDeletingStory] = useState<Story | null>(null);
   const [localStories, setLocalStories] = useState<Story[]>(stories);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // State for multi-select and multi-sort
+  const [selectedStoryIds, setSelectedStoryIds] = useState<Set<string>>(new Set());
+  const [sortCriteria, setSortCriteria] = useState<Array<{field: string, order: 'asc' | 'desc', priority: number}>>([
+    { field: 'businessValue', order: 'desc', priority: 1 }
+  ]);
   
   // Update local stories when prop changes
   useEffect(() => {
@@ -99,39 +106,147 @@ export function BacklogViewer({
     setShowCreateForm(true);
   };
 
-  // Filter stories based on search and filters
+  // Filter stories based on search query and selected filters
   const filteredStories = localStories.filter(story => {
-    // Search by title or description
-    const matchesSearch = !searchQuery || 
-      story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (story.userStory && story.userStory.toLowerCase().includes(searchQuery.toLowerCase()));
+    const titleMatch = story.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const userStoryMatch = story.userStory?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
+    const categoryMatch = !selectedCategory || story.category === selectedCategory;
+    const valueMatch = !selectedValue || story.businessValue === selectedValue;
     
-    // Filter by category if selected
-    const matchesCategory = !selectedCategory || story.category === selectedCategory;
+    return (titleMatch || userStoryMatch) && categoryMatch && valueMatch;
+  });
+  
+  // Sort stories based on selected sort criteria
+  const sortedStories = [...filteredStories].sort((a, b) => {
+    // Apply each sort criterion in order of priority
+    for (const criterion of sortCriteria) {
+      let comparison = 0;
+      
+      switch (criterion.field) {
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'businessValue':
+          // Define business value priority based on standardized terminology
+          const valuePriority: Record<string, number> = {
+            'Critical': 3,   // Highest value
+            'Important': 2,  // Medium value
+            'Nice to Have': 1, // Lowest value
+            '': 0
+          };
+          comparison = (valuePriority[a.businessValue || ''] || 0) - (valuePriority[b.businessValue || ''] || 0);
+          break;
+        case 'points':
+          comparison = (a.storyPoints || a.points || 0) - (b.storyPoints || b.points || 0);
+          break;
+        case 'category':
+          comparison = (a.category || '').localeCompare(b.category || '');
+          break;
+        default:
+          comparison = 0;
+      }
+      
+      if (comparison !== 0) {
+        return criterion.order === 'asc' ? comparison : -comparison;
+      }
+    }
     
-    // Filter by business value if selected
-    const matchesValue = !selectedValue || story.businessValue === selectedValue;
-    
-    // Filter by points if specified
-    const matchesPoints = !pointsFilter || 
-      (story.storyPoints || story.points) === pointsFilter;
-    
-    return matchesSearch && matchesCategory && matchesValue && matchesPoints;
+    // If all criteria are equal, sort by title as a fallback
+    return (a.title || '').localeCompare(b.title || '');
   });
 
-  // Sort stories by businessValue priority (Critical, Important, Nice to Have)
-  const sortedStories = Array.from(filteredStories).sort((a, b) => {
-    const priorityOrder: Record<string, number> = {
-      'Critical': 0,
-      'Important': 1,
-      'Nice to Have': 2
-    };
+  // Toggle item selection
+  const toggleStorySelection = (storyId: string, allowMultiple = false) => {
+    setSelectedStoryIds(prev => {
+      const newSelection = new Set(prev);
+      
+      if (allowMultiple) {
+        // Toggle this individual story
+        if (newSelection.has(storyId)) {
+          newSelection.delete(storyId);
+        } else {
+          newSelection.add(storyId);
+        }
+      } else {
+        // If not multi-selecting, just toggle this one
+        if (newSelection.has(storyId)) {
+          newSelection.clear();
+        } else {
+          newSelection.clear();
+          newSelection.add(storyId);
+        }
+      }
+      
+      return newSelection;
+    });
+  };
+
+  // Handle sorting click with multi-sort support
+  const handleSortClick = (field: string, event: React.MouseEvent) => {
+    const isShiftClick = event.shiftKey;
     
-    const valueA = a.businessValue || 'Nice to Have';
-    const valueB = b.businessValue || 'Nice to Have';
+    setSortCriteria(prev => {
+      // Check if this field is already in the sort criteria
+      const existingIndex = prev.findIndex(c => c.field === field);
+      
+      if (existingIndex >= 0) {
+        // Field exists, toggle order or remove if shift is not pressed
+        const newCriteria = [...prev];
+        
+        if (isShiftClick) {
+          // Toggle order for existing criterion
+          newCriteria[existingIndex] = {
+            ...newCriteria[existingIndex],
+            order: newCriteria[existingIndex].order === 'asc' ? 'desc' : 'asc'
+          };
+        } else {
+          // Remove all other criteria and just use this one
+          return [{
+            field, 
+            order: prev[existingIndex].order === 'asc' ? 'desc' : 'asc', 
+            priority: 1
+          }];
+        }
+        
+        return newCriteria;
+      } else {
+        // Field doesn't exist in criteria
+        if (isShiftClick) {
+          // Add as additional criterion with next priority
+          const nextPriority = prev.length + 1;
+          return [...prev, { field, order: 'desc', priority: nextPriority }];
+        } else {
+          // Replace all criteria with just this one
+          return [{ field, order: 'desc', priority: 1 }];
+        }
+      }
+    });
+  };
+
+  // Generate sort badge content with more visible priority indicators
+  const getSortBadge = (field: string) => {
+    const criterion = sortCriteria.find(c => c.field === field);
     
-    return (priorityOrder[valueA] || 999) - (priorityOrder[valueB] || 999);
-  });
+    if (!criterion) return null;
+    
+    const direction = criterion.order === 'desc' ? '↓' : '↑';
+    
+    // Only show priority number if there are multiple sort criteria
+    if (sortCriteria.length > 1) {
+      // Return priority number in a circle badge followed by direction arrow
+      return (
+        <span className="inline-flex items-center">
+          <span className="inline-flex items-center justify-center w-4 h-4 bg-blue-600 text-white text-xs rounded-full mr-0.5">
+            {criterion.priority}
+          </span>
+          {direction}
+        </span>
+      );
+    }
+    
+    // Just show direction if only one sort criterion
+    return direction;
+  };
 
   // Handle story creation
   const handleCreateStory = async (story: Story) => {
@@ -234,7 +349,7 @@ export function BacklogViewer({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4">
+    <div className="bg-white rounded-lg shadow-sm border p-4 flex flex-col h-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Product Backlog</h2>
         <button
@@ -253,13 +368,33 @@ export function BacklogViewer({
       
       {/* Search and Filter Section */}
       <div className="mb-4 space-y-2">
-        <input
-          type="text"
-          placeholder="Search stories..."
-          className="w-full p-2 border rounded"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Search stories..."
+            className="flex-1 p-2 border rounded"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          
+          <button
+            onClick={() => onAssignAllToDefaultCells && onAssignAllToDefaultCells(
+              selectedStoryIds.size > 0 
+                ? sortedStories.filter(story => selectedStoryIds.has(story._id))
+                : sortedStories
+            )}
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center whitespace-nowrap"
+            title={selectedStoryIds.size > 0 
+              ? "Assign selected stories to their default matrix positions based on business value and story points" 
+              : "Assign all stories to their default matrix positions based on business value and story points"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M3 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 14a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            {selectedStoryIds.size > 0 ? `Assign Selected (${selectedStoryIds.size})` : 'Assign All'}
+          </button>
+        </div>
         
         <div className="grid grid-cols-2 gap-2">
           {/* Category filter */}
@@ -286,22 +421,92 @@ export function BacklogViewer({
             ))}
           </select>
         </div>
+        
+        {/* Sorting options */}
+        <div className="flex items-center space-x-2 text-sm">
+          <span className="text-gray-600">Sort by:</span>
+          <div className="flex flex-wrap gap-1">
+            <button 
+              onClick={(e) => handleSortClick('businessValue', e)}
+              className={`px-2 py-1 rounded text-xs flex items-center ${
+                sortCriteria.some(c => c.field === 'businessValue')
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+              }`}
+            >
+              <span className="mr-1">Criticality</span> {getSortBadge('businessValue')}
+            </button>
+            <button 
+              onClick={(e) => handleSortClick('points', e)}
+              className={`px-2 py-1 rounded text-xs flex items-center ${
+                sortCriteria.some(c => c.field === 'points')
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+              }`}
+            >
+              <span className="mr-1">Points</span> {getSortBadge('points')}
+            </button>
+            <button 
+              onClick={(e) => handleSortClick('title', e)}
+              className={`px-2 py-1 rounded text-xs flex items-center ${
+                sortCriteria.some(c => c.field === 'title')
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+              }`}
+            >
+              <span className="mr-1">Name</span> {getSortBadge('title')}
+            </button>
+            <button 
+              onClick={(e) => handleSortClick('category', e)}
+              className={`px-2 py-1 rounded text-xs flex items-center ${
+                sortCriteria.some(c => c.field === 'category')
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+              }`}
+            >
+              <span className="mr-1">Category</span> {getSortBadge('category')}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Story List */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 250px)' }}>
         <div className="p-4 space-y-3">
           {sortedStories.length > 0 ? (
             sortedStories.map((story) => (
               <div key={story._id} className="relative group">
-                <StoryCard
-                  story={story}
-                  position={null}
-                  isExpanded={externalExpandedStoryIds 
-                    ? externalExpandedStoryIds.includes(story._id) 
-                    : internalExpandedStoryIds.has(story._id)}
-                  onToggleExpand={() => toggleStoryExpansion(story._id)}
-                />
+                <div className="flex items-start space-x-2">
+                  {/* Checkbox for selection */}
+                  <div 
+                    className={`mt-2 flex-shrink-0 h-4 w-4 border rounded cursor-pointer ${
+                      selectedStoryIds.has(story._id) 
+                        ? 'bg-blue-500 border-blue-500' 
+                        : 'border-gray-300 bg-white'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStorySelection(story._id, e.shiftKey);
+                    }}
+                  >
+                    {selectedStoryIds.has(story._id) && (
+                      <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  
+                  <div className="flex-grow">
+                    <StoryCard
+                      story={story}
+                      position={null}
+                      isExpanded={externalExpandedStoryIds 
+                        ? externalExpandedStoryIds.includes(story._id) 
+                        : internalExpandedStoryIds.has(story._id)}
+                      onToggleExpand={() => toggleStoryExpansion(story._id)}
+                    />
+                  </div>
+                </div>
                 
                 {/* Edit and Delete buttons */}
                 <div className="absolute top-3 right-12 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -334,7 +539,7 @@ export function BacklogViewer({
       
       {/* Create Story Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="w-full max-w-2xl">
             <StoryForm
               onSave={(formStory) => handleCreateStory({ ...formStory, _id: formStory._id || getNextStoryId() })}
@@ -349,7 +554,7 @@ export function BacklogViewer({
       
       {/* Edit Story Modal */}
       {editingStory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="w-full max-w-2xl">
             <StoryForm
               story={editingStory}
@@ -365,8 +570,8 @@ export function BacklogViewer({
       
       {/* Delete Confirmation Modal */}
       {deletingStory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Story</h3>
             <p className="text-gray-500 mb-4">
               Are you sure you want to delete "{deletingStory.title}"? This action cannot be undone.

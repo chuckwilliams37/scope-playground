@@ -1,0 +1,34 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-27",
+  "description": "Configuration, system settings, and integration related stories",
+  "stories": [
+    {
+      "id": "story-006",
+      "title": "Scenario Presets and Reset",
+      "userStory": "As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.",
+      "points": 3,
+      "businessValue": "Important",
+      "category": "Configuration",
+      "effortCategory": "Usability"
+    },
+    {
+      "id": "story-015",
+      "title": "AI Factor Simulation",
+      "userStory": "As a client, I can see simulated impacts of enabling/disabling various AI productivity boosters on project timeline and cost.",
+      "points": 13,
+      "businessValue": "Critical",
+      "category": "AI Integration",
+      "effortCategory": "AI Assistance"
+    },
+    {
+      "id": "story-012",
+      "title": "AI-Assisted Story Creation",
+      "userStory": "As a PM, I can use AI to help draft new user stories based on project requirements and existing stories.",
+      "points": 8,
+      "businessValue": "Important",
+      "category": "Productivity Enhancement",
+      "effortCategory": "AI Assistance"
+    }
+  ]
+}

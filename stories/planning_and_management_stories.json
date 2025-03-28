@@ -1,0 +1,70 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-27",
+  "description": "Project planning, team management, and resource allocation stories",
+  "stories": [
+    {
+      "id": "story-008",
+      "title": "Adjustable Cost Settings",
+      "userStory": "As a user, I can adjust developer hourly rate and team size to see how they affect cost estimates in real time.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Cost Planning",
+      "effortCategory": "Core Functionality"
+    },
+    {
+      "id": "story-013",
+      "title": "Historical Comparison Dashboard",
+      "userStory": "As a client or PM, I can view how current estimates compare to historical projects with similar scope and complexity.",
+      "points": 13,
+      "businessValue": "Critical",
+      "category": "Cost Planning",
+      "effortCategory": "Analytics"
+    },
+    {
+      "id": "story-014",
+      "title": "Team Composition Impact Analysis",
+      "userStory": "As a PM, I can adjust the senior/mid/junior ratio of the team and see how it affects timeline and cost.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Team Planning",
+      "effortCategory": "Resource Management"
+    },
+    {
+      "id": "story-017",
+      "title": "Multi-Project Resource Allocation",
+      "userStory": "As a PM managing multiple projects, I can see how developer allocation across projects affects each project's timeline.",
+      "points": 13,
+      "businessValue": "Critical",
+      "category": "Resource Management",
+      "effortCategory": "Advanced Planning"
+    },
+    {
+      "id": "story-018",
+      "title": "Workday Calendar Customization",
+      "userStory": "As a PM, I can customize working days calendar to account for holidays in specific regions and company-specific non-working days.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Schedule Planning",
+      "effortCategory": "Time Management"
+    },
+    {
+      "id": "story-019",
+      "title": "Risk Factor Adjustment",
+      "userStory": "As a PM, I can add risk factors to specific stories or the entire project and see how they affect the confidence level of estimates.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Risk Management",
+      "effortCategory": "Planning"
+    },
+    {
+      "id": "story-026",
+      "title": "Weighted Scoring for Value Estimation",
+      "userStory": "As a PM, I can apply a weighted scoring formula to stories (e.g., ROI × urgency × feasibility) to better prioritize scope.",
+      "points": 8,
+      "businessValue": "Important",
+      "category": "Decision Support",
+      "effortCategory": "Planning"
+    }
+  ]
+}

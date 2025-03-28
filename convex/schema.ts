@@ -185,7 +185,7 @@ export default defineSchema({
     // Matrix position (if placed on matrix)
     matrixPosition: v.optional(v.object({
       value: v.string(),
-      effort: v.string(),
+      effort: v.string()
     })),
     isPublic: v.boolean(),
     sharedWithClients: v.array(v.string()),
@@ -197,6 +197,32 @@ export default defineSchema({
     }))),
   })
   .index("by_project", ["projectId"]),
+
+  // Schema for story collections
+  storyCollections: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    stories: v.array(v.object({
+      _id: v.string(),
+      title: v.string(),
+      businessValue: v.string(),
+      userStory: v.optional(v.string()),
+      category: v.optional(v.string()),
+      points: v.optional(v.number()),
+      storyPoints: v.optional(v.number()),
+      notes: v.optional(v.string()),
+      effortCategory: v.optional(v.string()),
+      adjustmentReason: v.optional(v.string()),
+      originalPoints: v.optional(v.number()),
+      position: v.optional(v.object({
+        value: v.string(),
+        effort: v.string()
+      }))
+    })),
+    createdBy: v.optional(v.string()),
+    createdAt: v.number(),
+    lastModified: v.number()
+  }),
 
   // Schema for promo codes
   promoCodes: defineTable({

@@ -30,6 +30,7 @@ type ValueMatrixProps = {
   totalPoints?: number;
   totalEffort?: number;
   renderPositionedStories?: RenderPositionedStoriesFunction;
+  getStoriesInCell?: (value: string, effort: string) => Story[];
 };
 
 // Function to fix any React node rendering issues
@@ -86,7 +87,8 @@ export function ValuesMatrix({
   toggleStoryExpansion = () => {},
   totalPoints,
   totalEffort,
-  renderPositionedStories 
+  renderPositionedStories,
+  getStoriesInCell = (value: string, effort: string) => []
 }: ValueMatrixProps) {
   // Track which mismatch alerts are dismissed
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
@@ -119,32 +121,38 @@ export function ValuesMatrix({
   // Define the value and effort levels
   const valueLevels = ['high', 'medium', 'low'];
   const effortLevels = ['low', 'medium', 'high'];
-  const businessValueLevels = ['high', 'medium', 'low'];
   
   // Define point ranges for effort levels
-  const pointRanges = {
+  const pointRanges: Record<string, string> = {
     'low': '1-3',
     'medium': '5-8',
     'high': '13-21'
   };
   
   // Map business value to readable labels
-  const businessValueLabels = {
+  const businessValueLabels: Record<string, string> = {
     'high': 'Critical',
     'medium': 'Important',
     'low': 'Nice to Have'
   };
 
+  // Define effort level labels for consistent display
+  const effortLabels: Record<string, string> = {
+    'low': 'Small (1-3 pts)',
+    'medium': 'Medium (5 pts)',
+    'high': 'Large (8+ pts)'
+  };
+
   // Define color classes for the matrix cells
   const getColorClass = (valueLevel: string) => {
     // Use standardized terminology with specific colors
-    if (valueLevel === 'Critical' || valueLevel === 'High') {
+    if (valueLevel === 'Critical' || valueLevel === 'high') {
       return 'bg-green-100 border-green-300';
-    } else if (valueLevel === 'Important' || valueLevel === 'Medium') {
-      return 'bg-blue-100 border-blue-300';
+    } else if (valueLevel === 'Important' || valueLevel === 'medium') {
+      return 'bg-yellow-100 border-yellow-300';
     } else {
-      // "Nice to Have" or "Low"
-      return 'bg-gray-100 border-gray-300';
+      // "Nice to Have" or "low"
+      return 'bg-red-100 border-red-300';
     }
   };
 
@@ -153,86 +161,83 @@ export function ValuesMatrix({
     if (valueLevel === 'high' || valueLevel === 'Critical') {
       return 'text-green-800';
     } else if (valueLevel === 'medium' || valueLevel === 'Important') {
-      return 'text-blue-800';
+      return 'text-yellow-800';
     } else {
-      return 'text-gray-800'; // "Nice to Have" or "low"
+      return 'text-red-800'; // "Nice to Have" or "low"
     }
   };
 
   // Function to get stories for a specific cell
-  const getStoriesInCell = (value: string, effort: string) => {
+  const getStoriesForCell = getStoriesInCell || ((value: string, effort: string) => {
     if (!stories || !Array.isArray(stories)) return [];
     
     // Map business values to matrix values
-    const businessValueMap: Record<string, string> = {
+    const valueMap: Record<string, string> = {
       'Critical': 'high',
       'Important': 'medium',
       'Nice to Have': 'low'
     };
-    
-    // Map effort categories to matrix effort levels
-    const effortCategoryMap: Record<string, string> = {
-      'Small': 'low',
-      'Medium': 'medium',
-      'Large': 'high'
+
+    // Map story points to effort levels
+    const pointsToEffort = (points: number): string => {
+      if (points <= 3) return 'low';
+      if (points <= 8) return 'medium';
+      return 'high';
     };
-    
+
+    // Filter stories to find those in this cell
     return stories.filter(story => {
-      // Get the matrix value that corresponds to the story's business value
-      const storyValue = businessValueMap[story.businessValue || ''] || value;
+      // Get story business value and map to matrix value (high/medium/low)
+      const storyValue = valueMap[story.businessValue as keyof typeof valueMap] || 'low';
       
-      // Get the matrix effort that corresponds to the story's effort category
-      const storyEffort = effortCategoryMap[story.effortCategory || ''] || effort;
+      // Get story effort level based on story points
+      const storyPoints = story.storyPoints || story.points;
+      const storyEffort = pointsToEffort(storyPoints || 0);
       
       // Return true if both match the cell's value and effort
       return storyValue === value && storyEffort === effort;
     });
-  };
+  });
 
   const renderCell = (value: string, effort: string) => {
     const { setNodeRef, isOver } = useDroppable({
-      id: `cell-${value}-${effort}`,
+      id: `matrix-${value}-${effort}`,
+      data: {
+        value,
+        effort,
+        type: 'matrix-cell'
+      }
     });
-    
-    const cellStories = getStoriesInCell(value, effort);
+
+    // Get stories that should be positioned in this cell
+    const cellStories = getStoriesForCell(value, effort);
     const valueKey = valueLevels.indexOf(value);
     const effortKey = effortLevels.indexOf(effort);
     
-    // Check for business value mismatches
-    const storiesWithMismatches = cellStories
-      .filter(story => story.businessValue && hasMismatch(story, value))
-      .map(story => ({
-        storyId: story._id || story.id || '',
-        storyValue: story.businessValue || '',
-        cellValue: value,
-        storyTitle: story.title
-      }));
+    // Get color class based on the value level
+    const colorClass = getColorClass(businessValueLabels[value] || value);
     
-    // Render the cell with appropriate styling
-    const cellClassName = `border rounded-lg p-3 min-h-24 h-full 
-                          ${getColorClass(value)}
-                          ${cellStories.length > 0 ? 'shadow-md' : 'shadow-sm'}
-                          ${isOver ? 'border-2 border-blue-500 shadow-lg ring-2 ring-blue-300' : 'border-gray-200'}
-                          ${isOver ? 'relative before:absolute before:inset-0 before:bg-blue-100 before:bg-opacity-40 before:z-0 before:rounded-lg' : ''}
-                          transition-all duration-200 hover:shadow-lg`;
     return (
-      <MatrixCell
-        key={`cell-${value}-${effort}`}
-        value={value}
-        effort={effort}
-        className={cellClassName}
-        showAlert={storiesWithMismatches.length > 0}
-        isDismissed={dismissedAlerts.has(`${value}-${effort}`)}
-        onDismiss={() => handleDismissAlert(`${value}-${effort}`)}
-        setNodeRef={setNodeRef}
+      <div
+        ref={setNodeRef}
+        className={`p-3 h-full rounded border-2 ${colorClass} ${isOver ? 'ring-2 ring-blue-500' : ''} relative transition-all duration-200`}
+        style={{ minHeight: '120px' }}
       >
         {isOver && (
-          <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-            <div className="border-2 border-blue-400 border-dashed rounded-lg w-full h-full animate-pulse"></div>
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <div className="border-2 border-blue-400 border-dashed rounded-lg w-full h-full animate-pulse bg-blue-50 bg-opacity-40"></div>
           </div>
         )}
-        <div className="text-xs text-gray-500 mb-2 relative z-10">
-          {valueLevels[valueKey]} / {effortLevels[effortKey]}
+        <div className="text-xs text-gray-500 mb-2 relative z-5 flex justify-between items-center">
+          <span>{businessValueLabels[value] || value} / {effortLabels[effort] || effort}</span>
+          <span className="bg-gray-100 px-1 py-0.5 rounded text-xs font-medium">
+            {cellStories.length > 0 ? (
+              <>
+                {cellStories.length} {cellStories.length === 1 ? 'story' : 'stories'} • 
+                {cellStories.reduce((sum, story) => sum + (story.points || 0), 0)} pts
+              </>
+            ) : ''}
+          </span>
         </div>
         
         {renderPositionedStories ? (
@@ -252,17 +257,18 @@ export function ValuesMatrix({
                     return onUpdateStory(updatedStory);
                   } : undefined
                 }
+                inMatrix={true} // Indicate this card is in the matrix
               />
             ))}
           </div>
         )}
-      </MatrixCell>
+      </div>
     );
   };
 
   // Handle rendering of the matrix header
   const renderValueHeader = (value: string, index: number) => {
-    const valueLabel = businessValueLabels[value as keyof typeof businessValueLabels] || value;
+    const valueLabel = businessValueLabels[value];
     return (
       <div 
         key={`value-header-${index}`} 
@@ -275,12 +281,13 @@ export function ValuesMatrix({
 
   // Handle rendering of the matrix effort row headers
   const renderEffortHeader = (effort: string, index: number) => {
+    const capitalizedEffort = effort.charAt(0).toUpperCase() + effort.slice(1);
     return (
       <div 
         key={`effort-header-${index}`} 
         className="p-2 text-right text-gray-700 font-medium"
       >
-        {effort} <span className="text-xs">({pointRanges[effort as keyof typeof pointRanges]})</span>
+        {capitalizedEffort} <span className="text-xs">({pointRanges[effort]})</span>
       </div>
     );
   };
@@ -288,50 +295,95 @@ export function ValuesMatrix({
   // Structure of the matrix - main grid wrapper with header row, header column, and cells
   return (
     <div className="bg-white border rounded-lg shadow-sm p-4">
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        {/* Header row - empty corner cell */}
-        <div className="col-span-1"></div>
-        
-        {/* Value headers */}
-        <div className="col-span-3 grid grid-cols-3 gap-3">
-          {valueLevels.map((value, index) => renderValueHeader(value, index))}
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold">Business Value Matrix</h3>
+        <div className="text-sm text-gray-600">
+          {stories.length} {stories.length === 1 ? 'story' : 'stories'} • 
+          {stories.reduce((sum, story) => sum + (story.points || 0), 0)} total points
         </div>
       </div>
-
-      {/* Main grid - effort rows with cells */}
-      {effortLevels.map((effort, effortIndex) => (
-        <div key={`row-${effortIndex}`} className="grid grid-cols-4 gap-3 mb-3">
-          {/* Effort header */}
-          <div className="col-span-1">
-            {renderEffortHeader(effort, effortIndex)}
+      <div className="bg-white rounded-lg">
+        {/* Table header with effort levels */}
+        <div className="grid grid-cols-4 gap-0 border-b">
+          <div className="py-2 px-2 font-bold text-center">Business Value ↓</div>
+          <div className="py-2 px-2 text-center font-semibold border-l">
+            {effortLabels['low']}
+          </div>
+          <div className="py-2 px-2 text-center font-semibold border-l">
+            {effortLabels['medium']}
+          </div>
+          <div className="py-2 px-2 text-center font-semibold border-l">
+            {effortLabels['high']}
+          </div>
+        </div>
+        
+        {/* Business value rows with effort cells */}
+        <div className="divide-y">
+          {/* Critical row */}
+          <div className="grid grid-cols-4 gap-0">
+            <div className="p-2 font-semibold text-green-800">
+              {businessValueLabels['high']}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('high', 'low')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('high', 'medium')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('high', 'high')}
+            </div>
           </div>
           
-          {/* Value cells for this effort level */}
-          <div className="col-span-3 grid grid-cols-3 gap-3">
-            {valueLevels.map((value, valueIndex) => (
-              <div key={`cell-${effortIndex}-${valueIndex}`} className="min-h-[120px]">
-                {renderCell(value, effort)}
-              </div>
-            ))}
+          {/* Important row */}
+          <div className="grid grid-cols-4 gap-0">
+            <div className="p-2 font-semibold text-yellow-800">
+              {businessValueLabels['medium']}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('medium', 'low')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('medium', 'medium')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('medium', 'high')}
+            </div>
+          </div>
+          
+          {/* Nice to Have row */}
+          <div className="grid grid-cols-4 gap-0">
+            <div className="p-2 font-semibold text-red-800">
+              {businessValueLabels['low']}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('low', 'low')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('low', 'medium')}
+            </div>
+            <div className="border-l min-h-[150px]">
+              {renderCell('low', 'high')}
+            </div>
           </div>
         </div>
-      ))}
       
-      {/* Footer with totals */}
-      {(totalPoints || totalEffort) && (
-        <div className="mt-4 border-t pt-4 grid grid-cols-2 gap-4">
-          {totalPoints && (
-            <div className="text-sm">
-              <span className="font-semibold">Total Points:</span> {totalPoints}
-            </div>
-          )}
-          {totalEffort && (
-            <div className="text-sm text-right">
-              <span className="font-semibold">Total Effort:</span> {totalEffort}
-            </div>
-          )}
-        </div>
-      )}
+        {/* Footer with totals */}
+        {(totalPoints || totalEffort) && (
+          <div className="mt-4 border-t pt-4 grid grid-cols-2 gap-4 p-3">
+            {totalPoints && (
+              <div className="text-sm">
+                <span className="font-semibold">Total Points:</span> {totalPoints}
+              </div>
+            )}
+            {totalEffort && (
+              <div className="text-sm text-right">
+                <span className="font-semibold">Total Effort:</span> {totalEffort}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

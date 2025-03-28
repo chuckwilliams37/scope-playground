@@ -3,18 +3,20 @@ import { useState, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
-  DragOverlay,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   DragOverEvent,
-  closestCenter
+  closestCenter,
+  KeyboardSensor,
+  DragOverlay
 } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { StoryCard } from "@/components/StoryCard";
-import { ValuesMatrix } from "@/components/ValuesMatrix";
-import { BacklogViewer } from "@/components/BacklogViewer";
-import { MetricsPanel } from "@/components/MetricsPanel";
+import { ValuesMatrix } from '@/components/ValuesMatrix';
+import { BacklogViewer } from '@/components/BacklogViewer';
+import { MetricsPanel } from '@/components/MetricsPanel';
 import { ScenarioManager } from "@/components/ScenarioManager";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { EffortMismatchModal } from "../components/EffortMismatchModal";
@@ -27,104 +29,93 @@ import { ExportPanel } from '../components/ExportPanel';
 import { TopNavbar } from '../components/TopNavbar';
 import { Notification, NotificationType } from "../components/Notification";
 import { ShareProject } from "../components/ShareProject";
-
-// Define the Story type
-type Story = {
-  _id: string;
-  title: string;
-  businessValue: string;
-  storyPoints: number;
-  points?: number;
-  notes: string;
-  userStory: string;
-  category: string;
-  effortCategory?: string;
-  adjustmentReason?: string;
-  originalPoints?: number;
-};
+import { BacklogManager } from '../components/BacklogManager';
+import { Story } from '../types/index';
 
 // Sample data to use instead of Convex API until it's fully set up
-const sampleStories: Story[] = [
+const sampleStories = [
   {
-    _id: "story-001",
-    title: "Client-Specific Story Access",
-    businessValue: "Critical",
+    _id: 'story-001',
+    title: 'Client-Specific Story Access',
+    userStory: 'As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.',
+    points: 5,
     storyPoints: 5,
-    notes: "Users should only see stories shared with them by the admin or PM.",
-    userStory: "As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.",
-    category: "Access Control"
+    businessValue: 'Critical',
+    category: 'Access Control',
+    effortCategory: 'Security',
+    notes: "This enables multi-tenant usage where each client only sees relevant stories"
   },
   {
-    _id: "story-002",
-    title: "Backlog Story Viewer",
-    businessValue: "Critical",
+    _id: 'story-002',
+    title: 'Backlog Story Viewer',
+    businessValue: 'Critical',
     storyPoints: 3,
-    notes: "View list of stories with expandable detail",
-    userStory: "As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.",
-    category: "Story Management"
+    notes: 'View list of stories with expandable detail',
+    userStory: 'As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.',
+    category: 'Story Management'
   },
   {
-    _id: "story-003",
-    title: "Scope Matrix Drag-and-Drop",
-    businessValue: "Important",
+    _id: 'story-003',
+    title: 'Scope Matrix Drag-and-Drop',
+    businessValue: 'Important',
     storyPoints: 8,
-    notes: "Drag-and-drop with effort validation feedback",
-    userStory: "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
-    category: "UI Interaction"
+    notes: 'Drag-and-drop with effort validation feedback',
+    userStory: 'As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.',
+    category: 'UI Interaction'
   },
   {
-    _id: "story-004",
-    title: "Business Value Mismatch Explanation",
-    businessValue: "Important",
+    _id: 'story-004',
+    title: 'Business Value Mismatch Explanation',
+    businessValue: 'Important',
     storyPoints: 5,
-    notes: "Contextual messages for value mismatches",
-    userStory: "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
-    category: "UX Enhancement"
+    notes: 'Contextual messages for value mismatches',
+    userStory: 'When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.',
+    category: 'UX Enhancement'
   },
   {
-    _id: "story-005",
-    title: "Real-Time Scope Metrics Panel",
-    businessValue: "Critical",
+    _id: 'story-005',
+    title: 'Real-Time Scope Metrics Panel',
+    businessValue: 'Critical',
     storyPoints: 8,
-    notes: "Live metrics for points, days, and cost",
-    userStory: "As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.",
-    category: "Analytics"
+    notes: 'Live metrics for points, days, and cost',
+    userStory: 'As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.',
+    category: 'Analytics'
   },
   {
-    _id: "story-006",
-    title: "Scenario Presets and Reset",
-    businessValue: "Important",
+    _id: 'story-006',
+    title: 'Scenario Presets and Reset',
+    businessValue: 'Important',
     storyPoints: 3,
-    notes: "Load recommended configs and reset scope",
-    userStory: "As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.",
-    category: "Configuration"
+    notes: 'Load recommended configs and reset scope',
+    userStory: 'As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.',
+    category: 'Configuration'
   },
   {
-    _id: "story-007",
-    title: "Save and Load Scenarios",
-    businessValue: "Important",
+    _id: 'story-007',
+    title: 'Save and Load Scenarios',
+    businessValue: 'Important',
     storyPoints: 5,
-    notes: "Save configurations for later comparison",
-    userStory: "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
-    category: "Data Management"
+    notes: 'Save configurations for later comparison',
+    userStory: 'As a client, I can save scope matrix configurations and reload them later for comparison or revision.',
+    category: 'Data Management'
   },
   {
-    _id: "story-008",
-    title: "AI Productivity Factor Adjustment",
-    businessValue: "Important",
+    _id: 'story-008',
+    title: 'AI Productivity Factor Adjustment',
+    businessValue: 'Important',
     storyPoints: 5,
-    notes: "Adjust how AI impacts productivity",
-    userStory: "As a product manager, I can adjust the estimated productivity gains from AI-assisted development in different categories to refine time and cost projections.",
-    category: "Planning"
+    notes: 'Adjust how AI impacts productivity',
+    userStory: 'As a product manager, I can adjust the estimated productivity gains from AI-assisted development in different categories to refine time and cost projections.',
+    category: 'Planning'
   },
   {
-    _id: "story-009",
-    title: "Scope Limiters",
-    businessValue: "Nice to Have",
+    _id: 'story-009',
+    title: 'Scope Limiters',
+    businessValue: 'Nice to Have',
     storyPoints: 3,
-    notes: "Set maximum points, hours, and duration",
-    userStory: "As a client, I can set maximum limits for story points, development hours, and project duration to visualize scope constraints clearly.",
-    category: "Planning"
+    notes: 'Set maximum points, hours, and duration',
+    userStory: 'As a client, I can set maximum limits for story points, development hours, and project duration to visualize scope constraints clearly.',
+    category: 'Planning'
   }
 ];
 
@@ -250,6 +241,13 @@ const defaultSettings: Settings = {
   pointsToHoursConversion: 8,
 };
 
+// Type for story positions
+type StoryPosition = {
+  value: string;
+  effort: string;
+  rank: number;
+};
+
 export default function ScopePlaygroundPage() {
   // Fetch stories from Convex instead of using sample data
   const fetchedStories = useQuery(api.stories.listAccessibleStories, { clientId: undefined }) || [];
@@ -288,16 +286,24 @@ export default function ScopePlaygroundPage() {
   }, [fetchedStories]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [storyPositions, setStoryPositions] = useState<Record<string, { value: string, effort: string, rank?: number }>>({});
+  const [activeStory, setActiveStory] = useState<Story | null>(null);
+  const [activeCell, setActiveCell] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [storyPositions, setStoryPositions] = useState<Record<string, StoryPosition>>({});
   const [showSettings, setShowSettings] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [showBacklogManager, setShowBacklogManager] = useState(false);
   
+  // Project settings with tweakable parameters
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+
   // State for effort mismatch handling
   const [pendingStoryPlacement, setPendingStoryPlacement] = useState<{
     storyId: string;
-    cellValue: string;
-    cellEffort: string;
+    valueLevel: string;
+    effortLevel: string;
+    originalPoints?: number;
     suggestedPoints: number;
   } | null>(null);
 
@@ -309,13 +315,6 @@ export default function ScopePlaygroundPage() {
   }>({});
   
   // State for drag and drop reordering
-  const [activeCell, setActiveCell] = useState<string | null>(null);
-  const [reordering, setReordering] = useState(false);
-  
-  // Project settings with tweakable parameters
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-
-  // Set up state for expanded stories
   const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
   // Track stories that should be expanded in the backlog
   const [expandedBacklogStoryIds, setExpandedBacklogStoryIds] = useState<string[]>([]);
@@ -356,6 +355,15 @@ export default function ScopePlaygroundPage() {
       }
     });
   };
+
+  // Memoize the stories in each cell to avoid re-rendering
+  const getStoriesInCell = ((valueLevel: string, effortLevel: string) => {
+    // Filter only stories that are in the matrix and in this specific cell
+    return stories.filter(story => {
+      const position = storyPositions[story._id];
+      return position && position.value === valueLevel && position.effort === effortLevel;
+    });
+  });
 
   // Calculate metrics
   const calculateMetrics = () => {
@@ -610,27 +618,36 @@ export default function ScopePlaygroundPage() {
     }, 50);
   }, [stories, storyPositions, settings]);
 
-  // Set up sensors for drag interactions
+  // Setup sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 10, // Only start dragging after moving 10px to prevent accidental drags
       },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string);
+    const storyId = active.id as string;
+    
+    // Set the active story ID for the overlay
+    setActiveId(storyId);
+    
+    // Find the story being dragged
+    const story = stories.find(s => s._id === storyId);
+    if (story) {
+      setActiveStory(story);
+    }
     
     // Check if this is a reordering operation within a cell
-    const storyId = active.id as string;
-    const story = stories.find(s => s._id === storyId);
-    
     if (story && storyPositions[storyId]) {
       setReordering(true);
       const { value, effort } = storyPositions[storyId];
-      setActiveCell(`cell-${value}-${effort}`);
+      setActiveCell(`matrix-${value}-${effort}`);
     } else {
       setReordering(false);
       setActiveCell(null);
@@ -642,14 +659,12 @@ export default function ScopePlaygroundPage() {
     
     if (!over) return;
     
-    // Handle matrix cell drag over - only handle visualization and position tracking
-    // but don't trigger the effort mismatch modal here
+    // Handle matrix cell drag over
     if (active.id.toString().startsWith('story-') && over.id.toString().includes('-')) {
       // Track the current cell being dragged over for visual feedback
-      // but don't perform effort mismatch checking until dragEnd
       const overId = over.id.toString();
-      if (overId.startsWith('cell-')) {
-        // Update UI feedback for drag-over, if needed
+      if (overId.startsWith('matrix-')) {
+        console.log("Dragging over matrix cell:", overId);
       }
     }
   };
@@ -657,85 +672,215 @@ export default function ScopePlaygroundPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (over && active.id !== over.id) {
-      const storyId = active.id as string;
-      
-      // Handle reordering finish
-      if (reordering) {
-        // Reordering is handled in dragOver, just reset states
-        setReordering(false);
-        setActiveCell(null);
-      }
-      // Handle story placement in a cell
-      else if (over.id.toString().includes('cell-')) {
-        const cellId = over.id as string;
-        const [_, valueLevel, effortLevel] = cellId.split('-');
-        const story = stories.find(s => s._id === storyId);
-        
-        if (story) {
-          // Check if story points match the effort level they're being placed in
-          const storyPoints = story.storyPoints || story.points || 0;
-          const hasEffortMismatch = checkEffortMismatch(storyPoints, effortLevel);
-          
-          if (hasEffortMismatch) {
-            // Don't immediately reset activeId - keep the card visually in the target position
-            // until the user makes a decision in the mismatch dialog
-            setPendingStoryPlacement({
-              storyId,
-              cellValue: valueLevel,
-              cellEffort: effortLevel,
-              suggestedPoints: getSuggestedPointsForEffort(effortLevel)
-            });
-            
-            // We don't set activeId to null here to prevent the card from bouncing back
-            return; // Return early to maintain the dragging state
-          } else {
-            // No mismatch, proceed with placement
-            
-            // Get highest rank in target cell
-            const highestRank = Object.entries(storyPositions)
-              .filter(([_, pos]) => pos.value === valueLevel && pos.effort === effortLevel)
-              .reduce((max, [_, pos]) => Math.max(max, pos.rank || 0), -1);
-            
-            // Place at end of list
-            setStoryPositions(prev => ({
-              ...prev,
-              [storyId]: {
-                value: valueLevel,
-                effort: effortLevel,
-                rank: highestRank + 1
-              },
-            }));
-            
-            // Trigger drop animation
-            setDropAnimations(prev => ({
-              ...prev,
-              [storyId]: {
-                active: true,
-                timestamp: Date.now()
-              }
-            }));
-            
-            // Reset animation after duration
-            setTimeout(() => {
-              setDropAnimations(prev => ({
-                ...prev,
-                [storyId]: {
-                  active: false,
-                  timestamp: prev[storyId]?.timestamp || 0
-                }
-              }));
-            }, 1000);
-          }
-        }
-      }
-    }
-    
-    if (!pendingStoryPlacement) {
+    if (!over) {
+      // No valid drop target, reset states
       setActiveId(null);
+      setActiveStory(null);
       setReordering(false);
       setActiveCell(null);
+      return;
     }
+    
+    const storyId = active.id as string;
+    const targetId = over.id as string;
+    
+    console.log("Drag end - story:", storyId, "target:", targetId);
+    
+    // Handle dropping into matrix cell
+    if (targetId.startsWith('matrix-')) {
+      const parts = targetId.split('-');
+      if (parts.length === 3) {
+        const [, valueLevel, effortLevel] = parts;
+        
+        // Find the story being dragged
+        const draggedStory = stories.find(s => s._id === storyId);
+        
+        if (draggedStory) {
+          // Get story points based on the cell effort level
+          let suggestedPoints = 5; // Default for medium
+          if (effortLevel === 'low') {
+            // Low effort: 1-3 points
+            suggestedPoints = 3;
+          } else if (effortLevel === 'medium') {
+            // Medium effort: 5 points
+            suggestedPoints = 5;
+          } else if (effortLevel === 'high') { 
+            // High effort: 8+ points
+            suggestedPoints = 8;
+          } else {
+            console.error('Unknown effort level:', effortLevel);
+            return; // Invalid effort level
+          }
+          
+          // Check for effort mismatch - properly handle larger point values
+          if (draggedStory.storyPoints && !pendingStoryPlacement) {
+            // For high effort, consider 8+ points as a match (don't reduce higher points)
+            const isMismatch = effortLevel === 'high' 
+              ? draggedStory.storyPoints < 8  // Only mismatch if points are less than 8
+              : effortLevel === 'medium'
+                ? draggedStory.storyPoints !== 5
+                : draggedStory.storyPoints > 3; // For low effort
+                
+            if (isMismatch) {
+              console.log(`Effort mismatch: Story has ${draggedStory.storyPoints} points, cell is ${effortLevel} effort (${suggestedPoints} points)`);
+              
+              // For high effort cells with high-point stories, keep the original points
+              const effectiveSuggestedPoints = (effortLevel === 'high' && draggedStory.storyPoints > 8) 
+                ? draggedStory.storyPoints 
+                : suggestedPoints;
+              
+              // Show mismatch modal instead of placing directly
+              setPendingStoryPlacement({
+                storyId,
+                valueLevel,
+                effortLevel,
+                originalPoints: draggedStory.storyPoints,
+                suggestedPoints: effectiveSuggestedPoints
+              });
+              return; // Exit early, don't update until user confirms
+            }
+          }
+          
+          // Get business value based on the cell value level
+          let valueLevel3Scale = 'Important'; // Default
+          if (valueLevel === 'high') {
+            valueLevel3Scale = 'Critical';
+          } else if (valueLevel === 'medium') {
+            valueLevel3Scale = 'Important';
+          } else if (valueLevel === 'low') {
+            valueLevel3Scale = 'Nice to Have';
+          } else {
+            console.error('Unknown value level:', valueLevel);
+          }
+          
+          // Flag business value mismatch rather than changing the value
+          const hasMismatch = draggedStory.businessValue && draggedStory.businessValue !== valueLevel3Scale;
+          
+          // Determine if this is a points adjustment
+          const isAdjustment = draggedStory.storyPoints && draggedStory.storyPoints !== suggestedPoints;
+          const finalPoints = (effortLevel === 'high' && draggedStory.storyPoints && draggedStory.storyPoints > 8) 
+              ? draggedStory.storyPoints  // Keep high point values for high effort
+              : suggestedPoints;
+              
+          // Update the story with new properties, but don't change businessValue
+          const updatedStory = {
+            ...draggedStory,
+            storyPoints: finalPoints,
+            points: finalPoints,
+            businessValueMismatch: hasMismatch ? valueLevel3Scale : undefined,
+            // Store original points and adjustment reason if this is an adjustment
+            originalPoints: isAdjustment ? draggedStory.storyPoints : undefined,
+            adjustmentReason: isAdjustment ? "Adjusted to match matrix position" : undefined
+          };
+          
+          // Update in state
+          handleUpdateStory(storyId, updatedStory);
+          
+          // Update the story position in the matrix
+          setStoryPositions(prev => {
+            const newPositions = { ...prev };
+            newPositions[storyId] = {
+              value: valueLevel,
+              effort: effortLevel,
+              rank: 0 // Initial rank
+            };
+            return newPositions;
+          });
+          
+          console.log("Story positioned in matrix:", storyId, valueLevel, effortLevel);
+        }
+      }
+    } else {
+      console.log("Drop target is not a matrix cell:", targetId);
+    }
+    
+    // Reset drag states
+    setActiveId(null);
+    setActiveStory(null);
+    setReordering(false);
+    setActiveCell(null);
+  };
+
+  // Handle the user adjusting the story points in the mismatch modal
+  const handleAdjustStoryPoints = (newPoints: number, reason: string) => {
+    if (!pendingStoryPlacement) return;
+    
+    if (!reason.trim()) {
+      setValidationErrors({
+        adjustmentReason: 'Please provide a reason for adjustment'
+      });
+      return;
+    }
+    
+    setValidationErrors({});
+    
+    const { storyId, valueLevel, effortLevel } = pendingStoryPlacement;
+    
+    // Update the story points
+    const updatedStories = stories.map(story => {
+      if (story._id === storyId) {
+        return {
+          ...story,
+          storyPoints: newPoints,
+          points: newPoints,
+          adjustmentReason: reason
+        };
+      }
+      return story;
+    });
+    
+    // Update story positions
+    // Get the current highest rank in that cell
+    const storiesInCell = Object.entries(storyPositions)
+      .filter(([_, pos]) => pos.value === valueLevel && pos.effort === effortLevel)
+      .map(([id, pos]) => ({ id, rank: pos.rank || 0 }));
+    
+    const maxRank = storiesInCell.length > 0 
+      ? Math.max(...storiesInCell.map(s => s.rank)) 
+      : -1;
+    
+    setStoryPositions(prev => {
+      const newPositions = { ...prev };
+      newPositions[storyId] = {
+        value: valueLevel,
+        effort: effortLevel,
+        rank: maxRank + 1
+      };
+      return newPositions;
+    });
+    
+    // Update stories
+    setStories(updatedStories);
+    
+    // Clear pending placement
+    setPendingStoryPlacement(null);
+  };
+
+  // Handle keeping existing points
+  const handleKeepStoryPoints = () => {
+    if (!pendingStoryPlacement) return;
+    
+    const { storyId, valueLevel, effortLevel } = pendingStoryPlacement;
+    
+    // Place story in the cell with original points
+    setStoryPositions({
+      ...storyPositions,
+      [storyId]: {
+        value: valueLevel,
+        effort: effortLevel,
+      },
+    });
+    
+    // Clear pending placement
+    setPendingStoryPlacement(null);
+  };
+
+  // Handle canceling placement
+  const handleCancelPlacement = () => {
+    setPendingStoryPlacement(null);
+    setActiveId(null);
+    setReordering(false);
+    setActiveCell(null);
   };
 
   // Check if there's an effort mismatch
@@ -767,88 +912,6 @@ export default function ScopePlaygroundPage() {
   };
   
   // Handle effort level mismatch for story placement
-  const handleAdjustStoryPoints = (newPoints: number, adjustmentReason: string) => {
-    if (!pendingStoryPlacement) return;
-    
-    if (!adjustmentReason.trim()) {
-      setValidationErrors({
-        adjustmentReason: 'Please provide a reason for adjustment'
-      });
-      return;
-    }
-    
-    setValidationErrors({});
-    
-    const { storyId, cellValue, cellEffort } = pendingStoryPlacement;
-    
-    // Update the story points
-    const updatedStories = stories.map(story => {
-      if (story._id === storyId) {
-        return {
-          ...story,
-          storyPoints: newPoints,
-          points: newPoints,
-          adjustmentReason,
-          originalPoints: story.originalPoints || story.storyPoints
-        };
-      }
-      return story;
-    });
-    
-    // Update story positions
-    // Get the current highest rank in that cell
-    const storiesInCell = Object.entries(storyPositions)
-      .filter(([_, pos]) => pos.value === cellValue && pos.effort === cellEffort)
-      .map(([id, pos]) => ({ id, rank: pos.rank || 0 }));
-    
-    const maxRank = storiesInCell.length > 0 
-      ? Math.max(...storiesInCell.map(s => s.rank)) 
-      : -1;
-    
-    setStoryPositions(prev => ({
-      ...prev,
-      [storyId]: {
-        value: cellValue,
-        effort: cellEffort,
-        rank: maxRank + 1
-      }
-    }));
-    
-    // Update stories
-    setStories(updatedStories);
-    
-    // Clear pending placement
-    setPendingStoryPlacement(null);
-  };
-
-  // Handle keeping existing points
-  const handleKeepStoryPoints = () => {
-    if (!pendingStoryPlacement) return;
-    
-    const { storyId, cellValue, cellEffort } = pendingStoryPlacement;
-    
-    // Place story in the cell with original points
-    setStoryPositions({
-      ...storyPositions,
-      [storyId]: {
-        value: cellValue,
-        effort: cellEffort,
-      },
-    });
-    
-    // Clear pending placement
-    setPendingStoryPlacement(null);
-  };
-
-  // Handle canceling placement
-  const handleCancelPlacement = () => {
-    setPendingStoryPlacement(null);
-    setActiveId(null);
-    setReordering(false);
-    setActiveCell(null);
-  };
-
-  // Handle custom adjustment of story points
   const handleCustomAdjustPoints = (storyId: string, newPoints: number, reason: string) => {
     // Update story points with the custom adjustment and reason
     const updatedStories = stories.map(story => {
@@ -869,17 +932,8 @@ export default function ScopePlaygroundPage() {
     setStories(updatedStories);
   };
 
-  const activeStory = activeId ? stories.find(story => story._id === activeId) : null;
-  
   const getStoryPosition = (storyId: string) => {
     return storyPositions[storyId] || null;
-  };
-
-  const getStoriesInCell = (value: string, effort: string) => {
-    return stories.filter(story => {
-      const position = storyPositions[story._id];
-      return position && position.value === value && position.effort === effort;
-    });
   };
 
   // Handler for creating a new story
@@ -888,8 +942,11 @@ export default function ScopePlaygroundPage() {
       // Generate a proper story ID
       const storyNum = Math.max(
         ...stories.map(s => {
-          const match = (s._id.startsWith('story-') ? s._id : '').match(/story-(\d+)/);
-          return match ? parseInt(match[1], 10) : 0;
+          const id = s._id || '';
+          if (id.startsWith('story-')) {
+            return parseInt(id.replace('story-', ''), 10);
+          }
+          return 0;
         }),
         0
       ) + 1;
@@ -919,7 +976,7 @@ export default function ScopePlaygroundPage() {
       // Convert the returned Convex story to the Story type
       if (newStory) {
         return {
-          _id: newStory._id.toString(),
+          _id: newStory._id,
           title: newStory.title,
           businessValue: newStory.businessValue,
           storyPoints: newStory.points,
@@ -948,34 +1005,48 @@ export default function ScopePlaygroundPage() {
   // Handler for updating an existing story
   const handleUpdateStory = async (storyId: string, updatedStory: Story): Promise<boolean> => {
     try {
-      // Call the updateStory mutation
-      await updateStoryMutation({
-        id: storyId,
-        title: updatedStory.title,
-        userStory: updatedStory.userStory || "",
-        businessValue: updatedStory.businessValue || "Important",
-        category: updatedStory.category || "Feature",
-        points: updatedStory.storyPoints || updatedStory.points || 3,
-        effortCategory: updatedStory.effortCategory || "Medium",
-        notes: updatedStory.notes || ""
-      });
+      // Find the story to update
+      const storyIndex = stories.findIndex((s) => s._id === storyId);
       
-      // Add notification
-      setNotification({
-        type: "success",
-        message: `Story updated successfully`
-      });
+      if (storyIndex === -1) {
+        console.error(`Story with ID ${storyId} not found`);
+        return false;
+      }
+      
+      // Update the story in state
+      const updatedStories = [...stories];
+      updatedStories[storyIndex] = updatedStory;
+      setStories(updatedStories);
+      
+      // If we have an updateStory backend function, call it
+      if (updateStoryMutation) {
+        try {
+          // Check if the storyId needs to be converted to a Convex ID
+          if (storyId.includes('_')) {
+            // This is a Convex ID, call the backend
+            await updateStoryMutation({ 
+              id: storyId as unknown as Id<"stories">,
+              title: updatedStory.title,
+              businessValue: updatedStory.businessValue,
+              points: updatedStory.storyPoints || updatedStory.points || 0,
+              notes: updatedStory.notes || '',
+              userStory: updatedStory.userStory || '',
+              category: updatedStory.category || '',
+              effortCategory: updatedStory.effortCategory || '',
+            });
+          }
+        } catch (error) {
+          console.error('Failed to update story on backend:', error);
+          // Revert the change in the UI
+          const revertedStories = [...stories];
+          setStories(revertedStories);
+          return false;
+        }
+      }
       
       return true;
     } catch (error) {
       console.error('Error updating story:', error);
-      
-      // Add error notification
-      setNotification({
-        type: "error",
-        message: `Failed to update story: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-      
       return false;
     }
   };
@@ -1006,7 +1077,53 @@ export default function ScopePlaygroundPage() {
     }
   };
 
-  // Handle scenario management
+  // Function to handle auto-placing all stories based on their business value and story points
+  const handleAssignAllToDefaultCells = (storiesToAssign: Story[]) => {
+    const newPositions: Record<string, StoryPosition> = { ...storyPositions };
+    
+    storiesToAssign.forEach((story, index) => {
+      if (!story._id) return;
+      
+      // Determine value level based on business value
+      let valueLevel = 'medium'; // Default
+      if (story.businessValue === 'Critical') {
+        valueLevel = 'high';
+      } else if (story.businessValue === 'Important') {
+        valueLevel = 'medium';
+      } else if (story.businessValue === 'Nice to Have') {
+        valueLevel = 'low';
+      }
+      
+      // Determine effort level based on story points
+      let effortLevel = 'medium'; // Default
+      const points = story.storyPoints || story.points || 0;
+      if (points <= 3) {
+        effortLevel = 'low';
+      } else if (points === 5) {
+        effortLevel = 'medium';
+      } else if (points >= 8) {
+        effortLevel = 'high';
+      }
+      
+      // Add the position with explicit rank
+      newPositions[story._id] = { 
+        value: valueLevel, 
+        effort: effortLevel, 
+        rank: index 
+      };
+    });
+    
+    // Update all positions at once
+    setStoryPositions(newPositions);
+    
+    // Provide feedback
+    setNotification({
+      type: 'success',
+      message: `Assigned ${storiesToAssign.length} stories to matrix cells based on their business value and points`
+    });
+  };
+
+  // Scenario management functions
   const handleSaveScenario = async (name: string, description: string) => {
     console.log(`Saving scenario: ${name}`);
     
@@ -1050,6 +1167,7 @@ export default function ScopePlaygroundPage() {
     return Promise.resolve();
   };
 
+  // Handle loading scenarios with fixed UI updating
   const handleLoadScenario = async (scenarioId: string) => {
     console.log(`Loading scenario: ${scenarioId}`);
     
@@ -1057,7 +1175,7 @@ export default function ScopePlaygroundPage() {
     if (scenarioId === 'preset-mvp' || scenarioId === 'preset-lovable') {
       // For demo purposes, if it's the MVP preset, place critical stories in high value/low effort
       if (scenarioId === 'preset-mvp') {
-        const newPositions: Record<string, { value: string, effort: string, rank: number }> = {};
+        const newPositions: Record<string, StoryPosition> = {};
         
         stories.forEach((story, index) => {
           if (story.businessValue === 'Critical') {
@@ -1070,13 +1188,13 @@ export default function ScopePlaygroundPage() {
       
       // For demo purposes, if it's the lovable preset, place critical and high value stories
       if (scenarioId === 'preset-lovable') {
-        const newPositions: Record<string, { value: string, effort: string, rank: number }> = {};
+        const newPositions: Record<string, StoryPosition> = {};
         
         stories.forEach((story, index) => {
           if (story.businessValue === 'Critical') {
             newPositions[story._id] = { value: 'high', effort: 'low', rank: index };
-          } else if (story.businessValue === 'High') {
-            newPositions[story._id] = { value: 'high', effort: 'medium', rank: index };
+          } else if (story.businessValue === 'Important') {
+            newPositions[story._id] = { value: 'medium', effort: 'medium', rank: index };
           }
         });
         
@@ -1089,17 +1207,12 @@ export default function ScopePlaygroundPage() {
         const scenario = savedScenarios.find(s => s._id === scenarioId);
         
         if (scenario && scenario.data) {
-          // Restore story positions
-          setStoryPositions(scenario.data.storyPositions || {});
-          
-          // Restore settings if present
-          if (scenario.data.settings) {
-            setSettings(scenario.data.settings);
-          }
+          // Make a copy of the current stories to update
+          let updatedStories = [...stories];
           
           // Restore story adjustments if present
           if (scenario.data.stories && scenario.data.stories.length > 0) {
-            const updatedStories = stories.map(story => {
+            updatedStories = stories.map(story => {
               const savedStory = scenario.data.stories.find((s: any) => s._id === story._id);
               if (savedStory) {
                 return {
@@ -1113,18 +1226,57 @@ export default function ScopePlaygroundPage() {
               return story;
             });
             
+            // Update stories state
             setStories(updatedStories);
           }
           
+          // Restore settings if present
+          if (scenario.data.settings) {
+            setSettings(scenario.data.settings);
+          }
+          
+          // Restore story positions after a slight delay to ensure React has processed the story updates
+          setTimeout(() => {
+            if (scenario.data.storyPositions) {
+              // Make sure all positions have a rank to avoid TypeScript errors
+              const positionsWithRank: Record<string, StoryPosition> = {};
+              
+              Object.entries(scenario.data.storyPositions || {}).forEach(([id, posData], index) => {
+                // Cast position data to allow safe property access
+                const pos = posData as any;
+                
+                if (pos) {
+                  positionsWithRank[id] = {
+                    value: typeof pos.value === 'string' ? pos.value : 'medium',
+                    effort: typeof pos.effort === 'string' ? pos.effort : 'medium',
+                    rank: typeof pos.rank === 'number' ? pos.rank : index
+                  };
+                }
+              });
+              
+              // Set the positions with proper types
+              setStoryPositions(positionsWithRank);
+            }
+          }, 50);
+          
           console.log(`Scenario "${scenario.name}" loaded successfully!`);
-          alert(`Scenario "${scenario.name}" loaded successfully!`);
+          setNotification({
+            type: 'success',
+            message: `Scenario "${scenario.name}" loaded successfully!`
+          });
         } else {
           console.error('Scenario not found:', scenarioId);
-          alert('Scenario not found. It may have been deleted.');
+          setNotification({
+            type: 'error',
+            message: 'Scenario not found. It may have been deleted.'
+          });
         }
       } catch (error) {
         console.error('Error loading scenario:', error);
-        alert('Failed to load scenario. Please try again.');
+        setNotification({
+          type: 'error',
+          message: 'Failed to load scenario. Please try again.'
+        });
       }
     }
     
@@ -1142,6 +1294,20 @@ export default function ScopePlaygroundPage() {
   const handleUpdateSettings = (newSettings: any) => {
     setSettings(newSettings);
     setShowSettings(false);
+  };
+
+  // Function to remove all stories from matrix and place them back in backlog
+  const handleRemoveAllFromMatrix = () => {
+    // Clear all story positions
+    setStoryPositions({});
+    
+    console.log("All stories moved back to the backlog");
+    
+    // Show success notification
+    setNotification({
+      type: "success",
+      message: "All stories moved back to the backlog"
+    });
   };
 
   // Handle removing a story from the matrix
@@ -1172,53 +1338,122 @@ export default function ScopePlaygroundPage() {
   // State for Share Project modal
   const [showShareModal, setShowShareModal] = useState(false);
 
-  // Render the stories that have been positioned in the matrix
-  const renderPositionedStories = (valueLevel: string, effortLevel: string) => {
-    // Get stories in this cell
-    const cellStories = stories.filter(story => {
-      const position = storyPositions[story._id];
-      return position && position.value === valueLevel && position.effort === effortLevel;
-    });
+  // Generate next story ID
+  const getNextStoryId = () => {
+    const storyIds = stories
+      .map(s => {
+        const id = s._id || '';
+        if (id.startsWith('story-')) {
+          return parseInt(id.replace('story-', ''), 10);
+        }
+        return 0;
+      })
+      .filter(id => !isNaN(id));
+    
+    const maxId = Math.max(...storyIds, 0);
+    return `story-${String(maxId + 1).padStart(3, '0')}`;
+  };
 
-    // If no stories in this cell, return null
-    if (cellStories.length === 0) {
-      return null;
+  // Function to handle story import from BacklogManager
+  const handleImportStories = async (importedStories: any[], positions?: Record<string, any>) => {
+    try {
+      // Convert imported stories to the correct format if needed
+      const formattedStories = importedStories.map(story => {
+        // Ensure each story has required fields with proper types
+        return {
+          ...story,
+          _id: story._id || `temp-${Math.random().toString(36).substring(2, 9)}`,
+          title: story.title || "Untitled Story",
+          businessValue: story.businessValue || undefined,
+          storyPoints: story.storyPoints || story.points || 0,
+          userStory: story.userStory || "",
+          notes: story.notes || "",
+          category: story.category || "Feature"
+        };
+      });
+      
+      // Set or update story positions if provided
+      if (positions) {
+        setStoryPositions(prev => ({
+          ...prev,
+          ...positions
+        }));
+      }
+      
+      // Clear existing stories if this is a full import
+      if (formattedStories.length > 0) {
+        setStories(formattedStories);
+        console.log("Imported", formattedStories.length, "stories");
+      }
+    } catch (error) {
+      console.error("Error importing stories:", error);
     }
+  };
 
-    // Sort stories by rank if available
-    const sortedStories = [...cellStories].sort((a, b) => {
-      const rankA = storyPositions[a._id]?.rank || 0;
-      const rankB = storyPositions[b._id]?.rank || 0;
-      return rankA - rankB;
+  // Function to clear the backlog
+  const handleClearBacklog = () => {
+    if (window.confirm('Are you sure you want to clear the entire backlog? This cannot be undone.')) {
+      setStories([]);
+      setStoryPositions({});
+      setNotification({
+        type: 'info',
+        message: 'Backlog cleared successfully'
+      });
+    }
+  };
+
+  // Function to handle updating a story's value level or effort level via drag-and-drop
+  const handleStoryUpdate = async (storyId: string, value: string, effort: string) => {
+    if (!storyId) return;
+    
+    // Find the story
+    const storyToUpdate = stories.find(s => s._id === storyId);
+    if (!storyToUpdate) return;
+    
+    // Get correct business value text based on position value
+    let valueLevel3Scale = 'Important'; // Default
+    if (value === 'high') {
+      valueLevel3Scale = 'Critical';
+    } else if (value === 'medium') {
+      valueLevel3Scale = 'Important';
+    } else {
+      valueLevel3Scale = 'Nice to Have';
+    }
+    
+    // Get story points based on effort level
+    let storyPoints = 5; // Default (medium)
+    if (effort === 'low') {
+      storyPoints = 3;
+    } else if (effort === 'medium') {
+      storyPoints = 5;
+    } else { // high
+      storyPoints = 8;
+    }
+    
+    // Check for business value mismatch
+    const hasMismatch = storyToUpdate.businessValue && storyToUpdate.businessValue !== valueLevel3Scale;
+    
+    // Update story with the new values, but preserve the original business value
+    const updatedStory = {
+      ...storyToUpdate,
+      storyPoints,
+      points: storyPoints,
+      businessValueMismatch: hasMismatch ? valueLevel3Scale : undefined
+    };
+    
+    // Update the story
+    await handleUpdateStory(storyId, updatedStory);
+    
+    // Update the story position
+    setStoryPositions(prev => {
+      const newPositions = { ...prev };
+      newPositions[storyId] = { 
+        value, 
+        effort,
+        rank: prev[storyId]?.rank || 0 
+      };
+      return newPositions;
     });
-
-    // Otherwise return the stories
-    return (
-      <div className="space-y-2 w-full">
-        {sortedStories.map((story, index) => (
-          <div 
-            key={story._id}
-            className={`relative ${index > 0 ? 'mt-4' : ''}`}
-          >
-            {index > 0 && (
-              <div className="absolute -top-2 left-0 right-0 flex justify-center">
-                <div className="w-3/4 border-t border-dashed border-gray-300"></div>
-              </div>
-            )}
-            <StoryCard 
-              key={story._id} 
-              story={story} 
-              position={storyPositions[story._id]}
-              isDragging={false} 
-              isExpanded={expandedStoryIds.has(story._id)}
-              onToggleExpand={() => toggleMatrixStoryExpansion(story._id)}
-              onRemove={() => handleRemoveStory(story._id)}
-              onAdjustPoints={handleCustomAdjustPoints}
-            />
-          </div>
-        ))}
-      </div>
-    );
   };
 
   return (
@@ -1233,9 +1468,10 @@ export default function ScopePlaygroundPage() {
         onCreatePreset={handleCreatePreset}
         onResetScenario={handleResetScenario}
         onShowSettings={() => setShowSettings(true)}
-        onShowImport={() => setShowImportPanel(true)}
+        onShowImport={() => setShowImportPanel(true)} 
         onShowExport={() => setShowExportPanel(true)}
         onShowShare={() => setShowShareModal(true)}
+        onShowBacklogManager={() => setShowBacklogManager(true)}
       />
       
       <DndContext 
@@ -1243,6 +1479,7 @@ export default function ScopePlaygroundPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
+        collisionDetection={closestCenter}
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 pt-6">
           {/* Left Column - Backlog only */}
@@ -1253,8 +1490,15 @@ export default function ScopePlaygroundPage() {
                 expandedStoryIds={expandedBacklogStoryIds}
                 onToggleExpandStory={handleToggleExpandStory}
                 onCreateStory={handleCreateStory}
-                onUpdateStory={handleUpdateStory}
+                onUpdateStory={(storyId, story) => {
+                  // Convert the signature to match what handleUpdateStory expects
+                  if (typeof storyId === 'string' && story) {
+                    return handleUpdateStory(storyId, story);
+                  }
+                  return Promise.resolve(false);
+                }}
                 onDeleteStory={handleDeleteStory}
+                onAssignAllToDefaultCells={handleAssignAllToDefaultCells}
               />
             </div>
           </div>
@@ -1264,12 +1508,66 @@ export default function ScopePlaygroundPage() {
             <div className="border p-4 rounded-lg shadow-sm" id="scope-matrix-container">
               <h2 className="text-xl font-semibold mb-4">Scope Matrix</h2>
               <ValuesMatrix 
-                getStoriesInCell={getStoriesInCell}
-                totalPoints={metrics.totalPoints}
-                totalEffort={metrics.adjustedEffort}
+                stories={stories}
+                onUpdateStory={(story) => {
+                  // Ensure the story has a valid _id before passing to handleUpdateStory
+                  if (story && story._id) {
+                    return handleUpdateStory(story._id, story);
+                  }
+                  return Promise.resolve(false);
+                }}
                 expandedStoryIds={expandedStoryIds}
                 toggleStoryExpansion={toggleMatrixStoryExpansion}
-                renderPositionedStories={renderPositionedStories}
+                totalPoints={metrics.totalPoints}
+                totalEffort={metrics.adjustedEffort}
+                getStoriesInCell={getStoriesInCell}
+                renderPositionedStories={(valueLevel, effortLevel) => {
+                  // Get stories in this cell
+                  const cellStories = stories.filter(story => {
+                    const position = storyPositions[story._id];
+                    return position && position.value === valueLevel && position.effort === effortLevel;
+                  });
+
+                  // If no stories in this cell, return null
+                  if (cellStories.length === 0) {
+                    return null;
+                  }
+
+                  // Sort stories by rank if available
+                  const sortedStories = [...cellStories].sort((a, b) => {
+                    const rankA = storyPositions[a._id]?.rank || 0;
+                    const rankB = storyPositions[b._id]?.rank || 0;
+                    return rankA - rankB;
+                  });
+
+                  // Otherwise return the stories
+                  return (
+                    <div className="space-y-2 w-full">
+                      {sortedStories.map((story, index) => (
+                        <div 
+                          key={story._id}
+                          className={`relative ${index > 0 ? 'mt-4' : ''}`}
+                        >
+                          {index > 0 && (
+                            <div className="absolute -top-2 left-0 right-0 flex justify-center">
+                              <div className="w-3/4 border-t border-dashed border-gray-300"></div>
+                            </div>
+                          )}
+                          <StoryCard 
+                            key={story._id} 
+                            story={story} 
+                            position={storyPositions[story._id]}
+                            isDragging={false} 
+                            isExpanded={expandedStoryIds.has(story._id)}
+                            onToggleExpand={() => toggleMatrixStoryExpansion(story._id)}
+                            onRemove={() => handleRemoveStory(story._id)}
+                            onAdjustPoints={handleCustomAdjustPoints}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }}
               />
             </div>
             
@@ -1330,6 +1628,17 @@ export default function ScopePlaygroundPage() {
               </div>
             )}
             
+            {showBacklogManager && (
+              <div className="mb-4">
+                <BacklogManager
+                  stories={stories}
+                  onImport={handleImportStories}
+                  onClearBacklog={handleClearBacklog}
+                  onClose={() => setShowBacklogManager(false)}
+                />
+              </div>
+            )}
+            
             <MetricsPanel
               metrics={metrics}
               animatedMetrics={animatedMetrics}
@@ -1339,16 +1648,29 @@ export default function ScopePlaygroundPage() {
               onImportStoriesClick={() => setShowImportPanel(!showImportPanel)}
               onExportClick={() => setShowExportPanel(!showExportPanel)}
             />
+            
+            <button
+              onClick={handleRemoveAllFromMatrix}
+              className="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+              title="Remove all stories from the matrix"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+              </svg>
+              Remove All
+            </button>
           </div>
         </div>
         
         <DragOverlay>
           {activeId && activeStory ? (
-            <div className="opacity-80">
-              <StoryCard 
-                story={activeStory} 
-                position={getStoryPosition(activeStory._id)}
-                isDragging 
+            <div className="w-full max-w-md opacity-80">
+              <StoryCard
+                story={activeStory}
+                position={storyPositions[activeId] || { value: "medium", effort: "medium" }}
+                isDragging={true}
+                isExpanded={false}
+                onToggleExpand={() => {}}
               />
             </div>
           ) : null}
@@ -1357,10 +1679,10 @@ export default function ScopePlaygroundPage() {
         {/* Effort Mismatch Modal */}
         {pendingStoryPlacement && (
           <EffortMismatchModal
-            storyTitle={stories.find(s => s._id === pendingStoryPlacement.storyId)?.title || ''}
-            storyPoints={stories.find(s => s._id === pendingStoryPlacement.storyId)?.storyPoints || 0}
-            cellEffort={pendingStoryPlacement.cellEffort}
-            suggestedPoints={pendingStoryPlacement.suggestedPoints}
+            storyTitle={stories.find(s => s._id === pendingStoryPlacement?.storyId)?.title || ''}
+            storyPoints={stories.find(s => s._id === pendingStoryPlacement?.storyId)?.storyPoints || 0}
+            cellEffort={pendingStoryPlacement?.effortLevel}
+            suggestedPoints={pendingStoryPlacement?.suggestedPoints}
             onAdjustPoints={handleAdjustStoryPoints}
             onKeepAsIs={handleKeepStoryPoints}
             onCancel={handleCancelPlacement}
@@ -1370,7 +1692,7 @@ export default function ScopePlaygroundPage() {
         
         {/* Share Project Modal */}
         {showShareModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
             <ShareProject
               stories={stories}
               businessValues={["Critical", "Important", "Nice to Have"]}
@@ -1388,6 +1710,20 @@ export default function ScopePlaygroundPage() {
             message={notification.message}
             onClose={() => setNotification(null)}
           />
+        )}
+        
+        {/* Backlog Manager Modal */}
+        {showBacklogManager && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+              <BacklogManager
+                stories={stories}
+                onImport={handleImportStories}
+                onClearBacklog={handleClearBacklog}
+                onClose={() => setShowBacklogManager(false)}
+              />
+            </div>
+          </div>
         )}
       </DndContext>
     </>

@@ -58,8 +58,8 @@ const calculateAiTimelineImpact = (settings: Settings) => {
   // Calculate the weighted average productivity gain (ensure it's positive)
   const averageGainPercent = categories.reduce((sum, val) => sum + Math.max(0, val), 0) / categories.length;
   
-  // Cap the maximum gain at 40% to keep estimates realistic
-  return Math.min(40, Math.round(averageGainPercent * 10) / 10);
+  // Cap the maximum gain at 65% based on 2025 research data
+  return Math.min(65, Math.round(averageGainPercent * 10) / 10);
 };
 
 const calculateAiCostImpact = (settings: Settings) => {
@@ -147,7 +147,7 @@ export function SettingsPanel({
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6 m-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Project Settings</h2>

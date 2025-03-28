@@ -1,0 +1,98 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-03-27",
+  "description": "Core functionality stories including backlog management and essential features",
+  "stories": [
+    {
+      "id": "story-001",
+      "title": "Client-Specific Story Access",
+      "userStory": "As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Access Control",
+      "effortCategory": "Security",
+      "acceptanceCriteria": [
+        "Client can only see stories that have been specifically shared with them",
+        "Stories not shared with the client are completely hidden from view",
+        "Admin/PM can see which clients have access to which stories",
+        "Changes to sharing permissions are reflected immediately"
+      ]
+    },
+    {
+      "id": "story-002",
+      "title": "Backlog Story Viewer",
+      "userStory": "As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.",
+      "points": 3,
+      "businessValue": "Critical",
+      "category": "Story Management",
+      "effortCategory": "Core Functionality",
+      "acceptanceCriteria": [
+        "Stories are displayed in a scrollable list view",
+        "Each story shows title, points, and business value in collapsed view",
+        "Stories can be expanded to show full details including user story text",
+        "Story list can be filtered by category and business value"
+      ]
+    },
+    {
+      "id": "story-007",
+      "title": "Save and Load Scenarios",
+      "userStory": "As a client, I can save scope matrix configurations and reload them later for comparison or revision.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Data Management",
+      "effortCategory": "Core Functionality",
+      "acceptanceCriteria": [
+        "User can save the current scope matrix configuration with a name and description",
+        "All saved configurations are listed and can be selected for loading",
+        "Loading a configuration correctly restores all story positions",
+        "User is prompted for confirmation before replacing the current matrix configuration"
+      ]
+    },
+    {
+      "id": "story-009",
+      "title": "Role-Based Permissions and Visibility",
+      "userStory": "As a system admin, I can manage user roles and restrict which parts of the interface different roles can see or interact with.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Access Control",
+      "effortCategory": "Security",
+      "acceptanceCriteria": [
+        "System supports at least 3 different roles (Admin, PM, Client)",
+        "Each UI element has appropriate visibility settings based on user role",
+        "Admin can assign and modify user roles",
+        "Role changes take effect immediately without requiring users to log out"
+      ]
+    },
+    {
+      "id": "story-022",
+      "title": "Scenario Saving Enhancement",
+      "userStory": "As a product manager, I want to save my scenario configurations including story positions, rankings, and adjustments so I can revisit them later.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Data Management",
+      "effortCategory": "Core Functionality",
+      "acceptanceCriteria": [
+        "Save dialog includes fields for name, description, and optional tags",
+        "Saved scenarios include all story positions, rankings, and custom adjustments",
+        "Saved scenarios can be organized into collections",
+        "Scenarios can be exported to and imported from JSON files"
+      ]
+    },
+    {
+      "id": "story-045",
+      "title": "Backlog Story Management",
+      "userStory": "As a product manager, I want to create, edit, and delete user stories directly in the backlog, so I can efficiently manage the product backlog without leaving the application.",
+      "points": 8,
+      "businessValue": "Critical", 
+      "category": "Story Management",
+      "effortCategory": "Core Functionality",
+      "acceptanceCriteria": [
+        "PM can add new stories with all required fields plus acceptance criteria",
+        "Stories can be edited with full validation of required fields",
+        "Stories can be deleted with confirmation dialog",
+        "Changes are saved to the database in real-time",
+        "Multiple stories can be selected for batch operations"
+      ]
+    }
+  ]
+}

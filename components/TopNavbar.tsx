@@ -23,6 +23,7 @@ type TopNavbarProps = {
   onShowImport: () => void;
   onShowExport: () => void;
   onShowShare?: () => void;
+  onShowBacklogManager?: () => void;
 };
 
 export function TopNavbar({
@@ -35,7 +36,8 @@ export function TopNavbar({
   onShowSettings,
   onShowImport,
   onShowExport,
-  onShowShare
+  onShowShare,
+  onShowBacklogManager
 }: TopNavbarProps) {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioMenuOpen, setScenarioMenuOpen] = useState(false);
@@ -310,6 +312,17 @@ export function TopNavbar({
                           }}
                         >
                           Share
+                        </button>
+                      )}
+                      {onShowBacklogManager && (
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => {
+                            onShowBacklogManager();
+                            setToolsMenuOpen(false);
+                          }}
+                        >
+                          Manage Backlog
                         </button>
                       )}
                     </div>
