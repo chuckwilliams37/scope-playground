@@ -17,6 +17,7 @@ export default defineSchema({
     adjustmentReason: v.optional(v.string()), // Reason for point adjustment
     effortCategory: v.optional(v.string()), // Effort category (e.g., Core Functionality, Development, etc.)
     notes: v.optional(v.string()), // Additional notes about the story
+    acceptanceCriteria: v.optional(v.array(v.string())), // Acceptance criteria for the story
     isTemporary: v.optional(v.boolean()) // Whether this story is temporary and should be cleaned up
   }),
 

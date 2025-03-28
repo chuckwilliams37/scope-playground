@@ -19,6 +19,8 @@ type TopNavbarProps = {
   onLoadScenario: (scenarioId: string) => Promise<void>;
   onCreatePreset: (presetType: string) => Promise<void>;
   onResetScenario: () => void;
+  onUpdateScenario?: (scenarioId: string, name: string, description: string) => Promise<void>;
+  onDeleteScenario?: (scenarioId: string) => Promise<void>;
   onShowSettings: () => void;
   onShowImport: () => void;
   onShowExport: () => void;
@@ -33,6 +35,8 @@ export function TopNavbar({
   onLoadScenario,
   onCreatePreset,
   onResetScenario,
+  onUpdateScenario,
+  onDeleteScenario,
   onShowSettings,
   onShowImport,
   onShowExport,

@@ -34,7 +34,11 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
           "value": "Critical",
           "effort": "Medium",
           "rank": 1
-        }
+        },
+        "acceptanceCriteria": [
+          "The user can create an account and log in securely.",
+          "The user can log out securely."
+        ]
       },
       {
         "id": "sample-002",
@@ -47,7 +51,11 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
           "value": "Important",
           "effort": "High",
           "rank": 2
-        }
+        },
+        "acceptanceCriteria": [
+          "The user can view a dashboard with key metrics and information at a glance.",
+          "The user can view a dashboard with key metrics and information at a glance."
+        ]
       },
       {
         "id": "sample-003",
@@ -60,7 +68,11 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
           "value": "Nice to Have",
           "effort": "Low",
           "rank": 3
-        }
+        },
+        "acceptanceCriteria": [
+          "The user can export reports to PDF format.",
+          "The user can export reports to PDF format."
+        ]
       }
     ]
   };
@@ -143,6 +155,8 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
           points: story.points || story.storyPoints || 0,
           isPublic: story.isPublic !== undefined ? story.isPublic : true,
           sharedWithClients: story.sharedWithClients || [],
+          notes: story.notes || '',
+          acceptanceCriteria: story.acceptanceCriteria || [],
           position: story.position ? {
             value: story.position.value,
             effort: story.position.effort,

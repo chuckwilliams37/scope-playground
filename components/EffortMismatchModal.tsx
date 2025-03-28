@@ -26,6 +26,7 @@ export function EffortMismatchModal({
 }: EffortMismatchModalProps) {
   const [selectedPoints, setSelectedPoints] = useState(suggestedPoints);
   const [adjustmentReason, setAdjustmentReason] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
 
   // Define point options appropriate for each effort level
   const pointOptions = {
@@ -49,8 +50,31 @@ export function EffortMismatchModal({
     high: [
       "Requires complex integration with external systems",
       "High technical complexity and test coverage",
-      "Contains multiple edge cases to handle"
+      "Involves architectural changes"
     ]
+  };
+
+  // Preset reasons for the selected effort level
+  const presetReasons = commonReasons[cellEffort as keyof typeof commonReasons] || [];
+
+  // Helper to select a preset reason
+  const selectPresetReason = (reason: string) => {
+    setAdjustmentReason(reason);
+  };
+
+  // Returns background color class based on effort level
+  const getEffortColor = () => {
+    switch (cellEffort) {
+      case 'low': return 'text-green-600';
+      case 'medium': return 'text-yellow-600';
+      case 'high': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  // Returns effort text with capitalized first letter
+  const getEffortText = () => {
+    return cellEffort.charAt(0).toUpperCase() + cellEffort.slice(1) + ' Effort Column';
   };
 
   // Set initial selected points based on effort level
@@ -62,24 +86,6 @@ export function EffortMismatchModal({
     }
   }, [suggestedPoints, storyPoints, cellEffort]);
 
-  const getEffortColor = () => {
-    switch (cellEffort) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-amber-600';
-      case 'high': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getEffortText = () => {
-    switch (cellEffort) {
-      case 'low': return 'Low Effort (1-3 points)';
-      case 'medium': return 'Medium Effort (5-8 points)';
-      case 'high': return 'High Effort (8+ points)';
-      default: return 'Unknown Effort';
-    }
-  };
-
   const handleAdjustPoints = () => {
     onAdjustPoints(selectedPoints, adjustmentReason);
   };
@@ -89,8 +95,14 @@ export function EffortMismatchModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 m-4">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+      <div 
+        className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"
+        style={{
+          borderLeft: '8px solid',
+          borderLeftColor: cellEffort === 'low' ? '#10B981' : cellEffort === 'medium' ? '#FBBF24' : '#EF4444'
+        }}
+      >
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Effort Mismatch Detected</h3>
           <p className="text-sm text-gray-500 mt-1">
@@ -98,8 +110,17 @@ export function EffortMismatchModal({
           </p>
         </div>
         
-        <div className="mb-6 bg-blue-50 p-4 rounded-md">
-          <h4 className="font-medium text-blue-700 mb-2">{storyTitle}</h4>
+        <div 
+          className="mb-6 bg-blue-50 p-4 rounded-md border-2 border-blue-200 relative"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          {isHovering && (
+            <div className="absolute -top-3 -right-3 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+              i
+            </div>
+          )}
+          <h4 className="font-medium text-blue-700 mb-2 text-base border-b border-blue-200 pb-1">{storyTitle}</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="block text-gray-500">Current Points:</span>
@@ -156,10 +177,10 @@ export function EffortMismatchModal({
                       )}
                       <div className="text-xs text-green-700 mb-1">Common reasons:</div>
                       <div className="flex flex-col gap-1">
-                        {commonReasons[cellEffort as keyof typeof commonReasons].map((reason, index) => (
+                        {presetReasons.map((reason, index) => (
                           <button
                             key={index}
-                            onClick={() => handleReasonSelect(reason)}
+                            onClick={() => selectPresetReason(reason)}
                             className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2 py-1 rounded text-left transition-all duration-200 border border-green-100"
                           >
                             {reason}

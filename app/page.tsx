@@ -55,7 +55,7 @@ const MATRIX_DEFAULTS = {
 };
 
 // Sample data to use instead of Convex API until it's fully set up
-const sampleStories = [
+const sampleStories: Story[] = [
   {
     _id: 'story-001',
     title: 'Client-Specific Story Access',
@@ -65,7 +65,11 @@ const sampleStories = [
     businessValue: 'Critical',
     category: 'Access Control',
     effortCategory: 'Security',
-    notes: "This enables multi-tenant usage where each client only sees relevant stories"
+    notes: "This enables multi-tenant usage where each client only sees relevant stories",
+    acceptanceCriteria: [
+      "The client can only see stories shared with them.",
+      "The client cannot see stories not shared with them."
+    ]
   },
   {
     _id: 'story-002',
@@ -74,7 +78,11 @@ const sampleStories = [
     storyPoints: 3,
     notes: 'View list of stories with expandable detail',
     userStory: 'As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.',
-    category: 'Story Management'
+    category: 'Story Management',
+    acceptanceCriteria: [
+      "The client can view a list of stories.",
+      "The client can expand story details."
+    ]
   },
   {
     _id: 'story-003',
@@ -83,7 +91,11 @@ const sampleStories = [
     storyPoints: 8,
     notes: 'Drag-and-drop with effort validation feedback',
     userStory: 'As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.',
-    category: 'UI Interaction'
+    category: 'UI Interaction',
+    acceptanceCriteria: [
+      "The client can drag and drop features into the scope matrix.",
+      "The system prompts the client with effort adjustment options when effort is mismatched."
+    ]
   },
   {
     _id: 'story-004',
@@ -92,7 +104,11 @@ const sampleStories = [
     storyPoints: 5,
     notes: 'Contextual messages for value mismatches',
     userStory: 'When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.',
-    category: 'UX Enhancement'
+    category: 'UX Enhancement',
+    acceptanceCriteria: [
+      "The system explains the meaning of the mismatch when a low-value item is moved to a high-priority scope bucket.",
+      "The system explains the meaning of the mismatch when a high-value item is moved to a low-priority scope bucket."
+    ]
   },
   {
     _id: 'story-005',
@@ -101,7 +117,11 @@ const sampleStories = [
     storyPoints: 8,
     notes: 'Live metrics for points, days, and cost',
     userStory: 'As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.',
-    category: 'Analytics'
+    category: 'Analytics',
+    acceptanceCriteria: [
+      "The client can view live scope metrics.",
+      "The metrics update in real-time as the scope matrix changes."
+    ]
   },
   {
     _id: 'story-006',
@@ -110,7 +130,11 @@ const sampleStories = [
     storyPoints: 3,
     notes: 'Load recommended configs and reset scope',
     userStory: 'As a user, I can load recommended configurations such as MVP or Legacy Parity and reset my scope decisions to predefined presets.',
-    category: 'Configuration'
+    category: 'Configuration',
+    acceptanceCriteria: [
+      "The user can load recommended configurations.",
+      "The user can reset their scope decisions to predefined presets."
+    ]
   },
   {
     _id: 'story-007',
@@ -119,7 +143,11 @@ const sampleStories = [
     storyPoints: 5,
     notes: 'Save configurations for later comparison',
     userStory: 'As a client, I can save scope matrix configurations and reload them later for comparison or revision.',
-    category: 'Data Management'
+    category: 'Data Management',
+    acceptanceCriteria: [
+      "The client can save scope matrix configurations.",
+      "The client can reload saved configurations for comparison or revision."
+    ]
   },
   {
     _id: 'story-008',
@@ -128,7 +156,11 @@ const sampleStories = [
     storyPoints: 5,
     notes: 'Adjust how AI impacts productivity',
     userStory: 'As a product manager, I can adjust the estimated productivity gains from AI-assisted development in different categories to refine time and cost projections.',
-    category: 'Planning'
+    category: 'Planning',
+    acceptanceCriteria: [
+      "The product manager can adjust the estimated productivity gains from AI-assisted development.",
+      "The adjustments refine time and cost projections."
+    ]
   },
   {
     _id: 'story-009',
@@ -137,7 +169,28 @@ const sampleStories = [
     storyPoints: 3,
     notes: 'Set maximum points, hours, and duration',
     userStory: 'As a client, I can set maximum limits for story points, development hours, and project duration to visualize scope constraints clearly.',
-    category: 'Planning'
+    category: 'Planning',
+    acceptanceCriteria: [
+      "The client can set maximum limits for story points.",
+      "The client can set maximum limits for development hours.",
+      "The client can set maximum limits for project duration."
+    ]
+  },
+  {
+    _id: 'story-010',
+    title: 'Multi-Client Support',
+    businessValue: 'Critical',
+    storyPoints: 13,
+    userStory: 'As an administrator, I can restrict client access to only their relevant stories.',
+    category: 'Access Control',
+    effortCategory: 'Security',
+    notes: "This enables multi-tenant usage where each client only sees relevant stories",
+    acceptanceCriteria: [
+      "The client can only see stories shared with them.",
+      "The client cannot see stories not shared with them.",
+      "Administrators can control which stories are shared with each client.",
+      "Changes to sharing permissions take effect immediately."
+    ]
   }
 ];
 
@@ -320,7 +373,8 @@ export default function ScopePlaygroundPage() {
     category: story.category || "Imported",
     effortCategory: story.effortCategory || "",
     adjustmentReason: story.adjustmentReason,
-    originalPoints: story.originalPoints
+    originalPoints: story.originalPoints,
+    acceptanceCriteria: story.acceptanceCriteria || []
   }));
   
   // Fall back to sample data if no stories are fetched (helpful during development)
@@ -344,6 +398,7 @@ export default function ScopePlaygroundPage() {
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [showBacklogManager, setShowBacklogManager] = useState(false);
+  const [showScenariosPanel, setShowScenariosPanel] = useState(false);
   
   // Project settings with tweakable parameters
   const [settings, setSettings] = useState<Settings>(defaultSettings);
@@ -728,7 +783,7 @@ export default function ScopePlaygroundPage() {
       setActiveStory(null);
       setReordering(false);
       setActiveCell(null);
-      return;
+      return; // Exit early - no valid target
     }
     
     const storyId = active.id as string;
@@ -753,8 +808,7 @@ export default function ScopePlaygroundPage() {
               ? draggedStory.points < 8  // High: 8+ points
               : effortLevel === 'medium'
                 ? (draggedStory.points < 5 || draggedStory.points > 8) // Medium: 5-8 points inclusive
-                : draggedStory.points > 3; // Low: 1-3 points
-                
+              : draggedStory.points > 3; // Low: 1-3 points
             if (isMismatch) {
               console.log(`Effort mismatch: Story has ${draggedStory.points} points, cell is ${effortLevel} effort (${MATRIX_DEFAULTS.STORY_POINTS[effortLevel]} points)`);
               
@@ -816,13 +870,19 @@ export default function ScopePlaygroundPage() {
       }
     } else {
       console.log("Drop target is not a matrix cell:", targetId);
+      setActiveId(null);
+      setActiveStory(null);
+      setReordering(false);
+      setActiveCell(null);
     }
     
     // Reset drag states
-    setActiveId(null);
-    setActiveStory(null);
-    setReordering(false);
-    setActiveCell(null);
+    if (!targetId.startsWith('matrix-')) {
+      setActiveId(null);
+      setActiveStory(null);
+      setReordering(false);
+      setActiveCell(null);
+    }
   };
 
   // Handle the user adjusting the story points in the mismatch modal
@@ -838,45 +898,42 @@ export default function ScopePlaygroundPage() {
     
     setValidationErrors({});
     
-    const { storyId, valueLevel, effortLevel } = pendingStoryPlacement;
+    const { storyId, valueLevel, effortLevel, originalPoints } = pendingStoryPlacement;
     
-    // Update the story points
-    const updatedStories = stories.map(story => {
-      if (story._id === storyId) {
-        return {
-          ...story,
-          storyPoints: newPoints,
-          points: newPoints,
-          adjustmentReason: reason
-        };
-      }
-      return story;
-    });
+    // Find the specific story to update
+    const storyToUpdate = stories.find(story => story._id === storyId);
+    if (!storyToUpdate) {
+      console.error("Story not found:", storyId);
+      return;
+    }
     
-    // Update story positions
-    // Get the current highest rank in that cell
-    const storiesInCell = Object.entries(storyPositions)
-      .filter(([_, pos]) => pos.value === valueLevel && pos.effort === effortLevel)
-      .map(([id, pos]) => ({ id, rank: pos.rank || 0 }));
+    // Create updated story with the new points
+    const updatedStory = {
+      ...storyToUpdate,
+      storyPoints: newPoints,
+      points: newPoints,
+      // Save the original points if this is the first adjustment
+      originalPoints: storyToUpdate.originalPoints !== undefined 
+        ? storyToUpdate.originalPoints 
+        : originalPoints,
+      adjustmentReason: reason
+    };
     
-    const maxRank = storiesInCell.length > 0 
-      ? Math.max(...storiesInCell.map(s => s.rank)) 
-      : -1;
+    // Update ONLY this specific story in state
+    handleUpdateStory(storyId, updatedStory);
     
+    // Update the story position in the matrix
     setStoryPositions(prev => {
       const newPositions = { ...prev };
       newPositions[storyId] = {
         value: valueLevel,
         effort: effortLevel,
-        rank: maxRank + 1
+        rank: newPositions[storyId]?.rank || 0
       };
       return newPositions;
     });
     
-    // Update stories
-    setStories(updatedStories);
-    
-    // Clear pending placement
+    // Clear the pending placement
     setPendingStoryPlacement(null);
   };
 
@@ -1042,28 +1099,38 @@ export default function ScopePlaygroundPage() {
       updatedStories[storyIndex] = updatedStory;
       setStories(updatedStories);
       
-      // If we have an updateStory backend function, call it
+      // Always try to update in the database regardless of ID format
       if (updateStoryMutation) {
         try {
-          // Check if the storyId needs to be converted to a Convex ID
-          if (storyId.includes('_')) {
-            // This is a Convex ID, call the backend
-            await updateStoryMutation({ 
-              id: storyId as unknown as Id<"stories">,
-              title: updatedStory.title,
-              businessValue: updatedStory.businessValue,
-              points: updatedStory.storyPoints || updatedStory.points || 0,
-              notes: updatedStory.notes || '',
-              userStory: updatedStory.userStory || '',
-              category: updatedStory.category || '',
-              effortCategory: updatedStory.effortCategory || '',
-            });
-          }
+          // Add notification for debugging
+          console.log('Updating story in database:', storyId, updatedStory);
+          
+          await updateStoryMutation({ 
+            id: storyId as unknown as Id<"stories">,
+            title: updatedStory.title,
+            businessValue: updatedStory.businessValue,
+            points: updatedStory.storyPoints || updatedStory.points || 0,
+            notes: updatedStory.notes || '',
+            userStory: updatedStory.userStory || '',
+            category: updatedStory.category || '',
+            effortCategory: updatedStory.effortCategory || '',
+            acceptanceCriteria: updatedStory.acceptanceCriteria || []
+          });
+          
+          // Success notification
+          setNotification({
+            type: "success",
+            message: `Story "${updatedStory.title}" updated successfully`
+          });
         } catch (error) {
-          console.error('Failed to update story on backend:', error);
-          // Revert the change in the UI
-          const revertedStories = [...stories];
-          setStories(revertedStories);
+          console.error('Failed to update story in database:', error);
+          
+          // Error notification
+          setNotification({
+            type: "error",
+            message: `Failed to update story: ${error instanceof Error ? error.message : 'Unknown error'}`
+          });
+          
           return false;
         }
       }
@@ -1074,7 +1141,7 @@ export default function ScopePlaygroundPage() {
       return false;
     }
   };
-  
+
   // Handler for deleting a story
   const handleDeleteStory = async (storyId: string): Promise<boolean> => {
     try {
@@ -1159,9 +1226,14 @@ export default function ScopePlaygroundPage() {
       settings,
       stories: stories.map(story => ({
         _id: story._id,
+        title: story.title,
+        businessValue: story.businessValue,
         storyPoints: story.storyPoints,
         originalPoints: story.originalPoints,
-        adjustmentReason: story.adjustmentReason
+        adjustmentReason: story.adjustmentReason,
+        notes: story.notes,
+        userStory: story.userStory,
+        acceptanceCriteria: story.acceptanceCriteria || []
       }))
     };
     
@@ -1191,7 +1263,107 @@ export default function ScopePlaygroundPage() {
     return Promise.resolve();
   };
 
-  // Handle loading scenarios with fixed UI updating
+  const handleUpdateScenario = async (scenarioId: string, name: string, description: string) => {
+    console.log(`Updating scenario: ${scenarioId}`);
+    
+    try {
+      // Get existing scenarios
+      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      
+      // Find the scenario to update
+      const scenarioIndex = existingScenarios.findIndex((s: any) => s._id === scenarioId);
+      
+      if (scenarioIndex === -1) {
+        throw new Error('Scenario not found');
+      }
+      
+      // Create updated scenario data
+      const scenarioData = {
+        name,
+        description,
+        storyPositions,
+        settings,
+        stories: stories.map(story => ({
+          _id: story._id,
+          title: story.title,
+          businessValue: story.businessValue,
+          storyPoints: story.storyPoints,
+          originalPoints: story.originalPoints,
+          adjustmentReason: story.adjustmentReason,
+          notes: story.notes,
+          userStory: story.userStory,
+          acceptanceCriteria: story.acceptanceCriteria || []
+        }))
+      };
+      
+      // Update the scenario
+      const updatedScenario = {
+        ...existingScenarios[scenarioIndex],
+        name,
+        description,
+        lastModified: Date.now(),
+        data: scenarioData
+      };
+      
+      // Replace the scenario in the array
+      existingScenarios[scenarioIndex] = updatedScenario;
+      
+      // Save updated scenarios list
+      localStorage.setItem('scenarios', JSON.stringify(existingScenarios));
+      console.log('Scenario updated successfully:', updatedScenario);
+      
+      // Refresh the scenarios list
+      setSavedScenarios(existingScenarios);
+      
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: `Scenario "${name}" updated successfully!`
+      });
+    } catch (error) {
+      console.error('Error updating scenario:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to update scenario. Please try again.'
+      });
+    }
+    
+    return Promise.resolve();
+  };
+
+  const handleDeleteScenario = async (scenarioId: string) => {
+    console.log(`Deleting scenario: ${scenarioId}`);
+    
+    try {
+      // Get existing scenarios
+      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      
+      // Filter out the scenario to delete
+      const updatedScenarios = existingScenarios.filter((s: any) => s._id !== scenarioId);
+      
+      // Save updated scenarios list
+      localStorage.setItem('scenarios', JSON.stringify(updatedScenarios));
+      console.log('Scenario deleted successfully');
+      
+      // Refresh the scenarios list
+      setSavedScenarios(updatedScenarios);
+      
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: `Scenario deleted successfully`
+      });
+    } catch (error) {
+      console.error('Error deleting scenario:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to delete scenario. Please try again.'
+      });
+    }
+    
+    return Promise.resolve();
+  };
+
   const handleLoadScenario = async (scenarioId: string) => {
     console.log(`Loading scenario: ${scenarioId}`);
     
@@ -1231,12 +1403,16 @@ export default function ScopePlaygroundPage() {
         const scenario = savedScenarios.find(s => s._id === scenarioId);
         
         if (scenario && scenario.data) {
-          // Make a copy of the current stories to update
-          let updatedStories = [...stories];
+          // Make a copy of the current stories
+          let currentStories = [...stories];
+          let updatedStories = [...currentStories];
           
-          // Restore story adjustments if present
+          // Restore story adjustments if present and restore deleted stories
           if (scenario.data.stories && scenario.data.stories.length > 0) {
-            updatedStories = stories.map(story => {
+            const currentStoryIds = new Set(currentStories.map(s => s._id));
+            
+            // First update existing stories
+            updatedStories = currentStories.map(story => {
               const savedStory = scenario.data.stories.find((s: any) => s._id === story._id);
               if (savedStory) {
                 return {
@@ -1244,15 +1420,49 @@ export default function ScopePlaygroundPage() {
                   storyPoints: savedStory.storyPoints || story.storyPoints,
                   points: savedStory.storyPoints || story.points,
                   originalPoints: savedStory.originalPoints || story.originalPoints,
-                  adjustmentReason: savedStory.adjustmentReason || story.adjustmentReason
+                  adjustmentReason: savedStory.adjustmentReason || story.adjustmentReason,
+                  acceptanceCriteria: savedStory.acceptanceCriteria || []
                 };
               }
               return story;
             });
             
-            // Update stories state
-            setStories(updatedStories);
+            // Then add any stories that exist in the scenario but not in current stories (deleted stories)
+            const storiesToRestore = scenario.data.stories
+              .filter((s: any) => !currentStoryIds.has(s._id))
+              .map((savedStory: any) => {
+                // Debug what data we have for the story
+                console.log('Restoring story data:', JSON.stringify(savedStory, null, 2));
+                
+                return {
+                  _id: savedStory._id,
+                  title: savedStory.title || "Untitled Story",
+                  businessValue: savedStory.businessValue || "Important",
+                  storyPoints: savedStory.storyPoints || 0,
+                  points: savedStory.storyPoints || 0,
+                  originalPoints: savedStory.originalPoints,
+                  adjustmentReason: savedStory.adjustmentReason,
+                  notes: savedStory.notes || "",
+                  userStory: savedStory.userStory || "",
+                  category: savedStory.category || "Restored",
+                  acceptanceCriteria: savedStory.acceptanceCriteria || []
+                };
+              });
+            
+            if (storiesToRestore.length > 0) {
+              updatedStories = [...updatedStories, ...storiesToRestore];
+              console.log(`Restored ${storiesToRestore.length} previously deleted stories:`, storiesToRestore);
+              
+              // Show notification about restored stories
+              setNotification({
+                type: 'info',
+                message: `Restored ${storiesToRestore.length} stories that were previously deleted`
+              });
+            }
           }
+          
+          // Update stories state
+          setStories(updatedStories);
           
           // Restore settings if present
           if (scenario.data.settings) {
@@ -1401,7 +1611,8 @@ export default function ScopePlaygroundPage() {
           storyPoints: story.storyPoints || story.points || 0,
           userStory: story.userStory || "",
           notes: story.notes || "",
-          category: story.category || "Feature"
+          category: story.category || "Feature",
+          acceptanceCriteria: story.acceptanceCriteria || []
         };
       });
       
@@ -1557,6 +1768,8 @@ export default function ScopePlaygroundPage() {
           JSON.stringify(s.data?.storyPositions) === JSON.stringify(storyPositions)
         )?.name || "Untitled Scenario"}
         onSaveScenario={handleSaveScenario}
+        onUpdateScenario={handleUpdateScenario}
+        onDeleteScenario={handleDeleteScenario}
         onLoadScenario={handleLoadScenario}
         onCreatePreset={handleCreatePreset}
         onResetScenario={handleResetScenario}
@@ -1600,7 +1813,28 @@ export default function ScopePlaygroundPage() {
           {/* Center and Right Columns - Matrix and Metrics */}
           <div className="lg:col-span-2 space-y-6">
             <div className="border p-4 rounded-lg shadow-sm" id="scope-matrix-container">
-              <h2 className="text-xl font-semibold mb-4">Scope Matrix</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Scope Matrix</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setShowScenariosPanel(true)}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Manage Scenarios
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (Object.keys(storyPositions).length > 0 && 
+                          window.confirm('Are you sure you want to clear all stories from the matrix?')) {
+                        setStoryPositions({});
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                  >
+                    Clear Matrix
+                  </button>
+                </div>
+              </div>
               <ValuesMatrix 
                 stories={stories}
                 onUpdateStory={(story) => {
@@ -1743,16 +1977,22 @@ export default function ScopePlaygroundPage() {
               onExportClick={() => setShowExportPanel(!showExportPanel)}
             />
             
-            <button
-              onClick={handleRemoveAllFromMatrix}
-              className="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
-              title="Remove all stories from the matrix"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-              </svg>
-              Remove All
-            </button>
+            {showScenariosPanel && (
+              <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
+                  <ScenarioManager
+                    scenarios={savedScenarios}
+                    onSaveScenario={handleSaveScenario}
+                    onUpdateScenario={handleUpdateScenario}
+                    onDeleteScenario={handleDeleteScenario}
+                    onLoadScenario={handleLoadScenario}
+                    onCreatePreset={handleCreatePreset}
+                    onResetScenario={handleResetScenario}
+                    onClose={() => setShowScenariosPanel(false)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
         

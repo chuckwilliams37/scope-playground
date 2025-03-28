@@ -48,7 +48,8 @@ export const createStory = mutation({
     effortCategory: v.optional(v.string()),
     notes: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
-    sharedWithClients: v.optional(v.array(v.string()))
+    sharedWithClients: v.optional(v.array(v.string())),
+    acceptanceCriteria: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
     // Validate business value
@@ -69,7 +70,8 @@ export const createStory = mutation({
         effortCategory: args.effortCategory,
         notes: args.notes,
         isPublic: args.isPublic ?? true,
-        sharedWithClients: args.sharedWithClients ?? []
+        sharedWithClients: args.sharedWithClients ?? [],
+        acceptanceCriteria: args.acceptanceCriteria ?? []
       });
 
       // Return the newly created story
@@ -93,7 +95,8 @@ export const updateStory = mutation({
     effortCategory: v.optional(v.string()),
     notes: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
-    sharedWithClients: v.optional(v.array(v.string()))
+    sharedWithClients: v.optional(v.array(v.string())),
+    acceptanceCriteria: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
     // Get the existing story
@@ -121,6 +124,7 @@ export const updateStory = mutation({
     if (args.notes !== undefined) updateFields.notes = args.notes;
     if (args.isPublic !== undefined) updateFields.isPublic = args.isPublic;
     if (args.sharedWithClients !== undefined) updateFields.sharedWithClients = args.sharedWithClients;
+    if (args.acceptanceCriteria !== undefined) updateFields.acceptanceCriteria = args.acceptanceCriteria;
 
     try {
       // Update the story
@@ -158,7 +162,7 @@ export const deleteStory = mutation({
   }
 });
 
-// Import stories from a JSON file (admin function)
+// Import multiple stories and position them in the matrix
 export const importStories = mutation({
   args: {
     stories: v.array(
@@ -168,17 +172,20 @@ export const importStories = mutation({
         userStory: v.string(),
         businessValue: v.string(),
         category: v.string(),
-        points: v.number(),
+        points: v.float64(),
         isPublic: v.optional(v.boolean()),
         sharedWithClients: v.optional(v.array(v.string())),
-        position: v.optional(v.object({
-          value: v.string(),
-          effort: v.string(),
-          rank: v.optional(v.number())
-        }))
+        position: v.optional(
+          v.object({
+            value: v.string(),
+            effort: v.string(),
+            rank: v.optional(v.float64()),
+          })
+        ),
+        notes: v.optional(v.string()),
+        acceptanceCriteria: v.optional(v.array(v.string()))
       })
-    ),
-    updatePositions: v.optional(v.boolean())
+    )
   },
   handler: async (ctx, args) => {
     const storyIds = [];
@@ -206,7 +213,9 @@ export const importStories = mutation({
           category: story.category,
           points: story.points,
           isPublic: story.isPublic ?? true,
-          sharedWithClients: story.sharedWithClients ?? []
+          sharedWithClients: story.sharedWithClients ?? [],
+          notes: story.notes,
+          acceptanceCriteria: story.acceptanceCriteria ?? []
         });
         
         importResults.success++;
