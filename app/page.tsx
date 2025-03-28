@@ -724,51 +724,6 @@ export default function ScopePlaygroundPage() {
         const draggedStory = stories.find(s => s._id === storyId);
         
         if (draggedStory) {
-          // Get story points based on the cell effort level
-          let suggestedPoints = 5; // Default for medium
-          if (effortLevel === 'low') {
-            // Low effort: 1-3 points
-            suggestedPoints = 3;
-          } else if (effortLevel === 'medium') {
-            // Medium effort: 5 points
-            suggestedPoints = 5;
-          } else if (effortLevel === 'high') { 
-            // High effort: 8+ points
-            suggestedPoints = 8;
-          } else {
-            console.error('Unknown effort level:', effortLevel);
-            return; // Invalid effort level
-          }
-          
-          // Check for effort mismatch - properly handle larger point values
-          if (draggedStory.storyPoints && !pendingStoryPlacement) {
-            // For high effort, consider 8+ points as a match (don't reduce higher points)
-            const isMismatch = effortLevel === 'high' 
-              ? draggedStory.storyPoints < 8  // Only mismatch if points are less than 8
-              : effortLevel === 'medium'
-                ? draggedStory.storyPoints !== 5
-                : draggedStory.storyPoints > 3; // For low effort
-                
-            if (isMismatch) {
-              console.log(`Effort mismatch: Story has ${draggedStory.storyPoints} points, cell is ${effortLevel} effort (${suggestedPoints} points)`);
-              
-              // For high effort cells with high-point stories, keep the original points
-              const effectiveSuggestedPoints = (effortLevel === 'high' && draggedStory.storyPoints > 8) 
-                ? draggedStory.storyPoints 
-                : suggestedPoints;
-              
-              // Show mismatch modal instead of placing directly
-              setPendingStoryPlacement({
-                storyId,
-                valueLevel,
-                effortLevel,
-                originalPoints: draggedStory.storyPoints,
-                suggestedPoints: effectiveSuggestedPoints
-              });
-              return; // Exit early, don't update until user confirms
-            }
-          }
-          
           // Get business value based on the cell value level
           let valueLevel3Scale = 'Important'; // Default
           if (valueLevel === 'high') {
@@ -781,24 +736,56 @@ export default function ScopePlaygroundPage() {
             console.error('Unknown value level:', valueLevel);
           }
           
+          // Get story points based on the cell effort level
+          let suggestedPoints = 5; // Default for medium
+          if (effortLevel === 'low') {
+            // Low effort: 1-3 points
+            suggestedPoints = 3;
+          } else if (effortLevel === 'medium') {
+            // Medium effort: 5-8 points
+            suggestedPoints = 5;
+          } else if (effortLevel === 'high') { 
+            // High effort: 8+ points
+            suggestedPoints = 8;
+          } else {
+            console.error('Unknown effort level:', effortLevel);
+            return; // Invalid effort level
+          }
+          
           // Flag business value mismatch rather than changing the value
           const hasMismatch = draggedStory.businessValue && draggedStory.businessValue !== valueLevel3Scale;
           
-          // Determine if this is a points adjustment
-          const isAdjustment = draggedStory.storyPoints && draggedStory.storyPoints !== suggestedPoints;
-          const finalPoints = (effortLevel === 'high' && draggedStory.storyPoints && draggedStory.storyPoints > 8) 
-              ? draggedStory.storyPoints  // Keep high point values for high effort
-              : suggestedPoints;
-              
+          // Determine if this is a points adjustment - compare CURRENT points with what the cell suggests
+          const isPointsAdjustment = draggedStory.points && draggedStory.points !== suggestedPoints;
+          
+          // For high effort cells with high-point stories, keep the original points
+          const finalPoints = (effortLevel === 'high' && draggedStory.points && draggedStory.points > 8) 
+            ? draggedStory.points  // Keep high point values for high effort
+            : suggestedPoints;
+          
+          // When adjusting points, save the original value if not already saved
+          let originalPointsValue = undefined;
+          if (isPointsAdjustment) {
+            // If originalPoints is already set, keep that value (the first/original estimate)
+            originalPointsValue = draggedStory.originalPoints !== undefined 
+              ? draggedStory.originalPoints  // Keep the existing original points value
+              : draggedStory.points;         // This is the first adjustment, store current points
+          }
+          
           // Update the story with new properties, but don't change businessValue
           const updatedStory = {
             ...draggedStory,
             storyPoints: finalPoints,
             points: finalPoints,
             businessValueMismatch: hasMismatch ? valueLevel3Scale : undefined,
-            // Store original points and adjustment reason if this is an adjustment
-            originalPoints: isAdjustment ? draggedStory.storyPoints : undefined,
-            adjustmentReason: isAdjustment ? "Adjusted to match matrix position" : undefined
+            
+            // IMPORTANT: Set originalPoints only if we're adjusting points
+            originalPoints: originalPointsValue,
+            
+            // Only set the adjustment reason if we're actually adjusting points
+            adjustmentReason: isPointsAdjustment 
+              ? (draggedStory.adjustmentReason || "Adjusted to match matrix position") 
+              : undefined
           };
           
           // Update in state
@@ -1415,6 +1402,17 @@ export default function ScopePlaygroundPage() {
           ...prev,
           ...positions
         }));
+        
+        // Show success notification
+        setNotification({
+          type: 'success',
+          message: `Imported ${importedStories.length} stories with ${Object.keys(positions).length} positioned in matrix`
+        });
+      } else {
+        setNotification({
+          type: 'success',
+          message: `Imported ${importedStories.length} stories`
+        });
       }
       
       // Clear existing stories if this is a full import

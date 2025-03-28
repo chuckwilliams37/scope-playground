@@ -350,7 +350,7 @@ export function StoryCard({
                     Expected for {effortMismatch.expected} effort cell: 
                     <span className="font-medium">{' '}
                       {effortMismatch.expected === 'low' ? '1-3' : 
-                       effortMismatch.expected === 'medium' ? '5' : '8+'}
+                       effortMismatch.expected === 'medium' ? '5-8' : '8+'}
                     </span>
                   </div>
                   <div className="mt-1 text-orange-600">

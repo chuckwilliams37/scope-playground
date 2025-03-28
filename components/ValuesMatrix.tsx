@@ -141,7 +141,7 @@ export function ValuesMatrix({
   // Define effort level labels for consistent display
   const effortLabels: Record<string, string> = {
     'low': 'Small (1-3 pts)',
-    'medium': 'Medium (5 pts)',
+    'medium': 'Medium (5-8 pts)',
     'high': 'Large (8+ pts)'
   };
 
@@ -254,7 +254,7 @@ export function ValuesMatrix({
               
               const effortMismatch = effort === 'low' && (story.points || 0) > 3 ||
                                    effort === 'medium' && ((story.points || 0) < 5 || (story.points || 0) > 8) ||
-                                   effort === 'high' && (story.points || 0) < 8;
+                                   effort === 'high' && (story.points || 0) <= 8;
               
               const hasMismatch = valueMismatch || effortMismatch;
               
