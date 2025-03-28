@@ -32,6 +32,28 @@ import { ShareProject } from "../components/ShareProject";
 import { BacklogManager } from '../components/BacklogManager';
 import { Story } from '../types/index';
 
+// Matrix cell default value mappings
+const MATRIX_DEFAULTS = {
+  // Business value mappings (position → standardized term)
+  BUSINESS_VALUES: {
+    'high': 'Critical',
+    'medium': 'Important',
+    'low': 'Nice to Have'
+  },
+  // Story points mappings (position → default points)
+  STORY_POINTS: {
+    'high': 8,   // High effort: 8+ points
+    'medium': 5, // Medium effort: 5-8 points
+    'low': 3     // Low effort: 1-3 points
+  },
+  // Points ranges for effort levels
+  POINTS_RANGES: {
+    'high': '8+',
+    'medium': '5-8',
+    'low': '1-3'
+  }
+};
+
 // Sample data to use instead of Convex API until it's fully set up
 const sampleStories = [
   {
@@ -724,68 +746,55 @@ export default function ScopePlaygroundPage() {
         const draggedStory = stories.find(s => s._id === storyId);
         
         if (draggedStory) {
-          // Get business value based on the cell value level
-          let valueLevel3Scale = 'Important'; // Default
-          if (valueLevel === 'high') {
-            valueLevel3Scale = 'Critical';
-          } else if (valueLevel === 'medium') {
-            valueLevel3Scale = 'Important';
-          } else if (valueLevel === 'low') {
-            valueLevel3Scale = 'Nice to Have';
-          } else {
-            console.error('Unknown value level:', valueLevel);
+          // Check for effort mismatch and show dialog if needed
+          if (draggedStory.points && !pendingStoryPlacement) {
+            // Better effort mismatch detection with proper ranges
+            const isMismatch = effortLevel === 'high' 
+              ? draggedStory.points < 8  // High: 8+ points
+              : effortLevel === 'medium'
+                ? (draggedStory.points < 5 || draggedStory.points > 8) // Medium: 5-8 points inclusive
+                : draggedStory.points > 3; // Low: 1-3 points
+                
+            if (isMismatch) {
+              console.log(`Effort mismatch: Story has ${draggedStory.points} points, cell is ${effortLevel} effort (${MATRIX_DEFAULTS.STORY_POINTS[effortLevel]} points)`);
+              
+              // For high effort cells with high-point stories, keep the original points
+              const effectiveSuggestedPoints = (effortLevel === 'high' && draggedStory.points > 8) 
+                ? draggedStory.points 
+                : MATRIX_DEFAULTS.STORY_POINTS[effortLevel];
+              
+              // Show mismatch modal instead of placing directly
+              setPendingStoryPlacement({
+                storyId,
+                valueLevel,
+                effortLevel,
+                originalPoints: draggedStory.points,
+                suggestedPoints: effectiveSuggestedPoints
+              });
+              return; // Exit early, don't update until user confirms
+            }
           }
-          
-          // Get story points based on the cell effort level
-          let suggestedPoints = 5; // Default for medium
-          if (effortLevel === 'low') {
-            // Low effort: 1-3 points
-            suggestedPoints = 3;
-          } else if (effortLevel === 'medium') {
-            // Medium effort: 5-8 points
-            suggestedPoints = 5;
-          } else if (effortLevel === 'high') { 
-            // High effort: 8+ points
-            suggestedPoints = 8;
-          } else {
-            console.error('Unknown effort level:', effortLevel);
-            return; // Invalid effort level
-          }
-          
-          // Flag business value mismatch rather than changing the value
-          const hasMismatch = draggedStory.businessValue && draggedStory.businessValue !== valueLevel3Scale;
-          
-          // Determine if this is a points adjustment - compare CURRENT points with what the cell suggests
-          const isPointsAdjustment = draggedStory.points && draggedStory.points !== suggestedPoints;
           
           // For high effort cells with high-point stories, keep the original points
-          const finalPoints = (effortLevel === 'high' && draggedStory.points && draggedStory.points > 8) 
-            ? draggedStory.points  // Keep high point values for high effort
-            : suggestedPoints;
-          
-          // When adjusting points, save the original value if not already saved
-          let originalPointsValue = undefined;
-          if (isPointsAdjustment) {
-            // If originalPoints is already set, keep that value (the first/original estimate)
-            originalPointsValue = draggedStory.originalPoints !== undefined 
-              ? draggedStory.originalPoints  // Keep the existing original points value
-              : draggedStory.points;         // This is the first adjustment, store current points
-          }
+          // For medium effort cells with 8 points, keep 8 (don't adjust down to 5)
+          const finalPoints = 
+            (effortLevel === 'high' && draggedStory.points && draggedStory.points > 8) ||
+            (effortLevel === 'medium' && draggedStory.points === 8)
+              ? draggedStory.points  // Keep as-is 
+              : MATRIX_DEFAULTS.STORY_POINTS[effortLevel];     // Otherwise use suggested points
           
           // Update the story with new properties, but don't change businessValue
           const updatedStory = {
             ...draggedStory,
             storyPoints: finalPoints,
             points: finalPoints,
-            businessValueMismatch: hasMismatch ? valueLevel3Scale : undefined,
+            businessValueMismatch: draggedStory.businessValue && draggedStory.businessValue !== MATRIX_DEFAULTS.BUSINESS_VALUES[valueLevel] ? MATRIX_DEFAULTS.BUSINESS_VALUES[valueLevel] : undefined,
             
             // IMPORTANT: Set originalPoints only if we're adjusting points
-            originalPoints: originalPointsValue,
-            
-            // Only set the adjustment reason if we're actually adjusting points
-            adjustmentReason: isPointsAdjustment 
-              ? (draggedStory.adjustmentReason || "Adjusted to match matrix position") 
-              : undefined
+            originalPoints: draggedStory.originalPoints !== undefined 
+              ? draggedStory.originalPoints  // Keep the existing original points value
+              : draggedStory.points,         // This is the first adjustment, store current points
+            adjustmentReason: draggedStory.adjustmentReason || "Adjusted to match matrix position"
           };
           
           // Update in state
@@ -904,7 +913,7 @@ export default function ScopePlaygroundPage() {
       case 'low':
         return points > 3;
       case 'medium':
-        return points < 3 || points > 8;
+        return points < 5 || points > 8;
       case 'high':
         return points < 8;
       default:
@@ -1502,23 +1511,16 @@ export default function ScopePlaygroundPage() {
     if (!storyToUpdate) return;
     
     // Get correct business value text based on position value
-    let valueLevel3Scale = 'Important'; // Default
-    if (value === 'high') {
-      valueLevel3Scale = 'Critical';
-    } else if (value === 'medium') {
-      valueLevel3Scale = 'Important';
-    } else {
-      valueLevel3Scale = 'Nice to Have';
+    let valueLevel3Scale = MATRIX_DEFAULTS.BUSINESS_VALUES[value] || 'Important'; // Default
+    if (!MATRIX_DEFAULTS.BUSINESS_VALUES[value]) {
+      console.error('Unknown value level:', value);
     }
     
     // Get story points based on effort level
-    let storyPoints = 5; // Default (medium)
-    if (effort === 'low') {
-      storyPoints = 3;
-    } else if (effort === 'medium') {
-      storyPoints = 5;
-    } else { // high
-      storyPoints = 8;
+    let storyPoints = MATRIX_DEFAULTS.STORY_POINTS[effort] || 5; // Default (medium)
+    if (!MATRIX_DEFAULTS.STORY_POINTS[effort]) {
+      console.error('Unknown effort level:', effort);
+      return; // Invalid effort level
     }
     
     // Check for business value mismatch

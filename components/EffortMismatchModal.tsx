@@ -169,12 +169,6 @@ export function EffortMismatchModal({
                     </div>
                   </div>
                 </div>
-                <button 
-                  onClick={handleAdjustPoints}
-                  className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-sm transition-all duration-200"
-                >
-                  Adjust
-                </button>
               </div>
             </div>
             
@@ -186,21 +180,30 @@ export function EffortMismatchModal({
                     Keep the current {storyPoints} points but place in a {cellEffort} effort column
                   </p>
                 </div>
-                <button 
-                  onClick={onKeepAsIs}
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1 rounded text-sm transition-all duration-200"
-                >
-                  Keep
-                </button>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={handleAdjustPoints}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium transition-colors"
+            type="button"
+          >
+            Save Adjustment
+          </button>
+          <button
+            onClick={onKeepAsIs}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded font-medium transition-colors"
+            type="button"
+          >
+            Keep Current Points
+          </button>
           <button
             onClick={onCancel}
-            className="px-4 py-2 border rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200"
+            className="bg-white hover:bg-gray-50 text-gray-500 py-2 px-3 rounded border border-gray-300 font-medium transition-colors"
+            type="button"
           >
             Cancel
           </button>
