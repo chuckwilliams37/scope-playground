@@ -31,6 +31,7 @@ type ValueMatrixProps = {
   totalEffort?: number;
   renderPositionedStories?: RenderPositionedStoriesFunction;
   getStoriesInCell?: (value: string, effort: string) => Story[];
+  highlightStoryCards?: boolean; // New prop to highlight story cards
 };
 
 // Function to fix any React node rendering issues
@@ -88,7 +89,8 @@ export function ValuesMatrix({
   totalPoints,
   totalEffort,
   renderPositionedStories,
-  getStoriesInCell = (value: string, effort: string) => []
+  getStoriesInCell = (value: string, effort: string) => [],
+  highlightStoryCards = false // New prop to highlight story cards
 }: ValueMatrixProps) {
   // Track which mismatch alerts are dismissed
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
@@ -244,22 +246,44 @@ export function ValuesMatrix({
           renderPositionedStories(value, effort)
         ) : (
           <div className="space-y-2">
-            {cellStories.map(story => (
-              <StoryCard
-                key={story._id || story.id}
-                story={story}
-                position={{ value, effort }}
-                isExpanded={expandedStoryIds.has(story._id || story.id || '')}
-                onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
-                onAdjustPoints={!readOnly && onUpdateStory ? 
-                  (storyId, points, reason) => {
-                    const updatedStory = { ...story, points, adjustmentReason: reason };
-                    return onUpdateStory(updatedStory);
-                  } : undefined
-                }
-                inMatrix={true} // Indicate this card is in the matrix
-              />
-            ))}
+            {cellStories.map(story => {
+              // Directly calculate mismatches here
+              const valueMismatch = value === 'high' && story.businessValue !== 'Critical' ||
+                                  value === 'medium' && story.businessValue !== 'Important' ||
+                                  value === 'low' && story.businessValue !== 'Nice to Have';
+              
+              const effortMismatch = effort === 'low' && (story.points || 0) > 3 ||
+                                   effort === 'medium' && ((story.points || 0) < 5 || (story.points || 0) > 8) ||
+                                   effort === 'high' && (story.points || 0) < 8;
+              
+              const hasMismatch = valueMismatch || effortMismatch;
+              
+              // Log for debugging
+              if (hasMismatch) {
+                console.log(`Matrix cell ${value}-${effort} detected mismatch for story ${story.title}`);
+                console.log(`Value: ${story.businessValue}, Expected: ${value === 'high' ? 'Critical' : value === 'medium' ? 'Important' : 'Nice to Have'}`);
+                console.log(`Points: ${story.points}, In ${effort} cell`);
+              }
+              
+              return (
+                <StoryCard
+                  key={story._id || story.id}
+                  story={story}
+                  position={{ value, effort }}
+                  isExpanded={expandedStoryIds.has(story._id || story.id || '')}
+                  onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
+                  onAdjustPoints={!readOnly && onUpdateStory ? 
+                    (storyId, points, reason) => {
+                      const updatedStory = { ...story, points, adjustmentReason: reason };
+                      return onUpdateStory(updatedStory);
+                    } : undefined
+                  }
+                  inMatrix={true} // Indicate this card is in the matrix
+                  highlight={highlightStoryCards} // New prop to highlight story cards
+                  forceMismatch={hasMismatch} // Directly pass mismatch information
+                />
+              );
+            })}
           </div>
         )}
       </div>

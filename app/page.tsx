@@ -119,6 +119,34 @@ const sampleStories = [
   }
 ];
 
+// Sample data for metrics panel
+const sampleData = [
+  {
+    name: "Data 1",
+    metrics: {
+      scopeEfficiency: 0.75,
+      mvpDaysToBuild: 156,
+      lovableDaysToBuild: 224,
+      hoursPerPoint: 7.5,
+      mvpPointsPerDeveloper: 1.2,
+      productivityGain: 0.45,
+      description: "First data sample with metrics"
+    }
+  },
+  {
+    name: "Data 2",
+    metrics: {
+      scopeEfficiency: 0.85,
+      mvpDaysToBuild: 124,
+      lovableDaysToBuild: 180,
+      hoursPerPoint: 6.5,
+      mvpPointsPerDeveloper: 1.5,
+      productivityGain: 0.65,
+      description: "Productivity gain from AI-assisted schema design and business logic"
+    }
+  }
+];
+
 // Scenario preset definitions
 const scenarioPresets = [
   {
@@ -1298,6 +1326,15 @@ export default function ScopePlaygroundPage() {
 
   // Function to remove all stories from matrix and place them back in backlog
   const handleRemoveAllFromMatrix = () => {
+    // Only proceed if there are stories in the matrix
+    if (Object.keys(storyPositions).length === 0) {
+      setNotification({
+        type: "info",
+        message: "No stories in the matrix to remove"
+      });
+      return;
+    }
+    
     // Clear all story positions
     setStoryPositions({});
     
@@ -1390,14 +1427,70 @@ export default function ScopePlaygroundPage() {
     }
   };
 
-  // Function to clear the backlog
-  const handleClearBacklog = () => {
-    if (window.confirm('Are you sure you want to clear the entire backlog? This cannot be undone.')) {
-      setStories([]);
-      setStoryPositions({});
+  // Handle clearing the backlog (delete all stories)
+  const handleClearBacklog = async () => {
+    try {
+      // Get current URL path
+      const currentUrl = window.location.pathname;
+      
+      // Only delete stories that aren't part of saved scenarios
+      // First, collect all story IDs used in any scenario
+      const scenarioStoryIds = new Set<string>();
+      
+      // Get user-saved scenarios
+      const savedScenariosData = localStorage.getItem('savedScenarios');
+      const savedScenarios = savedScenariosData ? JSON.parse(savedScenariosData) : [];
+      
+      // Add story IDs from scenarios to the protected set
+      savedScenarios.forEach((scenario: any) => {
+        if (scenario?.data?.storyPositions) {
+          Object.keys(scenario.data.storyPositions).forEach(id => {
+            scenarioStoryIds.add(id);
+          });
+        }
+      });
+      
+      // Filter stories to only delete those not in scenarios and associated with current URL
+      const storiesToDelete = stories.filter(story => 
+        !scenarioStoryIds.has(story._id) && 
+        (!story.urlPath || story.urlPath === currentUrl)
+      );
+      
+      if (storiesToDelete.length === 0) {
+        setNotification({
+          type: "info",
+          message: "No stories to delete in the current backlog"
+        });
+        return;
+      }
+      
+      // Delete each story
+      for (const story of storiesToDelete) {
+        await deleteStoryMutation({ id: story._id as Id<"stories"> });
+      }
+      
       setNotification({
-        type: 'info',
-        message: 'Backlog cleared successfully'
+        type: "success",
+        message: `Deleted ${storiesToDelete.length} stories from the current backlog`
+      });
+      
+      // Clear local state for these stories
+      setStories(prevStories => 
+        prevStories.filter(s => scenarioStoryIds.has(s._id))
+      );
+      
+      // Also remove deleted stories from positions
+      const newPositions = { ...storyPositions };
+      storiesToDelete.forEach(story => {
+        delete newPositions[story._id];
+      });
+      setStoryPositions(newPositions);
+      
+    } catch (error) {
+      console.error("Error clearing backlog:", error);
+      setNotification({
+        type: "error",
+        message: "Failed to clear backlog"
       });
     }
   };
@@ -1499,6 +1592,7 @@ export default function ScopePlaygroundPage() {
                 }}
                 onDeleteStory={handleDeleteStory}
                 onAssignAllToDefaultCells={handleAssignAllToDefaultCells}
+                onClearBacklog={handleClearBacklog}
               />
             </div>
           </div>

@@ -117,29 +117,34 @@ export function StoryForm({
   }, [isNewEffortCategory]);
   
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md relative z-[100]">
-      <h2 className="text-xl font-semibold mb-4">{story ? 'Edit Story' : 'Create New Story'}</h2>
+    <div className="bg-white rounded-xl shadow-xl overflow-hidden transition-all">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+        <h2 className="text-xl font-bold text-white">
+          {story ? 'Edit Story' : 'Create New Story'}
+        </h2>
+      </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title input */}
-        <div>
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        {/* Title */}
+        <div className="space-y-2">
           <label htmlFor="title" className="block text-sm font-medium text-gray-700">
             Title <span className="text-red-500">*</span>
           </label>
           <input
-            type="text"
             id="title"
+            type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-              errors.title ? 'border-red-500' : ''
-            }`}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+            placeholder="Short descriptive title"
           />
-          {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
+          {errors.title && (
+            <p className="text-sm text-red-600">{errors.title}</p>
+          )}
         </div>
-        
-        {/* User Story input */}
-        <div>
+
+        {/* User Story */}
+        <div className="space-y-2">
           <label htmlFor="userStory" className="block text-sm font-medium text-gray-700">
             User Story
           </label>
@@ -147,159 +152,117 @@ export function StoryForm({
             id="userStory"
             value={userStory}
             onChange={(e) => setUserStory(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
             rows={3}
-            placeholder="As a [role], I want [feature] so that [benefit]"
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-          />
+            placeholder="As a [type of user], I want [goal] so that [benefit]"
+          ></textarea>
         </div>
-        
-        {/* Points input */}
-        <div className="relative">
-          <label htmlFor="points" className="block text-sm font-medium text-gray-700">
-            Story Points
-          </label>
-          <select
-            id="points"
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110]"
-          >
-            {pointOptions.map((option) => (
-              <option key={option} value={option}>
-                {option} {option <= 3 ? "(Low Effort)" : option <= 8 ? "(Medium Effort)" : "(High Effort)"}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-gray-500">The effort category will automatically update based on points, but can be manually changed.</p>
+
+        {/* Two-column section for Business Value and Points */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Business Value */}
+          <div className="space-y-2">
+            <label htmlFor="businessValue" className="block text-sm font-medium text-gray-700">
+              Business Value <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="businessValue"
+              value={businessValue}
+              onChange={(e) => setBusinessValue(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {businessValues.map(value => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+            {errors.businessValue && (
+              <p className="text-sm text-red-600">{errors.businessValue}</p>
+            )}
+          </div>
+
+          {/* Story Points */}
+          <div className="space-y-2">
+            <label htmlFor="points" className="block text-sm font-medium text-gray-700">
+              Story Points
+            </label>
+            <select
+              id="points"
+              value={points}
+              onChange={(e) => setPoints(Number(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {pointOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        
-        {/* Business Value input */}
-        <div className="relative">
-          <label htmlFor="businessValue" className="block text-sm font-medium text-gray-700">
-            Business Value <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="businessValue"
-            value={businessValue}
-            onChange={(e) => setBusinessValue(e.target.value)}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110] ${
-              errors.businessValue ? 'border-red-500' : ''
-            }`}
-          >
-            {businessValues.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          {errors.businessValue && <p className="mt-1 text-sm text-red-500">{errors.businessValue}</p>}
-        </div>
-        
-        {/* Category input */}
-        <div className="relative">
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-            Category <span className="text-red-500">*</span>
-          </label>
-          {isNewCategory ? (
-            <div>
-              <input
-                type="text"
-                value={newCategory}
-                onChange={(e) => {
-                  setNewCategory(e.target.value);
-                  setCategory(e.target.value);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter new category"
-              />
-              <button
-                type="button"
-                onClick={() => setIsNewCategory(false)}
-                className="mt-1 text-sm text-blue-500 hover:text-blue-700"
-              >
-                Select from existing
-              </button>
-            </div>
-          ) : (
+
+        {/* Two-column section for Category and Effort Category */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Category */}
+          <div className="space-y-2">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+              Category <span className="text-red-500">*</span>
+            </label>
             <div>
               <select
                 id="category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110] ${
-                  errors.category ? 'border-red-500' : ''
-                }`}
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setIsNewCategory(true)}
-                className="mt-1 text-sm text-blue-500 hover:text-blue-700"
-              >
-                Add new category
-              </button>
-            </div>
-          )}
-          {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
-        </div>
-        
-        {/* Effort Category input */}
-        <div className="relative">
-          <label htmlFor="effortCategory" className="block text-sm font-medium text-gray-700">
-            Effort Category
-          </label>
-          {isNewEffortCategory ? (
-            <div>
-              <input
-                type="text"
-                value={newEffortCategory}
                 onChange={(e) => {
-                  setNewEffortCategory(e.target.value);
-                  setEffortCategory(e.target.value);
+                  if (e.target.value === 'Other') {
+                    setIsNewCategory(true);
+                    setCategory('');
+                  } else {
+                    setIsNewCategory(false);
+                    setCategory(e.target.value);
+                  }
                 }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter new effort category"
-              />
-              <button
-                type="button"
-                onClick={() => setIsNewEffortCategory(false)}
-                className="mt-1 text-sm text-blue-500 hover:text-blue-700"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
-                Select from existing
-              </button>
-            </div>
-          ) : (
-            <div>
-              <select
-                id="effortCategory"
-                value={effortCategory}
-                onChange={(e) => setEffortCategory(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm relative z-[110]"
-              >
-                {effortCategories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
+                <option value="Other">Other...</option>
               </select>
-              <button
-                type="button"
-                onClick={() => setIsNewEffortCategory(true)}
-                className="mt-1 text-sm text-blue-500 hover:text-blue-700"
-              >
-                Add new effort category
-              </button>
+              {isNewCategory && (
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => {
+                    setNewCategory(e.target.value);
+                    setCategory(e.target.value);
+                  }}
+                  className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Enter new category"
+                />
+              )}
+              {errors.category && (
+                <p className="text-sm text-red-600">{errors.category}</p>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Effort Category */}
+          <div className="space-y-2">
+            <label htmlFor="effortCategory" className="block text-sm font-medium text-gray-700">
+              Effort Category
+            </label>
+            <select
+              id="effortCategory"
+              value={effortCategory}
+              onChange={(e) => setEffortCategory(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {effortCategories.map(effort => (
+                <option key={effort} value={effort}>{effort}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        
-        {/* Notes input */}
-        <div>
+
+        {/* Notes */}
+        <div className="space-y-2">
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
             Notes
           </label>
@@ -307,76 +270,77 @@ export function StoryForm({
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          />
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+            rows={4}
+            placeholder="Any additional notes about this story"
+          ></textarea>
         </div>
-        
+
         {/* Acceptance Criteria */}
-        <div>
+        <div className="space-y-2 border-t pt-5 border-gray-200">
           <label className="block text-sm font-medium text-gray-700">
             Acceptance Criteria
           </label>
-          <div className="mt-2">
-            <ul className="space-y-2 max-h-48 overflow-y-auto">
-              {acceptanceCriteria.map((criterion, index) => (
-                <li key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
-                  <span className="flex-1">{criterion}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updatedCriteria = [...acceptanceCriteria];
-                      updatedCriteria.splice(index, 1);
-                      setAcceptanceCriteria(updatedCriteria);
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 flex space-x-2">
-              <input
-                type="text"
-                value={newCriterion}
-                onChange={(e) => setNewCriterion(e.target.value)}
-                placeholder="Add a new acceptance criterion"
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (newCriterion.trim()) {
-                    setAcceptanceCriteria([...acceptanceCriteria, newCriterion.trim()]);
-                    setNewCriterion('');
-                  }
-                }}
-                className="px-3 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Add
-              </button>
-            </div>
-            <p className="mt-1 text-xs text-gray-500">Add criteria that must be met for this story to be considered complete.</p>
+          <p className="text-sm text-gray-500 mb-2">
+            Add specific conditions that must be met for this story to be considered complete.
+          </p>
+          
+          <div className="space-y-2 mb-3">
+            {acceptanceCriteria.map((criterion, index) => (
+              <div key={index} className="flex items-center bg-gray-50 p-2 rounded-md">
+                <span className="flex-grow">{criterion}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newCriteria = [...acceptanceCriteria];
+                    newCriteria.splice(index, 1);
+                    setAcceptanceCriteria(newCriteria);
+                  }}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex">
+            <input
+              type="text"
+              value={newCriterion}
+              onChange={(e) => setNewCriterion(e.target.value)}
+              className="flex-grow px-4 py-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+              placeholder="Enter acceptance criterion"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (newCriterion.trim()) {
+                  setAcceptanceCriteria([...acceptanceCriteria, newCriterion.trim()]);
+                  setNewCriterion('');
+                }
+              }}
+              className="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-r-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Add
+            </button>
           </div>
         </div>
-        
-        {/* Form actions */}
-        <div className="flex justify-end space-x-3 pt-4">
+
+        {/* Buttons */}
+        <div className="pt-5 border-t border-gray-200 flex justify-end space-x-3">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            {story ? 'Save Changes' : 'Create Story'}
+            {story ? 'Update Story' : 'Create Story'}
           </button>
         </div>
       </form>

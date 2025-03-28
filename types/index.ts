@@ -26,6 +26,7 @@ export type Story = {
   adjustmentReason?: string;
   originalPoints?: number;
   businessValueMismatch?: string; // The expected matrix value that doesn't match the story's value
+  urlPath?: string; // URL path this story is associated with
 };
 
 // Define the backend story type (used with Convex)
@@ -60,4 +61,5 @@ export type BacklogViewerProps = {
   onUpdateStory?: (storyId: string, story: Story) => Promise<boolean>;
   onDeleteStory?: (storyId: string) => Promise<boolean>;
   onAssignAllToDefaultCells?: (stories: Story[]) => void;
+  onClearBacklog?: () => void; // Function to clear the backlog
 };
