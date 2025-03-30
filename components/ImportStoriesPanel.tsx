@@ -181,6 +181,15 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
     }
   };
   
+  // Define result type
+  type ImportResult = {
+    success: number;
+    duplicates?: number; 
+    errors?: string[];
+    storyIds?: string[];
+    positions?: Record<string, { value: string, effort: string, rank?: number }>;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-4">
@@ -259,27 +268,24 @@ export function ImportStoriesPanel({ onImportComplete, onClose }: ImportStoriesP
       )}
       
       {importResults && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-2">Import Results</h3>
-          <div className="p-4 mb-2 text-sm rounded-lg bg-blue-50 text-blue-700">
-            Successfully imported {importResults.success} stories
+        <div className="mt-4">
+          <div className="text-lg font-medium">Import Results</div>
+          <div className="bg-green-50 border border-green-200 rounded-md p-2 mt-2">
+            <div className="text-green-700">Successfully imported {importResults.success} stories</div>
+            {importResults.duplicates && importResults.duplicates > 0 && (
+              <div className="text-amber-700 mt-1">Skipped {importResults.duplicates} duplicate stories</div>
+            )}
           </div>
           
           {importResults.errors && importResults.errors.length > 0 && (
-            <div className="border rounded p-3 mb-3 bg-red-50">
-              <h4 className="font-medium text-red-700 mb-1">Errors ({importResults.errors.length})</h4>
-              <ul className="list-disc list-inside text-xs text-red-700">
-                {importResults.errors.map((err: string, i: number) => (
-                  <li key={i}>{err}</li>
+            <div className="bg-red-50 border border-red-200 rounded-md p-2 mt-2">
+              <div className="text-red-700 font-medium">Errors:</div>
+              <ul className="list-disc list-inside text-sm text-red-600 mt-1">
+                {importResults.errors.map((error: string, i: number) => (
+                  <li key={i}>{error}</li>
                 ))}
               </ul>
             </div>
-          )}
-          
-          {updatePositions && importResults.positions && Object.keys(importResults.positions).length > 0 && (
-            <p className="text-sm text-gray-600">
-              {Object.keys(importResults.positions).length} stories positioned in the matrix
-            </p>
           )}
         </div>
       )}

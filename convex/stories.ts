@@ -192,13 +192,29 @@ export const importStories = mutation({
     const validBusinessValues = ["Critical", "Important", "Nice to Have"];
     const importResults = {
       success: 0,
+      duplicates: 0,
       errors: [] as string[],
       storyIds: [] as string[],
       positions: {} as Record<string, { value: string, effort: string, rank?: number }>
     };
     
+    // First, gather all existing story titles for duplicate checking
+    const existingStories = await ctx.db
+      .query("stories")
+      .collect();
+    
+    const existingTitles = new Set(existingStories.map(story => story.title.toLowerCase().trim()));
+    
     for (const story of args.stories) {
       try {
+        // Check for duplicates by title
+        const normalizedTitle = story.title.toLowerCase().trim();
+        if (existingTitles.has(normalizedTitle)) {
+          importResults.duplicates++;
+          importResults.errors.push(`Duplicate story: "${story.title}" - A story with this title already exists`);
+          continue;
+        }
+        
         // Validate business value
         if (!validBusinessValues.includes(story.businessValue)) {
           importResults.errors.push(`Story "${story.title}" has invalid business value: ${story.businessValue}. Must be one of: ${validBusinessValues.join(", ")}`);
@@ -217,6 +233,9 @@ export const importStories = mutation({
           notes: story.notes,
           acceptanceCriteria: story.acceptanceCriteria ?? []
         });
+        
+        // Add to existing titles set to prevent duplicates in the same import batch
+        existingTitles.add(normalizedTitle);
         
         importResults.success++;
         importResults.storyIds.push(id);

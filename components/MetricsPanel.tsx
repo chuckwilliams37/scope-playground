@@ -123,7 +123,7 @@ export function MetricsPanel({
             className="flex items-center justify-center py-2 px-4 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 01.947 2.287c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
             </svg>
             Project Settings
           </button>
@@ -236,37 +236,47 @@ export function MetricsPanel({
                 Effective: {formatNumber(metrics.effectiveContributorCount)} 
                 ({metrics.productivityLossPercent}% loss)
               </div>
-              <div className="mt-2 space-y-1 text-gray-700">
-                <details className="text-xs">
-                  <summary className="cursor-pointer font-medium">Team Productivity Details</summary>
-                  <div className="mt-1 pl-2 border-l-2 border-gray-300 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Communication Overhead:</span>
-                      <span className="font-medium">{formatNumber((metrics.communicationOverhead || 0) * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Management Overhead:</span>
-                      <span className="font-medium">{formatNumber((metrics.managementOverhead || 0) * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Ramp-up Overhead:</span>
-                      <span className="font-medium">{formatNumber((metrics.rampUpOverhead || 0) * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Context Switching:</span>
-                      <span className="font-medium">{formatNumber((metrics.contextSwitchingOverhead || 0) * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between font-medium pt-1 border-t border-gray-200">
-                      <span>Total Overhead:</span>
-                      <span>{formatNumber((metrics.totalOverhead || 0) * 100)}%</span>
-                    </div>
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer font-medium text-gray-700">Team Productivity Details</summary>
+                <div className="mt-2 space-y-2 text-gray-700">
+                  <div className="flex justify-between items-center">
+                    <span>Communication Overhead:</span>
+                    <span className="font-medium">{formatNumber((metrics.communicationOverhead || 0) * 100)}%</span>
                   </div>
-                </details>
-                <div className="flex justify-between text-xs text-blue-600">
-                  <span>Communication Paths:</span>
-                  <span className="font-medium">{Math.round((settings.contributorCount * (settings.contributorCount - 1)) / 2)}</span>
+                  <div className="flex justify-between items-center">
+                    <span>Management Overhead:</span>
+                    <span className="font-medium">{formatNumber((metrics.managementOverhead || 0) * 100)}%</span>
+                  </div>
+                  {metrics.rampUpOverhead !== undefined && (
+                    <div className="flex justify-between items-center">
+                      <span>Ramp-up Time:</span>
+                      <span className="font-medium">{formatNumber((metrics.rampUpOverhead) * 100)}%</span>
+                    </div>
+                  )}
+                  {metrics.contextSwitchingOverhead !== undefined && (
+                    <div className="flex justify-between items-center">
+                      <span>Context Switching:</span>
+                      <span className="font-medium">{formatNumber((metrics.contextSwitchingOverhead) * 100)}%</span>
+                    </div>
+                  )}
+                  {metrics.accountManagementOverhead !== undefined && (
+                    <div className="flex justify-between items-center">
+                      <span>Account Management:</span>
+                      <span className="font-medium">{formatNumber((metrics.accountManagementOverhead) * 100)}%</span>
+                    </div>
+                  )}
+                  {metrics.selfManagedPartnerDiscount !== undefined && (
+                    <div className="flex justify-between items-center">
+                      <span>Self-managed Discount:</span>
+                      <span className="font-medium text-green-600">-{formatNumber((metrics.selfManagedPartnerDiscount) * 100)}%</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-gray-200 flex justify-between items-center font-medium">
+                    <span>Total Overhead:</span>
+                    <span>{formatNumber((metrics.totalOverhead || 0) * 100)}%</span>
+                  </div>
                 </div>
-              </div>
+              </details>
             </div>
           )}
         </div>
