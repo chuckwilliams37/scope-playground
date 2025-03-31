@@ -16,22 +16,16 @@ type Story = {
   [key: string]: any;
 };
 
-type RenderPositionedStoriesFunction = (
-  value: string,
-  effort: string
-) => JSX.Element | null;
-
 type ValueMatrixProps = {
   stories: Story[];
+  storyPositions: Record<string, { value: string, effort: string, rank?: number }>;
+  onAdjustPoints?: (storyId: string, newPoints: number, reason: string) => void;
   onUpdateStory?: (story: Story) => Promise<boolean>;
   readOnly?: boolean;
   expandedStoryIds?: Set<string>;
   toggleStoryExpansion?: (storyId: string) => void;
   totalPoints?: number;
   totalEffort?: number;
-  renderPositionedStories?: RenderPositionedStoriesFunction;
-  getStoriesInCell?: (value: string, effort: string) => Story[];
-  highlightStoryCards?: boolean; // New prop to highlight story cards
 };
 
 // Function to fix any React node rendering issues
@@ -82,16 +76,19 @@ const MatrixCell = ({
 
 export function ValuesMatrix({ 
   stories = [], 
-  onUpdateStory,
+  storyPositions = {},
+  onAdjustPoints,
+  onUpdateStory, 
   readOnly = false,
   expandedStoryIds = new Set(),
   toggleStoryExpansion = () => {},
   totalPoints,
   totalEffort,
-  renderPositionedStories,
-  getStoriesInCell = (value: string, effort: string) => [],
-  highlightStoryCards = false // New prop to highlight story cards
 }: ValueMatrixProps) {
+  // --- DEBUG LOGGING START (RE-ADDED) ---
+  console.log('[ValuesMatrix Render] Received storyPositions prop:', storyPositions);
+  // --- DEBUG LOGGING END (RE-ADDED) ---
+
   // Track which mismatch alerts are dismissed
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
@@ -102,22 +99,6 @@ export function ValuesMatrix({
       newState.add(storyId);
       return newState;
     });
-  };
-
-  // Check if there's a value mismatch between story's business value and cell's value
-  const hasMismatch = (story: Story, cellValue: string) => {
-    // Map business values to expected cell values
-    const valueMap: Record<string, string> = {
-      'Critical': 'high',
-      'Important': 'medium',
-      'Nice to Have': 'low'
-    };
-    
-    // Get expected cell value based on business value
-    const expectedCellValue = valueMap[story.businessValue || 'Nice to Have'] || 'low';
-    
-    // Return true if there's a significant mismatch
-    return expectedCellValue !== cellValue;
   };
 
   // Define the value and effort levels
@@ -169,41 +150,9 @@ export function ValuesMatrix({
     }
   };
 
-  // Function to get stories for a specific cell
-  const getStoriesForCell = getStoriesInCell || ((value: string, effort: string) => {
-    if (!stories || !Array.isArray(stories)) return [];
-    
-    // Map business values to matrix values
-    const valueMap: Record<string, string> = {
-      'Critical': 'high',
-      'Important': 'medium',
-      'Nice to Have': 'low'
-    };
-
-    // Map story points to effort levels
-    const pointsToEffort = (points: number): string => {
-      if (points <= 3) return 'low';
-      if (points <= 8) return 'medium';
-      return 'high';
-    };
-
-    // Filter stories to find those in this cell
-    return stories.filter(story => {
-      // Get story business value and map to matrix value (high/medium/low)
-      const storyValue = valueMap[story.businessValue as keyof typeof valueMap] || 'low';
-      
-      // Get story effort level based on story points
-      const storyPoints = story.storyPoints || story.points;
-      const storyEffort = pointsToEffort(storyPoints || 0);
-      
-      // Return true if both match the cell's value and effort
-      return storyValue === value && storyEffort === effort;
-    });
-  });
-
   const renderCell = (value: string, effort: string) => {
     const { setNodeRef, isOver } = useDroppable({
-      id: `matrix-${value}-${effort}`,
+      id: `cell-${value}-${effort}`,
       data: {
         value,
         effort,
@@ -211,8 +160,38 @@ export function ValuesMatrix({
       }
     });
 
-    // Get stories that should be positioned in this cell
-    const cellStories = getStoriesForCell(value, effort);
+    // Robustly get story ID
+    const getStoryId = (story: Story): string | undefined => story._id || story.id;
+
+    // Filter stories for the current cell, handling ID and value mapping
+    const cellStories = stories.filter(story => {
+      const storyId = getStoryId(story);
+      if (!storyId) return false; // Skip stories without an ID
+
+      const position = storyPositions[storyId];
+      if (!position) return false; // Skip stories not in storyPositions
+
+      // Map cell's value level ('high', 'medium', 'low') to stored position value ('critical', 'important', 'nice-to-have')
+      const matchesValue = 
+        (value === 'high' && position.value === 'critical') ||
+        (value === 'medium' && position.value === 'important') ||
+        (value === 'low' && position.value === 'nice-to-have');
+
+      // Check if effort matches
+      const matchesEffort = position.effort === effort;
+
+      return matchesValue && matchesEffort;
+    });
+
+    // Sort stories by rank if available (using robust ID check)
+    const sortedStories = [...cellStories].sort((a, b) => {
+      const idA = getStoryId(a);
+      const idB = getStoryId(b);
+      const rankA = idA ? storyPositions[idA]?.rank || 0 : 0;
+      const rankB = idB ? storyPositions[idB]?.rank || 0 : 0;
+      return rankA - rankB;
+    });
+
     const valueKey = valueLevels.indexOf(value);
     const effortKey = effortLevels.indexOf(effort);
     
@@ -233,59 +212,41 @@ export function ValuesMatrix({
         <div className="text-xs text-gray-500 mb-2 relative z-5 flex justify-between items-center">
           <span>{businessValueLabels[value] || value} / {effortLabels[effort] || effort}</span>
           <span className="bg-gray-100 px-1 py-0.5 rounded text-xs font-medium">
-            {cellStories.length > 0 ? (
+            {sortedStories.length > 0 ? (
               <>
-                {cellStories.length} {cellStories.length === 1 ? 'story' : 'stories'} • 
-                {cellStories.reduce((sum, story) => sum + (story.points || 0), 0)} pts
+                {sortedStories.length} {sortedStories.length === 1 ? 'story' : 'stories'} • 
+                {sortedStories.reduce((sum, story) => sum + (story.points || 0), 0)} pts
               </>
             ) : ''}
           </span>
         </div>
         
-        {renderPositionedStories ? (
-          renderPositionedStories(value, effort)
-        ) : (
-          <div className="space-y-2">
-            {cellStories.map(story => {
-              // Directly calculate mismatches here
-              const valueMismatch = value === 'high' && story.businessValue !== 'Critical' ||
-                                  value === 'medium' && story.businessValue !== 'Important' ||
-                                  value === 'low' && story.businessValue !== 'Nice to Have';
-              
-              const effortMismatch = effort === 'low' && (story.points || 0) > 3 ||
-                                   effort === 'medium' && ((story.points || 0) < 5 || (story.points || 0) > 8) ||
-                                   effort === 'high' && (story.points || 0) <= 8;
-              
-              const hasMismatch = valueMismatch || effortMismatch;
-              
-              // Log for debugging
-              if (hasMismatch) {
-                console.log(`Matrix cell ${value}-${effort} detected mismatch for story ${story.title}`);
-                console.log(`Value: ${story.businessValue}, Expected: ${value === 'high' ? 'Critical' : value === 'medium' ? 'Important' : 'Nice to Have'}`);
-                console.log(`Points: ${story.points}, In ${effort} cell`);
-              }
-              
-              return (
-                <StoryCard
-                  key={story._id || story.id}
-                  story={story}
-                  position={{ value, effort }}
-                  isExpanded={expandedStoryIds.has(story._id || story.id || '')}
-                  onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
-                  onAdjustPoints={!readOnly && onUpdateStory ? 
-                    (storyId, points, reason) => {
-                      const updatedStory = { ...story, points, adjustmentReason: reason };
-                      return onUpdateStory(updatedStory);
-                    } : undefined
-                  }
-                  inMatrix={true} // Indicate this card is in the matrix
-                  highlight={highlightStoryCards} // New prop to highlight story cards
-                  forceMismatch={hasMismatch} // Directly pass mismatch information
-                />
-              );
-            })}
-          </div>
-        )}
+        {/* Render stories positioned in this cell */}
+        <div className="space-y-2">
+          {sortedStories.map(story => {
+            const storyId = getStoryId(story);
+            if (!storyId) return null; // Should not happen due to filter, but belts and suspenders
+            const position = storyPositions[storyId]; // Get the actual position data
+            if (!position) return null; // Belts and suspenders
+
+            return (
+              <StoryCard
+                key={storyId} // Use robust ID
+                story={story}
+                // Pass normalized position data with matrix-to-story value mapping
+                position={{
+                  value: position.value,
+                  effort: position.effort
+                }}
+                isExpanded={expandedStoryIds.has(story._id || story.id || '')}
+                onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
+                // Use the new onAdjustPoints handler passed from the parent
+                onAdjustPoints={!readOnly && onAdjustPoints ? onAdjustPoints : undefined} 
+                inMatrix={true} // Indicate this card is in the matrix
+              />
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -322,9 +283,14 @@ export function ValuesMatrix({
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">Business Value Matrix</h3>
         <div className="text-sm text-gray-600">
-          {stories.length} {stories.length === 1 ? 'story' : 'stories'} • 
-          {stories.reduce((sum, story) => sum + (story.points || 0), 0)} total points
-        </div>
+          {Object.keys(storyPositions).length}{' '} 
+          {Object.keys(storyPositions).length === 1 ? 'story' : 'stories'} • {' '}
+          {Object.keys(storyPositions).reduce((sum, storyId) => {
+            const story = stories.find(s => s._id === storyId);
+            return sum + (story?.storyPoints || story?.points || 0);
+          }, 0)}{' '} 
+          total points
+        </div> 
       </div>
       <div className="bg-white rounded-lg">
         {/* Table header with effort levels */}

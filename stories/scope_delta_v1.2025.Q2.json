@@ -1,0 +1,230 @@
+{
+  "stories": [
+    {
+      "id": "delta-v1-001",
+      "title": "[Feature] Implement Role-Based Access Control",
+      "userStory": "As an Admin, I want to manage user roles and permissions, so that clients can only see stories shared with them and interact with allowed parts of the UI.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Security",
+      "acceptanceCriteria": [
+        "Admin can define user roles (e.g., Admin, PM, Client).",
+        "Permissions restrict UI elements and actions based on role.",
+        "Clients can only view scenarios/stories explicitly shared or assigned to them.",
+        "Convex security rules enforce data access restrictions."
+      ]
+    },
+    {
+      "id": "delta-v1-002",
+      "title": "[Feature] Implement Scenario Presets and Reset",
+      "userStory": "As a user, I want to load predefined scenario configurations (e.g., MVP, Full Scope) and reset my current scenario to a preset, so that I can quickly explore common configurations.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Feature",
+      "acceptanceCriteria": [
+        "A selection of predefined presets (e.g., 'MVP', 'Recommended', 'Empty') is available.",
+        "Loading a preset populates the matrix and settings accordingly.",
+        "User can reset the current unsaved scenario back to a selected preset state."
+      ]
+    },
+    {
+      "id": "delta-v1-003",
+      "title": "[Feature] Implement Team Composition Impact Analysis",
+      "userStory": "As a PM, I want to adjust the senior/mid/junior ratio of the team, so that I can see the calculated impact on the project timeline and cost estimates.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Feature",
+      "acceptanceCriteria": [
+        "Settings panel allows input for team composition ratios or counts.",
+        "Metrics panel accurately reflects changes in estimated duration and cost based on team composition.",
+        "Calculation considers potential differences in productivity/velocity for different roles."
+      ]
+    },
+    {
+      "id": "delta-v1-004",
+      "title": "[Feature] Implement AI Factor Simulation",
+      "userStory": "As a user, I want to toggle AI productivity factor simulation, so that I can see the estimated impact of AI assistance on the project timeline and cost.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Feature",
+      "acceptanceCriteria": [
+        "A toggle exists in settings to enable/disable AI simulation.",
+        "When enabled, metrics panel shows adjusted timeline/cost reflecting AI factor percentages.",
+        "When disabled, metrics reflect calculations without AI factors applied."
+      ]
+    },
+     {
+      "id": "delta-v1-005",
+      "title": "[Feature] Add 'Clear Matrix' Functionality",
+      "userStory": "As a user, I want a way to quickly clear all stories from the scope matrix, returning them to the backlog, so that I can easily restart my scenario planning.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Feature",
+      "acceptanceCriteria": [
+        "A button/action exists (e.g., in the matrix area or top bar) labeled 'Clear Matrix'.",
+        "Clicking the button prompts for confirmation.",
+        "Upon confirmation, all stories are removed from the matrix cells and appear back in the backlog.",
+         "Metrics panel updates to reflect the empty matrix."
+      ]
+    },
+    {
+      "id": "delta-v1-006",
+      "title": "[Polish] Enhance Backlog & Story Details View",
+      "userStory": "As a user, I want to easily view full story details in the backlog and ensure clients have a read-only view, so that information is accessible and presented correctly.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "Stories listed in the Backlog Manager are expandable to show all details (user story, points, value, criteria, etc.).",
+        "The story detail view within the backlog is clearly non-editable for roles without edit permissions.",
+        "Story details are consistently displayed in both the backlog and matrix views."
+      ]
+    },
+    {
+      "id": "delta-v1-007",
+      "title": "[Polish] Add Effort/Value Mismatch Feedback",
+      "userStory": "As a user, I want clear feedback when dragging a story might cause an effort or value mismatch, so that I understand the implications of my placement.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "When dragging a story over a matrix cell, if the story's value doesn't match the cell's value, a visual warning or tooltip appears.",
+        "If dropping a story would cause an effort mismatch (e.g., points exceed column capacity), a prompt appears asking for confirmation or adjustment.",
+        "A distinct visual indicator (e.g., icon, border color) highlights stories placed in cells where their business value doesn't match the cell's value category."
+      ]
+    },
+    {
+      "id": "delta-v1-008",
+      "title": "[Polish] Add Drag-and-Drop Interaction Hints",
+      "userStory": "As a user, I want clear visual hints during drag-and-drop, so that I know where I can drop a story and what will happen.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "Valid drop targets (matrix cells, backlog area) are visually highlighted when dragging a story.",
+        "Invalid drop targets provide clear feedback (e.g., disabled state, 'no drop' cursor).",
+        "Visual feedback indicates whether a drop will move or copy the story (if applicable)."
+      ]
+    },
+     {
+      "id": "delta-v1-009",
+      "title": "[Polish] Add CSV Import Support",
+      "userStory": "As a user, I want to import stories from a CSV file in addition to JSON, so that I have more flexibility in how I bring data into the tool.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "The Import Stories panel provides an option to upload or paste CSV data.",
+        "The tool correctly parses CSV data based on expected headers (e.g., Title, UserStory, Points, BusinessValue).",
+        "Imported stories are added to the backlog."
+      ]
+    },
+    {
+      "id": "delta-v1-010",
+      "title": "[Polish] Improve Loading State Indicators",
+      "userStory": "As a user, I want to see clear loading indicators during operations like saving/loading scenarios or importing stories, so that I know the system is working.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "Spinners or skeleton loaders are displayed during Convex backend calls.",
+        "Buttons are disabled and show a loading state during submission (e.g., Save Scenario).",
+        "Progress indicators are shown for potentially long operations like large imports."
+      ]
+    },
+    {
+      "id": "delta-v1-011",
+      "title": "[Polish] Improve Error Handling & Messaging",
+      "userStory": "As a user, I want to see clear, user-friendly error messages when something goes wrong, so that I understand the problem and how to potentially fix it.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "Backend errors from Convex are caught and displayed gracefully (e.g., via toast notifications).",
+        "Input validation errors are clearly indicated next to the relevant fields.",
+        "Import/Export errors provide specific feedback about the issue (e.g., incorrect format, missing data)."
+      ]
+    },
+    {
+      "id": "delta-v1-012",
+      "title": "[Polish] Ensure Consistent UI/UX & Responsiveness",
+      "userStory": "As a user, I want the application to have a consistent visual style and layout, and be usable on different screen sizes, so that it feels professional and easy to use.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Polish",
+      "acceptanceCriteria": [
+        "Consistent use of colors, fonts, spacing, and components across all views.",
+        "Layout adapts gracefully to common device widths (desktop, tablet, mobile).",
+        "Key interactions (drag-and-drop, form inputs) remain functional on touch devices."
+      ]
+    },
+     {
+      "id": "delta-v1-013",
+      "title": "[Task] Conduct Accessibility (A11y) Audit & Remediation",
+      "userStory": "As a developer, I want to ensure the application meets basic accessibility standards, so that users with disabilities can effectively use the tool.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Task",
+      "acceptanceCriteria": [
+        "Keyboard navigation allows access to all interactive elements in a logical order.",
+        "Sufficient color contrast is used for text and UI elements.",
+        "Core components use appropriate ARIA roles and attributes where needed.",
+        "Images have descriptive alt text."
+      ]
+    },
+    {
+      "id": "delta-v1-014",
+      "title": "[Task] Conduct Performance Review & Optimization",
+      "userStory": "As a developer, I want to identify and address any performance bottlenecks, so that the application feels responsive and efficient.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Task",
+      "acceptanceCriteria": [
+        "Review React component rendering to minimize unnecessary updates.",
+        "Analyze Convex query performance and add indexing if required.",
+        "Optimize calculation logic within the frontend (e.g., metrics calculation).",
+        "Check application bundle size for potential improvements."
+      ]
+    },
+    {
+      "id": "delta-v1-015",
+      "title": "[Task] Conduct Security Review",
+      "userStory": "As a developer, I want to review the application for potential security vulnerabilities, so that user data and application integrity are protected.",
+      "points": 8,
+      "businessValue": "Critical",
+      "category": "Task",
+      "acceptanceCriteria": [
+        "Review Convex security rules for database access control.",
+        "Validate input handling on both frontend and backend to prevent injection attacks.",
+        "Ensure authentication and session management are secure.",
+        "Check dependencies for known vulnerabilities."
+      ]
+    },
+    {
+      "id": "delta-v1-016",
+      "title": "[Task] Improve Test Coverage",
+      "userStory": "As a developer, I want to increase unit and integration test coverage for critical components and logic, so that regressions can be caught early.",
+      "points": 5,
+      "businessValue": "Important",
+      "category": "Task",
+      "acceptanceCriteria": [
+        "Add unit tests for key utility functions and calculation logic.",
+        "Add integration tests for core user flows (e.g., adding story to matrix, saving scenario).",
+        "Set up automated testing in CI/CD pipeline (if applicable)."
+      ]
+    },
+    {
+      "id": "delta-v1-017",
+      "title": "[Task] Improve Documentation",
+      "userStory": "As a developer, I want clear code comments and updated project documentation, so that the codebase is easier to understand and maintain.",
+      "points": 3,
+      "businessValue": "Nice to Have",
+      "category": "Task",
+      "acceptanceCriteria": [
+        "Add JSDoc/TSDoc comments to complex functions and components.",
+        "Update README.md with current setup, build, and run instructions.",
+        "Document the Convex schema and key backend functions."
+      ]
+    }
+  ]
+}

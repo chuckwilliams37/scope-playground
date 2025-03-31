@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -352,6 +352,9 @@ type StoryPosition = {
 };
 
 export default function ScopePlaygroundPage() {
+  // Initial log to confirm component render with latest code
+  console.log('[ScopePlaygroundPage Render - ROOT] Component rendering...');
+
   // Fetch stories from Convex instead of using sample data
   const fetchedStories = useQuery(api.stories.listAccessibleStories, { clientId: undefined }) || [];
   
@@ -743,7 +746,7 @@ export default function ScopePlaygroundPage() {
     setActiveId(storyId);
     
     // Find the story being dragged
-    const story = stories.find(s => s._id === storyId);
+    const story = stories.find(s => s._id === storyId || s.id === storyId);
     if (story) {
       setActiveStory(story);
     }
@@ -759,6 +762,111 @@ export default function ScopePlaygroundPage() {
     }
   };
 
+  // Single, comprehensive handleDragEnd function with effort mismatch detection
+  const handleDragEnd = (event: DragEndEvent) => {
+    console.log("[handleDragEnd - ROOT] Drag ended. Forcing state update.");
+    const { active, over } = event;
+    
+    // Debugging log
+    console.log("[handleDragEnd - ROOT] Previous positions:", storyPositions);
+    
+    if (over && over.id) {
+      // Correctly parse the cell ID which has format 'cell-value-effort'
+      const cellId = over.id as string;
+      const cellParts = cellId.split('-');
+      
+      // Make sure we have at least 3 parts (cell, value, effort)
+      if (cellParts.length < 3) {
+        console.error("[handleDragEnd] Invalid cell ID format:", cellId);
+        return;
+      }
+      
+      // Extract the value and effort from parts
+      const value = cellParts[1]; // Second part is the value (high/medium/low)
+      const effort = cellParts[2]; // Third part is the effort (low/medium/high)
+      
+      console.log(`[handleDragEnd] Parsed cell ID: ${cellId} -> value: ${value}, effort: ${effort}`);
+      
+      const storyId = active.id as string;
+      
+      // Get the story object
+      const story = stories.find(s => s._id === storyId || s.id === storyId);
+      if (!story) {
+        console.error("[handleDragEnd] Story not found:", storyId);
+        return;
+      }
+      
+      // Map cell value to proper business value terms
+      const valueMap: Record<string, string> = {
+        'high': 'Critical',
+        'medium': 'Important', 
+        'low': 'Nice to Have'
+      };
+      const businessValue = valueMap[value] || 'Important';
+      
+      // Map cell value to canonical stored values
+      const canonicalValueMap: Record<string, string> = {
+        'high': 'critical',
+        'medium': 'important', 
+        'low': 'nice-to-have'
+      };
+      const canonicalValue = canonicalValueMap[value] || 'important';
+      
+      // Log for debugging
+      console.log("[handleDragEnd] Attempting to set new positions:", {
+        [storyId]: { value: canonicalValue, effort }
+      });
+      
+      // Check for effort mismatch
+      const storyPoints = story.points || story.storyPoints || 0;
+      let hasEffortMismatch = false;
+      
+      if (effort === 'low' && storyPoints > 3) {
+        hasEffortMismatch = true;
+      } else if (effort === 'medium' && (storyPoints < 5 || storyPoints > 8)) {
+        hasEffortMismatch = true;
+      } else if (effort === 'high' && storyPoints < 8) {
+        hasEffortMismatch = true;
+      }
+      
+      // Update the storyPositions state
+      setStoryPositions(prev => ({
+        ...prev,
+        [storyId]: { value: canonicalValue, effort, rank: Date.now() } // Use timestamp for basic ranking
+      }));
+      
+      // Update the story's businessValue to match the cell
+      setStories(prevStories => {
+        return prevStories.map(s => {
+          const id = s._id || s.id;
+          if (id === storyId) {
+            return {
+              ...s,
+              businessValue // Update to the mapped value
+            };
+          }
+          return s;
+        });
+      });
+      
+      // If there's an effort mismatch, show the dialog
+      if (hasEffortMismatch) {
+        handleEffortMismatch(story, { value: canonicalValue, effort });
+      }
+      
+      // Save the position to the database if needed
+      if (storyId && storyId.startsWith('story-')) {
+        // This is a local story, no need to save to DB
+      } else {
+        // Here we would save to the database
+        // savePositionToDb(storyId, value, effort);
+      }
+    }
+    
+    // Clear active ID after update
+    setActiveId(null);
+  };
+
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     
@@ -772,249 +880,6 @@ export default function ScopePlaygroundPage() {
         console.log("Dragging over matrix cell:", overId);
       }
     }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over) {
-      // No valid drop target, reset states
-      setActiveId(null);
-      setActiveStory(null);
-      setReordering(false);
-      setActiveCell(null);
-      return; // Exit early - no valid target
-    }
-    
-    const storyId = active.id as string;
-    const targetId = over.id as string;
-    
-    console.log("Drag end - story:", storyId, "target:", targetId);
-    
-    // Handle dropping into matrix cell
-    if (targetId.startsWith('matrix-')) {
-      const parts = targetId.split('-');
-      if (parts.length === 3) {
-        const [, valueLevel, effortLevel] = parts;
-        
-        // Find the story being dragged
-        const draggedStory = stories.find(s => s._id === storyId);
-        
-        if (draggedStory) {
-          // Check for effort mismatch and show dialog if needed
-          if (draggedStory.points && !pendingStoryPlacement) {
-            // Better effort mismatch detection with proper ranges
-            const isMismatch = effortLevel === 'high' 
-              ? draggedStory.points < 8  // High: 8+ points
-              : effortLevel === 'medium'
-                ? (draggedStory.points < 5 || draggedStory.points > 8) // Medium: 5-8 points inclusive
-              : draggedStory.points > 3; // Low: 1-3 points
-            if (isMismatch) {
-              console.log(`Effort mismatch: Story has ${draggedStory.points} points, cell is ${effortLevel} effort (${MATRIX_DEFAULTS.STORY_POINTS[effortLevel]} points)`);
-              
-              // For high effort cells with high-point stories, keep the original points
-              const effectiveSuggestedPoints = (effortLevel === 'high' && draggedStory.points > 8) 
-                ? draggedStory.points 
-                : MATRIX_DEFAULTS.STORY_POINTS[effortLevel];
-              
-              // Show mismatch modal instead of placing directly
-              setPendingStoryPlacement({
-                storyId,
-                valueLevel,
-                effortLevel,
-                originalPoints: draggedStory.points,
-                suggestedPoints: effectiveSuggestedPoints
-              });
-              return; // Exit early, don't update until user confirms
-            }
-          }
-          
-          // For high effort cells with high-point stories, keep the original points
-          // For medium effort cells with 8 points, keep 8 (don't adjust down to 5)
-          const finalPoints = 
-            (effortLevel === 'high' && draggedStory.points && draggedStory.points > 8) ||
-            (effortLevel === 'medium' && draggedStory.points === 8)
-              ? draggedStory.points  // Keep as-is 
-              : MATRIX_DEFAULTS.STORY_POINTS[effortLevel];     // Otherwise use suggested points
-          
-          // Update the story with new properties, but don't change businessValue
-          const updatedStory = {
-            ...draggedStory,
-            storyPoints: finalPoints,
-            points: finalPoints,
-            businessValueMismatch: draggedStory.businessValue && draggedStory.businessValue !== MATRIX_DEFAULTS.BUSINESS_VALUES[valueLevel] ? MATRIX_DEFAULTS.BUSINESS_VALUES[valueLevel] : undefined,
-            
-            // IMPORTANT: Set originalPoints only if we're adjusting points
-            originalPoints: draggedStory.originalPoints !== undefined 
-              ? draggedStory.originalPoints  // Keep the existing original points value
-              : draggedStory.points,         // This is the first adjustment, store current points
-            adjustmentReason: draggedStory.adjustmentReason || "Adjusted to match matrix position"
-          };
-          
-          // Update in state
-          handleUpdateStory(storyId, updatedStory);
-          
-          // Update the story position in the matrix
-          setStoryPositions(prev => {
-            const newPositions = { ...prev };
-            newPositions[storyId] = {
-              value: valueLevel,
-              effort: effortLevel,
-              rank: 0 // Initial rank
-            };
-            return newPositions;
-          });
-          
-          console.log("Story positioned in matrix:", storyId, valueLevel, effortLevel);
-        }
-      }
-    } else {
-      console.log("Drop target is not a matrix cell:", targetId);
-      setActiveId(null);
-      setActiveStory(null);
-      setReordering(false);
-      setActiveCell(null);
-    }
-    
-    // Reset drag states
-    if (!targetId.startsWith('matrix-')) {
-      setActiveId(null);
-      setActiveStory(null);
-      setReordering(false);
-      setActiveCell(null);
-    }
-  };
-
-  // Handle the user adjusting the story points in the mismatch modal
-  const handleAdjustStoryPoints = (newPoints: number, reason: string) => {
-    if (!pendingStoryPlacement) return;
-    
-    if (!reason.trim()) {
-      setValidationErrors({
-        adjustmentReason: 'Please provide a reason for adjustment'
-      });
-      return;
-    }
-    
-    setValidationErrors({});
-    
-    const { storyId, valueLevel, effortLevel, originalPoints } = pendingStoryPlacement;
-    
-    // Find the specific story to update
-    const storyToUpdate = stories.find(story => story._id === storyId);
-    if (!storyToUpdate) {
-      console.error("Story not found:", storyId);
-      return;
-    }
-    
-    // Create updated story with the new points
-    const updatedStory = {
-      ...storyToUpdate,
-      storyPoints: newPoints,
-      points: newPoints,
-      // Save the original points if this is the first adjustment
-      originalPoints: storyToUpdate.originalPoints !== undefined 
-        ? storyToUpdate.originalPoints 
-        : originalPoints,
-      adjustmentReason: reason
-    };
-    
-    // Update ONLY this specific story in state
-    handleUpdateStory(storyId, updatedStory);
-    
-    // Update the story position in the matrix
-    setStoryPositions(prev => {
-      const newPositions = { ...prev };
-      newPositions[storyId] = {
-        value: valueLevel,
-        effort: effortLevel,
-        rank: newPositions[storyId]?.rank || 0
-      };
-      return newPositions;
-    });
-    
-    // Clear the pending placement
-    setPendingStoryPlacement(null);
-  };
-
-  // Handle keeping existing points
-  const handleKeepStoryPoints = () => {
-    if (!pendingStoryPlacement) return;
-    
-    const { storyId, valueLevel, effortLevel } = pendingStoryPlacement;
-    
-    // Place story in the cell with original points
-    setStoryPositions({
-      ...storyPositions,
-      [storyId]: {
-        value: valueLevel,
-        effort: effortLevel,
-      },
-    });
-    
-    // Clear pending placement
-    setPendingStoryPlacement(null);
-  };
-
-  // Handle canceling placement
-  const handleCancelPlacement = () => {
-    setPendingStoryPlacement(null);
-    setActiveId(null);
-    setReordering(false);
-    setActiveCell(null);
-  };
-
-  // Check if there's an effort mismatch
-  const checkEffortMismatch = (points: number, effort: string): boolean => {
-    switch (effort) {
-      case 'low':
-        return points > 3;
-      case 'medium':
-        return points < 5 || points > 8;
-      case 'high':
-        return points < 8;
-      default:
-        return false;
-    }
-  };
-  
-  // Get suggested points for an effort level
-  const getSuggestedPointsForEffort = (effort: string): number => {
-    switch (effort) {
-      case 'low':
-        return 2;
-      case 'medium':
-        return 5;
-      case 'high':
-        return 13;
-      default:
-        return 3;
-    }
-  };
-  
-  // Handle effort level mismatch for story placement
-  const handleCustomAdjustPoints = (storyId: string, newPoints: number, reason: string) => {
-    // Update story points with the custom adjustment and reason
-    const updatedStories = stories.map(story => {
-      if (story._id === storyId) {
-        return {
-          ...story,
-          storyPoints: newPoints,
-          points: newPoints,
-          adjustmentReason: reason,
-          originalPoints: story.originalPoints || story.storyPoints
-        };
-      }
-      return story;
-    });
-    
-    // In a real app, we would persist this to the database
-    // For now, update our local state
-    setStories(updatedStories);
-  };
-
-  const getStoryPosition = (storyId: string) => {
-    return storyPositions[storyId] || null;
   };
 
   // Handler for creating a new story
@@ -1437,7 +1302,7 @@ export default function ScopePlaygroundPage() {
                 return {
                   _id: savedStory._id,
                   title: savedStory.title || "Untitled Story",
-                  businessValue: savedStory.businessValue || "Important",
+                  businessValue: savedStory.businessValue || undefined,
                   storyPoints: savedStory.storyPoints || 0,
                   points: savedStory.storyPoints || 0,
                   originalPoints: savedStory.originalPoints,
@@ -1518,7 +1383,16 @@ export default function ScopePlaygroundPage() {
   };
 
   const handleCreatePreset = async (presetType: string) => {
-    return handleLoadScenario(`preset-${presetType}`);
+    console.log(`Loading preset: ${presetType}. Forcing state update.`);
+    setStoryPositions(prev => {
+      console.log('Previous positions:', prev);
+      const newPositions = {
+        ...prev,
+        'story-002': { value: 'important', effort: 'medium', rank: Date.now() } // Include required rank property
+      };
+      console.log('Attempting to set new positions:', newPositions);
+      return newPositions;
+    });
   };
 
   const handleResetScenario = () => {
@@ -1760,6 +1634,127 @@ export default function ScopePlaygroundPage() {
     });
   };
 
+  // *** DEBUG: Log storyPositions whenever it changes ***
+  const initialRender = useRef(true);
+  useEffect(() => {
+    // Skip the initial render log
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    console.log('[ScopePlaygroundPage useEffect] storyPositions state changed to:', storyPositions);
+  }, [storyPositions]);
+  // *** END DEBUG ***
+
+  // Update story points in both local state and database
+  const handleAdjustPoints = async (storyId: string, newPoints: number, reason: string) => {
+    // Find the story in our local state
+    const story = stories.find(s => s._id === storyId || s.id === storyId);
+    if (!story) return false;
+    
+    // Update our local state
+    setStories(prev => prev.map(s => {
+      if (s._id === storyId || s.id === storyId) {
+        return {
+          ...s,
+          points: newPoints,
+          storyPoints: newPoints,
+          adjustmentReason: reason
+        };
+      }
+      return s;
+    }));
+    
+    // If it's a Convex story with _id, update in the database
+    if (story._id) {
+      try {
+        // await adjustStoryPoints({ id: story._id, newPoints, adjustmentReason: reason });
+        return true;
+      } catch (error) {
+        console.error('Failed to adjust story points:', error);
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  // State for effort mismatch dialog
+  const [showEffortMismatchDialog, setShowEffortMismatchDialog] = useState(false);
+  const [mismatchedStory, setMismatchedStory] = useState<Story | null>(null);
+  const [mismatchPosition, setMismatchPosition] = useState<{ value: string, effort: string } | null>(null);
+  const [adjustmentReason, setAdjustmentReason] = useState('');
+  const [adjustedPoints, setAdjustedPoints] = useState(0);
+
+  // Handle effort mismatch when dropping a story in a cell with mismatched points
+  const handleEffortMismatch = (story: Story, position: { value: string, effort: string }) => {
+    // Show dialog to let user decide what to do
+    setMismatchedStory(story);
+    setMismatchPosition(position);
+    setAdjustedPoints(story.points || story.storyPoints || 0);
+    setAdjustmentReason('');
+    setShowEffortMismatchDialog(true);
+  };
+
+  // Keep the original story points and continue with placement
+  const handleKeepStoryPoints = () => {
+    // Keep original points but continue with placement
+    setShowEffortMismatchDialog(false);
+    
+    // Story and position were already added to storyPositions during handleDragEnd
+    // Just clear the dialog state
+    setMismatchedStory(null);
+    setMismatchPosition(null);
+  };
+
+  // Cancel the placement and remove from storyPositions
+  const handleCancelPlacement = () => {
+    // Cancel the placement entirely
+    if (mismatchedStory && (mismatchedStory._id || mismatchedStory.id)) {
+      const storyId = mismatchedStory._id || mismatchedStory.id;
+      
+      // Remove from storyPositions
+      setStoryPositions(prev => {
+        const updated = { ...prev };
+        delete updated[storyId as string];
+        return updated;
+      });
+    }
+    
+    // Clear the dialog state
+    setShowEffortMismatchDialog(false);
+    setMismatchedStory(null);
+    setMismatchPosition(null);
+  };
+
+  // Adjust points to match the expected range for the cell
+  const handleAdjustToMatch = () => {
+    if (!mismatchedStory || !mismatchPosition) return;
+    
+    const storyId = mismatchedStory._id || mismatchedStory.id;
+    if (!storyId) return;
+    
+    // Get suggested points based on the effort level of the cell
+    let suggestedPoints = adjustedPoints;
+    if (mismatchPosition.effort === 'low' && adjustedPoints > 3) {
+      suggestedPoints = 3; // Max for low effort
+    } else if (mismatchPosition.effort === 'medium' && (adjustedPoints < 5 || adjustedPoints > 8)) {
+      suggestedPoints = adjustedPoints < 5 ? 5 : 8; // Adjust to valid medium effort range
+    } else if (mismatchPosition.effort === 'high' && adjustedPoints < 8) {
+      suggestedPoints = 8; // Min for high effort
+    }
+    
+    // Apply the adjustment if reason is provided
+    if (adjustmentReason.trim()) {
+      handleAdjustPoints(storyId as string, suggestedPoints, adjustmentReason);
+    }
+    
+    // Close the dialog
+    setShowEffortMismatchDialog(false);
+    setMismatchedStory(null);
+    setMismatchPosition(null);
+  };
+
   return (
     <>
       <TopNavbar
@@ -1836,6 +1831,7 @@ export default function ScopePlaygroundPage() {
                 </div>
               </div>
               <ValuesMatrix 
+                storyPositions={storyPositions} 
                 stories={stories}
                 onUpdateStory={(story) => {
                   // Ensure the story has a valid _id before passing to handleUpdateStory
@@ -1848,54 +1844,6 @@ export default function ScopePlaygroundPage() {
                 toggleStoryExpansion={toggleMatrixStoryExpansion}
                 totalPoints={metrics.totalPoints}
                 totalEffort={metrics.adjustedEffort}
-                getStoriesInCell={getStoriesInCell}
-                renderPositionedStories={(valueLevel, effortLevel) => {
-                  // Get stories in this cell
-                  const cellStories = stories.filter(story => {
-                    const position = storyPositions[story._id];
-                    return position && position.value === valueLevel && position.effort === effortLevel;
-                  });
-
-                  // If no stories in this cell, return null
-                  if (cellStories.length === 0) {
-                    return null;
-                  }
-
-                  // Sort stories by rank if available
-                  const sortedStories = [...cellStories].sort((a, b) => {
-                    const rankA = storyPositions[a._id]?.rank || 0;
-                    const rankB = storyPositions[b._id]?.rank || 0;
-                    return rankA - rankB;
-                  });
-
-                  // Otherwise return the stories
-                  return (
-                    <div className="space-y-2 w-full">
-                      {sortedStories.map((story, index) => (
-                        <div 
-                          key={story._id}
-                          className={`relative ${index > 0 ? 'mt-4' : ''}`}
-                        >
-                          {index > 0 && (
-                            <div className="absolute -top-2 left-0 right-0 flex justify-center">
-                              <div className="w-3/4 border-t border-dashed border-gray-300"></div>
-                            </div>
-                          )}
-                          <StoryCard 
-                            key={story._id} 
-                            story={story} 
-                            position={storyPositions[story._id]}
-                            isDragging={false} 
-                            isExpanded={expandedStoryIds.has(story._id)}
-                            onToggleExpand={() => toggleMatrixStoryExpansion(story._id)}
-                            onRemove={() => handleRemoveStory(story._id)}
-                            onAdjustPoints={handleCustomAdjustPoints}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }}
               />
             </div>
             
@@ -2002,7 +1950,7 @@ export default function ScopePlaygroundPage() {
               <StoryCard
                 story={activeStory}
                 position={storyPositions[activeId] || { value: "medium", effort: "medium" }}
-                isDragging={true}
+                isDragging 
                 isExpanded={false}
                 onToggleExpand={() => {}}
               />
@@ -2010,17 +1958,32 @@ export default function ScopePlaygroundPage() {
           ) : null}
         </DragOverlay>
         
-        {/* Effort Mismatch Modal */}
-        {pendingStoryPlacement && (
+        {/* Effort Mismatch Dialog */}
+        {showEffortMismatchDialog && mismatchedStory && mismatchPosition && (
           <EffortMismatchModal
-            storyTitle={stories.find(s => s._id === pendingStoryPlacement?.storyId)?.title || ''}
-            storyPoints={stories.find(s => s._id === pendingStoryPlacement?.storyId)?.storyPoints || 0}
-            cellEffort={pendingStoryPlacement?.effortLevel}
-            suggestedPoints={pendingStoryPlacement?.suggestedPoints}
-            onAdjustPoints={handleAdjustStoryPoints}
+            storyTitle={mismatchedStory.title || "Untitled Story"}
+            storyPoints={mismatchedStory.points || mismatchedStory.storyPoints || 0}
+            cellEffort={mismatchPosition.effort}
+            suggestedPoints={
+              mismatchPosition.effort === 'low' ? 3 :
+              mismatchPosition.effort === 'medium' ? (
+                (mismatchedStory.points || mismatchedStory.storyPoints || 0) < 5 ? 5 : 8
+              ) : 8
+            }
+            onAdjustPoints={(newPoints, reason) => {
+              const storyId = mismatchedStory._id || mismatchedStory.id;
+              if (storyId) {
+                handleAdjustPoints(storyId as string, newPoints, reason);
+                setShowEffortMismatchDialog(false);
+                setMismatchedStory(null);
+                setMismatchPosition(null);
+              }
+            }}
             onKeepAsIs={handleKeepStoryPoints}
             onCancel={handleCancelPlacement}
-            validationErrors={validationErrors}
+            validationErrors={{
+              adjustmentReason: adjustmentReason.trim() ? '' : undefined
+            }}
           />
         )}
         

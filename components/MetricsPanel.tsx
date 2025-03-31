@@ -60,6 +60,8 @@ type MetricsPanelProps = {
       documentation: number;
     };
     aiSimulationEnabled: boolean;
+    selfManagedPartner?: boolean; // Added to match the settings object passed from page.tsx
+    pointsToHoursConversion?: number; // Added to match the settings object passed from page.tsx
   };
   onSettingsClick?: () => void;
   onImportStoriesClick: () => void;

@@ -111,14 +111,27 @@ export function StoryCard({
   const getValueMismatch = () => {
     if (!position || !story.businessValue) return null;
     
-    // Expected values based on matrix position
-    const expectedMap: Record<string, string> = {
-      'high': 'Critical',
-      'medium': 'Important',
-      'low': 'Nice to Have'
-    };
+    // Translate position value to expected business value in a way that handles both formats
+    let expectedValue: string;
     
-    const expectedValue = expectedMap[position.value];
+    // Handle both position value formats - either direct values or matrix level values
+    if (['high', 'medium', 'low'].includes(position.value)) {
+      // If using matrix level format (high/medium/low), map to business value
+      const matrixToValue: Record<string, string> = {
+        'high': 'Critical',
+        'medium': 'Important',
+        'low': 'Nice to Have'
+      };
+      expectedValue = matrixToValue[position.value];
+    } else {
+      // If already using business value format (critical/important/nice-to-have), standardize capitalization
+      const valueMap: Record<string, string> = {
+        'critical': 'Critical',
+        'important': 'Important',
+        'nice-to-have': 'Nice to Have'
+      };
+      expectedValue = valueMap[position.value.toLowerCase()] || position.value;
+    }
     
     // Log both expected and actual values to debug
     console.log(`VALUE CHECK: ${story.title} - Expected: ${expectedValue}, Actual: ${story.businessValue}`);
@@ -269,16 +282,58 @@ export function StoryCard({
           <div className="m-0 p-0 bg-gradient-to-b from-gray-100 to-white rounded-lg">
             <div className="flex space-x-1 items-center justify-end z-20 -mt-1">
 
-              {/* Mismatch badge - prominently displayed */}
-              {inMatrix && (forceMismatch || valueMismatch || effortMismatch) && (
-                <div className="absolute top-0 right-0 -mt-2 -mr-2 z-50">
-                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-red-500 text-white shadow-lg border-2 border-white">
-                    {valueMismatch && effortMismatch ? 'VALUE+EFFORT' : 
-                     valueMismatch ? 'VALUE' : 'EFFORT'} MISMATCH
-                  </span>
-                </div>
+              {/* Mismatch Indicators (small icons that don't take much horizontal space) */}
+              {inMatrix && (
+                <>
+                {valueMismatch && (
+                  <div className="relative group">
+                    <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                      </svg>
+                      BV
+                    </span>
+                    
+                    <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
+                      <div className="font-medium text-gray-900 mb-1">Business Value Mismatch</div>
+                      <div className="text-gray-700 mb-1">
+                        Card's value: <span className="font-medium">{valueMismatch.actual}</span><br/>
+                        Expected in this position: <span className="font-medium">{valueMismatch.expected}</span>
+                      </div>
+                      <div className="mt-1 text-red-600">
+                        Consider moving this story to a more appropriate position or adjusting its business value.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {effortMismatch && (
+                  <div className="relative group">
+                    <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-300 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                      </svg>
+                      SP
+                    </span>
+                    
+                    <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
+                      <div className="font-medium text-gray-900 mb-1">Effort Mismatch</div>
+                      <div className="text-gray-700 mb-1">
+                        Story points: <span className="font-medium">{effortMismatch.actual}</span><br/>
+                        Expected for {effortMismatch.expected} effort cell: 
+                        <span className="font-medium">{' '}
+                          {effortMismatch.expected === 'low' ? '1-3' : 
+                           effortMismatch.expected === 'medium' ? '5-8' : '8+'}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-orange-600">
+                        Consider moving this story to a more appropriate effort level or adjusting its points.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
-
               {position && onRemove && (
                 <button 
                   onClick={(e) => {
@@ -380,29 +435,6 @@ export function StoryCard({
               <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800">
                 {story.category}
               </span>
-            )}
-            
-            {/* Value Mismatch Badge */}
-            {valueMismatch && inMatrix && (
-              <div className="relative group">
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
-                  </svg>
-                  Value Mismatch
-                </span>
-                
-                <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
-                  <div className="font-medium text-gray-900 mb-1">Business Value Mismatch</div>
-                  <div className="text-gray-700 mb-1">
-                    Card's value: <span className="font-medium">{valueMismatch.actual}</span><br/>
-                    Expected in this position: <span className="font-medium">{valueMismatch.expected}</span>
-                  </div>
-                  <div className="mt-1 text-red-600">
-                    Consider moving this story to a more appropriate position or adjusting its business value.
-                  </div>
-                </div>
-              </div>
             )}
           </div>
           

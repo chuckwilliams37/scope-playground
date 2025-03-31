@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import { StoryCard } from './StoryCard';
 import { StoryForm } from './StoryForm';
 import { Story, BacklogViewerProps } from '@/types';
@@ -36,7 +37,11 @@ export function BacklogViewer({
   ]);
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'backlog-area',
+  });
+
   // Update local stories when prop changes
   useEffect(() => {
     setLocalStories(stories);
@@ -386,7 +391,12 @@ export function BacklogViewer({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 flex flex-col h-full">
+    <div 
+      ref={setNodeRef} 
+      className={`bg-white rounded-lg shadow-sm border p-4 flex flex-col h-full transition-colors ${
+        isOver ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+      }`}
+    >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Product Backlog</h2>
         <div className="flex space-x-2">
