@@ -265,323 +265,364 @@ export function StoryCard({
     <>
       <div
         ref={setNodeRef}
-        {...attributes}
-        {...listeners}
         className={`
-          bg-white shadow-sm rounded-lg p-1 cursor-grab border-2
-          ${isDragging ? 'opacity-50' : ''}
-          ${position ? 'border-blue-400' : 'border-transparent'}
-          ${hasAdjustment ? 'ring-2 ring-purple-300' : ''}
-          hover:border-blue-200 transition-colors
-          relative
-          ${highlight ? 'ring-2 ring-yellow-300' : ''}
+          group relative border rounded-lg shadow-sm bg-white transition-all duration-200 
+          ${isDragging ? 'opacity-50' : 'opacity-100'}
+          ${inMatrix ? 'hover:ring-2 hover:ring-blue-300 hover:shadow-md' : ''}
+          ${highlight ? 'ring-2 ring-blue-500' : ''}
         `}
         style={style}
       >
-        <div className="flex flex-col gap-2 m-0 p-0">
-          <div className="m-0 p-0 bg-gradient-to-b from-gray-100 to-white rounded-lg">
-            <div className="flex space-x-1 items-center justify-end z-20 -mt-1">
+        {/* Drag handle - only this part is draggable */}
+        <div 
+          {...attributes}
+          {...listeners}
+          className="absolute top-0 left-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-grab z-30"
+          title="Drag to reposition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+        
+        {/* Hover overlay for matrix actions - Only shown when story is in the matrix */}
+        {inMatrix && (
+          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1 z-30">
+            {/* Edit button */}
+            {onAdjustPoints && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAdjustmentDialog(true);
+                }}
+                className="text-purple-500 hover:text-white hover:bg-purple-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center bg-white shadow-sm"
+                title="Edit story points"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Remove from matrix button */}
+            {onRemove && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onRemove) onRemove();
+                }}
+                className="text-red-500 hover:text-white hover:bg-red-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center bg-white shadow-sm"
+                title="Remove from matrix"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+        
+        <div className="p-3">
+          <div className="flex flex-col gap-2 m-0 p-0">
+            <div className="m-0 p-0 bg-gradient-to-b from-gray-100 to-white rounded-lg">
+              <div className="flex space-x-1 items-center justify-end z-20 -mt-1">
 
-              {/* Mismatch Indicators (small icons that don't take much horizontal space) */}
-              {inMatrix && (
-                <>
-                {valueMismatch && (
-                  <div className="relative group">
-                    <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
-                      </svg>
-                      BV
-                    </span>
+                {/* Badges for mismatch and edit buttons */}
+                <div className="flex items-center space-x-1">
+                  {/* Badge container */}
+                  <div className="flex gap-1">
+                    {valueMismatch && (
+                      <div className="relative hover-trigger">
+                        <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 flex items-center">
+                          <div className="bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            BV
+                          </div>
+                        </span>
+                        
+                        <div className="absolute z-10 hidden hover-target w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
+                          <div className="font-medium text-gray-900 mb-1">Business Value Mismatch</div>
+                          <div className="text-gray-700 mb-1">
+                            Current: <span className="font-medium">{valueMismatch.actual}</span><br/>
+                            Expected for this position: <span className="font-medium">{valueMismatch.expected}</span>
+                          </div>
+                          <div className="mt-1 text-red-600">
+                            {valueMismatch.actual.toLowerCase().includes('critical') || valueMismatch.actual.toLowerCase().includes('important') ?
+                              `User has elected to demote to a lower priority than expected (${valueMismatch.expected})` :
+                              `User has elected to promote to a higher priority than expected (${valueMismatch.expected})`}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
-                    <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
-                      <div className="font-medium text-gray-900 mb-1">Business Value Mismatch</div>
-                      <div className="text-gray-700 mb-1">
-                        Card's value: <span className="font-medium">{valueMismatch.actual}</span><br/>
-                        Expected in this position: <span className="font-medium">{valueMismatch.expected}</span>
+                    {effortMismatch && (
+                      <div className="relative hover-trigger">
+                        <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-300 flex items-center">
+                          <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            SP
+                          </div>
+                        </span>
+                        
+                        <div className="absolute z-10 hidden hover-target w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
+                          <div className="font-medium text-gray-900 mb-1">Effort Mismatch</div>
+                          <div className="text-gray-700 mb-1">
+                            Story points: <span className="font-medium">{effortMismatch.actual}</span><br/>
+                            Expected for {effortMismatch.expected} effort cell: <span className="font-medium">{' '}
+                              {effortMismatch.expected === 'low' ? '1-3' : 
+                               effortMismatch.expected === 'medium' ? '5-8' : '8+'}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-orange-600">
+                            Consider moving this story to a more appropriate effort level or adjusting its points.
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-1 text-red-600">
-                        Consider moving this story to a more appropriate position or adjusting its business value.
-                      </div>
+                    )}
+                  </div>
+                </div>
+                {position && onRemove && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onRemove) onRemove();
+                    }}
+                    className="text-red-500 hover:text-white hover:bg-red-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                )}
+                
+                {onAdjustPoints && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAdjustmentDialog(true);
+                    }}
+                    className="text-purple-500 hover:text-white hover:bg-purple-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </button>
+                )}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onToggleExpand) onToggleExpand();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  {isExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <h3 className="font-medium text-gray-900 leading-[0.85] tracking-tight pl-2 -mt-2 z-10">{story.title}</h3>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 transition-size">
+              <div className="relative hover-trigger">
+                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${valueBadgeColor} ${valueMismatch ? 'border-2 border-red-400 relative' : ''}`}>
+                  {story.businessValue || 'Unrated'} {valueMismatch && (
+                    <span className="ml-1 text-red-600" title="Business value changed from original estimate">
+                      *
+                    </span>
+                  )}
+                </span>
+              </div>
+              
+              <div className="relative hover-trigger">
+                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${pointsBadgeColor} ${hasAdjustment ? 'border-2 border-purple-400 relative' : ''} ${effortMismatch ? 'border-2 border-orange-400' : ''}`}>
+                  {storyPoints || '?'} points {hasAdjustment && (
+                    <span className="ml-1 text-purple-700 font-bold" title="Points adjusted from original estimate">
+                      *
+                    </span>
+                  )}
+                </span>
+                
+                {hasAdjustment && originalPoints !== undefined && (
+                  <div className="absolute z-10 hidden hover-target w-60 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-xs">
+                    <div className="font-medium text-gray-900 mb-1">Story points adjusted</div>
+                    <div className="text-gray-700 mb-1">
+                      Original: <span className="font-medium">{originalPoints} points</span> → 
+                      Current: <span className="font-medium">{storyPoints || 0} points</span>
+                    </div>
+                    {story.adjustmentReason && (
+                      <div className="text-gray-700 italic border-l-2 border-purple-200 pl-2 mt-2 mb-1">{story.adjustmentReason}</div>
+                    )}
+                    <div className="mt-1 text-purple-600">
+                      {getAdjustmentTooltip()}
                     </div>
                   </div>
                 )}
                 
-                {effortMismatch && (
-                  <div className="relative group">
-                    <span className="text-xs font-medium px-1 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-300 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
-                      </svg>
-                      SP
-                    </span>
-                    
-                    <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
-                      <div className="font-medium text-gray-900 mb-1">Effort Mismatch</div>
-                      <div className="text-gray-700 mb-1">
-                        Story points: <span className="font-medium">{effortMismatch.actual}</span><br/>
-                        Expected for {effortMismatch.expected} effort cell: 
-                        <span className="font-medium">{' '}
-                          {effortMismatch.expected === 'low' ? '1-3' : 
-                           effortMismatch.expected === 'medium' ? '5-8' : '8+'}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-orange-600">
-                        Consider moving this story to a more appropriate effort level or adjusting its points.
-                      </div>
-                    </div>
-                  </div>
-                )}
-                </>
-              )}
-              {position && onRemove && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onRemove) onRemove();
-                  }}
-                  className="text-red-500 hover:text-white hover:bg-red-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              )}
-              
-              {onAdjustPoints && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowAdjustmentDialog(true);
-                  }}
-                  className="text-purple-500 hover:text-white hover:bg-purple-500 p-1 rounded-full transition-colors duration-200 flex items-center justify-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                </button>
-              )}
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onToggleExpand) onToggleExpand();
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                {isExpanded ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            <h3 className="font-medium text-gray-900 leading-[0.85] tracking-tight pl-2 -mt-2 z-10">{story.title}</h3>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 transition-size">
-            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${valueBadgeColor} ${valueMismatch ? 'border border-red-400' : ''}`}>
-              {story.businessValue || 'Unrated'}
-            </span>
-            
-            <div className="relative group">
-              <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${pointsBadgeColor} ${hasAdjustment ? 'border border-purple-400' : ''} ${effortMismatch ? 'border border-orange-400' : ''}`}>
-                {storyPoints || '?'} points {hasAdjustment && (
-                  <span className="ml-1 text-purple-700" title="Points adjusted from original estimate">
+                {/* Adjustment indicator badge */}
+                {hasAdjustment && (
+                  <div className="absolute -top-2 -right-2 bg-purple-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center z-20">
                     *
-                  </span>
+                  </div>
                 )}
-              </span>
+              </div>
               
-              {/* Effort/Points Mismatch Badge */}
-              {effortMismatch && inMatrix && (
-                <div className="absolute z-10 hidden group-hover:block w-64 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
-                  <div className="font-medium text-gray-900 mb-1">Effort Mismatch</div>
-                  <div className="text-gray-700 mb-1">
-                    Story points: <span className="font-medium">{effortMismatch.actual}</span><br/>
-                    Expected for {effortMismatch.expected} effort cell: 
-                    <span className="font-medium">{' '}
-                      {effortMismatch.expected === 'low' ? '1-3' : 
-                       effortMismatch.expected === 'medium' ? '5-8' : '8+'}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-orange-600">
-                    Consider moving this story to a more appropriate effort level or adjusting its points.
-                  </div>
-                </div>
-              )}
-              
-              {hasAdjustment && originalPoints !== undefined && (
-                <div className="absolute z-10 hidden group-hover:block w-60 -left-24 top-6 bg-white border border-gray-200 rounded-md shadow-lg p-2 text-xs">
-                  <div className="font-medium text-gray-900 mb-1">Story points adjusted</div>
-                  <div className="text-gray-700 mb-1">
-                    Original: <span className="font-medium">{originalPoints} points</span> → 
-                    Current: <span className="font-medium">{storyPoints || 0} points</span>
-                  </div>
-                  {story.adjustmentReason && (
-                    <div className="text-gray-600 italic">{story.adjustmentReason}</div>
-                  )}
-                  <div className="mt-1 text-purple-600">
-                    {getAdjustmentTooltip()}
-                  </div>
-                </div>
+              {story.category && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                  {story.category}
+                </span>
               )}
             </div>
             
-            {story.category && (
-              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800">
-                {story.category}
-              </span>
+            {isExpanded && (
+              <div className="mt-2 text-sm text-gray-700 transition-all">
+                {story.userStory && (
+                  <div className="mb-2 italic border-l-2 border-gray-200 pl-2">
+                    "{story.userStory}"
+                  </div>
+                )}
+                {story.notes && <p className="text-gray-600">{story.notes}</p>}
+                
+                {/* Acceptance Criteria Section */}
+                {story.acceptanceCriteria && story.acceptanceCriteria.length > 0 && (
+                  <div className="mt-3">
+                    <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                      Acceptance Criteria
+                    </h4>
+                    <ul className="list-disc pl-5 text-sm space-y-1">
+                      {story.acceptanceCriteria.map((criterion, index) => (
+                        <li key={index} className="text-gray-700">{criterion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="mt-2 text-xs text-gray-500 flex items-center">
+                  <span>ID: {storyId}</span>
+                </div>
+              </div>
             )}
           </div>
-          
-          {isExpanded && (
-            <div className="mt-2 text-sm text-gray-700 transition-all">
-              {story.userStory && (
-                <div className="mb-2 italic border-l-2 border-gray-200 pl-2">
-                  "{story.userStory}"
-                </div>
-              )}
-              {story.notes && <p className="text-gray-600">{story.notes}</p>}
-              
-              {/* Acceptance Criteria Section */}
-              {story.acceptanceCriteria && story.acceptanceCriteria.length > 0 && (
-                <div className="mt-3">
-                  <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
-                    Acceptance Criteria
-                  </h4>
-                  <ul className="list-disc pl-5 text-sm space-y-1">
-                    {story.acceptanceCriteria.map((criterion, index) => (
-                      <li key={index} className="text-gray-700">{criterion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              <div className="mt-2 text-xs text-gray-500 flex items-center">
-                <span>ID: {storyId}</span>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
-      
-      {/* Adjustment Dialog */}
-      {showAdjustmentDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium mb-4">Adjust Story Points</h3>
-            
-            <div className="mb-4">
-              <div className="flex items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">Story Points</label>
-                {originalPoints !== undefined && originalPoints !== adjustedPoints && (
-                  <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                    {adjustedPoints > originalPoints ? 'Increased' : 'Decreased'}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="range"
-                  min={1}
-                  max={21}
-                  step={1}
-                  value={adjustedPoints}
-                  onChange={(e) => setAdjustedPoints(Number(e.target.value))}
-                  className="w-full"
-                />
-                <select
-                  value={adjustedPoints}
-                  onChange={(e) => setAdjustedPoints(Number(e.target.value))}
-                  className="w-20 p-1 text-sm border rounded"
-                >
-                  {[1, 2, 3, 5, 8, 13, 21].map(point => (
-                    <option key={point} value={point}>{point}</option>
-                  ))}
-                </select>
-              </div>
-              {originalPoints && (
-                <div className="text-xs text-gray-500 mt-1 flex items-center">
-                  <span>Original: {originalPoints} points</span>
-                  <button 
-                    className="ml-2 text-blue-600 hover:text-blue-800 text-xs underline" 
-                    onClick={handleResetToOriginal}
-                  >
-                    Reset to original
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Reason for Adjustment
-                  </label>
-                  <span className="ml-1 text-red-500 font-medium">*</span>
-                </div>
-                {originalPoints !== undefined && originalPoints !== adjustedPoints && !adjustmentReason.trim() && (
-                  <span className="text-xs text-red-500 font-medium">Required</span>
-                )}
-              </div>
-              <textarea
-                value={adjustmentReason}
-                onChange={(e) => setAdjustmentReason(e.target.value)}
-                className={`w-full p-2 border rounded text-sm ${
-                  !adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints 
-                    ? 'border-red-500 ring-1 ring-red-500 bg-red-50' 
-                    : 'border-gray-300'
-                }`}
-                rows={3}
-                placeholder="Explain why you're adjusting the story points..."
-                aria-required="true"
-              />
-              {!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints && (
-                <p className="text-xs text-red-500 mt-1">
-                  <span className="font-bold">⚠️</span> A reason is required when adjusting story points
-                </p>
-              )}
+        
+        {/* Adjustment Dialog */}
+        {showAdjustmentDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-medium mb-4">Adjust Story Points</h3>
               
-              <div className="mt-3">
-                <div className="text-xs font-medium text-gray-700 mb-1">Common reasons:</div>
-                <div className="flex flex-wrap gap-1">
-                  {commonAdjustmentReasons.map((reason, idx) => (
+              <div className="mb-4">
+                <div className="flex items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Story Points</label>
+                  {originalPoints !== undefined && originalPoints !== adjustedPoints && (
+                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                      {adjustedPoints > originalPoints ? 'Increased' : 'Decreased'}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="range"
+                    min={1}
+                    max={21}
+                    step={1}
+                    value={adjustedPoints}
+                    onChange={(e) => setAdjustedPoints(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <select
+                    value={adjustedPoints}
+                    onChange={(e) => setAdjustedPoints(Number(e.target.value))}
+                    className="w-20 p-1 text-sm border rounded"
+                  >
+                    {[1, 2, 3, 5, 8, 13, 21].map(point => (
+                      <option key={point} value={point}>{point}</option>
+                    ))}
+                  </select>
+                </div>
+                {originalPoints && (
+                  <div className="text-xs text-gray-500 mt-1 flex items-center">
+                    <span>Original: {originalPoints} points</span>
                     <button 
-                      key={idx}
-                      onClick={() => setAdjustmentReason(reason.text)}
-                      className={`text-xs px-2 py-1 rounded-md border 
-                        ${reason.points === 'lower' ? 'border-green-300 bg-green-50 hover:bg-green-100' : 'border-orange-300 bg-orange-50 hover:bg-orange-100'}`}
+                      className="ml-2 text-blue-600 hover:text-blue-800 text-xs underline" 
+                      onClick={handleResetToOriginal}
                     >
-                      {reason.text}
+                      Reset to original
                     </button>
-                  ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Reason for Adjustment
+                    </label>
+                    <span className="ml-1 text-red-500 font-medium">*</span>
+                  </div>
+                  {originalPoints !== undefined && originalPoints !== adjustedPoints && !adjustmentReason.trim() && (
+                    <span className="text-xs text-red-500 font-medium">Required</span>
+                  )}
+                </div>
+                <textarea
+                  value={adjustmentReason}
+                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                  className={`w-full p-2 border rounded text-sm ${
+                    !adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints 
+                      ? 'border-red-500 ring-1 ring-red-500 bg-red-50' 
+                      : 'border-gray-300'
+                  }`}
+                  rows={3}
+                  placeholder="Explain why you're adjusting the story points..."
+                  aria-required="true"
+                />
+                {!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints && (
+                  <p className="text-xs text-red-500 mt-1">
+                    <span className="font-bold">⚠️</span> A reason is required when adjusting story points
+                  </p>
+                )}
+                
+                <div className="mt-3">
+                  <div className="text-xs font-medium text-gray-700 mb-1">Common reasons:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {commonAdjustmentReasons.map((reason, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setAdjustmentReason(reason.text)}
+                        className={`text-xs px-2 py-1 rounded-md border 
+                          ${reason.points === 'lower' ? 'border-green-300 bg-green-50 hover:bg-green-100' : 'border-orange-300 bg-orange-50 hover:bg-orange-100'}`}
+                      >
+                        {reason.text}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowAdjustmentDialog(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSaveAdjustment}
-                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed"
-                disabled={!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints}
-              >
-                Save Adjustment
-              </button>
+              
+              <div className="flex justify-end space-x-3">
+                <button 
+                  onClick={() => setShowAdjustmentDialog(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveAdjustment}
+                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed"
+                  disabled={!adjustmentReason.trim() && originalPoints !== undefined && originalPoints !== adjustedPoints}
+                >
+                  Save Adjustment
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

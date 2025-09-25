@@ -56,3 +56,12 @@ body {
 .story-count-badge {
   @apply text-xs bg-white rounded-full px-2 py-0.5 shadow-sm;
 }
+
+/* Custom hover behavior for tooltips */
+.hover-trigger:hover .hover-target {
+  display: block;
+}
+
+.hover-target {
+  display: none;
+}

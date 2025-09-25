@@ -30,7 +30,7 @@ import { TopNavbar } from '../components/TopNavbar';
 import { Notification, NotificationType } from "../components/Notification";
 import { ShareProject } from "../components/ShareProject";
 import { BacklogManager } from '../components/BacklogManager';
-import { Story } from '../types/index';
+import { Story as ImportedStory } from '../types/index';
 
 // Matrix cell default value mappings
 const MATRIX_DEFAULTS = {
@@ -55,7 +55,7 @@ const MATRIX_DEFAULTS = {
 };
 
 // Sample data to use instead of Convex API until it's fully set up
-const sampleStories: Story[] = [
+const sampleStories: ImportedStory[] = [
   {
     _id: 'story-001',
     title: 'Client-Specific Story Access',
@@ -293,7 +293,7 @@ const defaultTweakableParams = {
 };
 
 // Update the settings interface to match the new MetricsPanel props structure
-type Settings = {
+interface SettingsType {
   contributorCost: number;
   contributorCount: number;
   hoursPerDay: number;
@@ -311,15 +311,12 @@ type Settings = {
     documentation: number;
   };
   aiSimulationEnabled: boolean;
-  selfManagedPartner: {
-    enabled: boolean;
-    managementReductionPercent: number;
-  };
+  selfManagedPartner: boolean | { enabled: boolean; managementReductionPercent: number };
   pointsToHoursConversion: number;
-};
+}
 
 // Update the default settings object to match the new structure
-const defaultSettings: Settings = {
+const defaultSettings: SettingsType = {
   contributorCost: 500,
   contributorCount: 2,
   hoursPerDay: 8,
@@ -350,6 +347,26 @@ type StoryPosition = {
   effort: string;
   rank: number;
 };
+
+// Define a more compatible Story type that accommodates both app types
+type AppStory = {
+  _id: string;
+  id?: string; // Support both _id and id
+  title: string;
+  businessValue?: string;
+  storyPoints?: number;
+  points?: number;
+  originalPoints?: number;
+  adjustmentReason?: string;
+  notes?: string;
+  userStory?: string;
+  category?: string;
+  acceptanceCriteria?: string[];
+  effortCategory?: string;
+  urlPath?: string; // Add missing urlPath property
+};
+
+type Story = AppStory;
 
 export default function ScopePlaygroundPage() {
   // Initial log to confirm component render with latest code
@@ -404,7 +421,7 @@ export default function ScopePlaygroundPage() {
   const [showScenariosPanel, setShowScenariosPanel] = useState(false);
   
   // Project settings with tweakable parameters
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [settings, setSettings] = useState<SettingsType>(defaultSettings);
 
   // State for effort mismatch handling
   const [pendingStoryPlacement, setPendingStoryPlacement] = useState<{
@@ -433,7 +450,8 @@ export default function ScopePlaygroundPage() {
   // Load saved scenarios from localStorage
   useEffect(() => {
     try {
-      const storedScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      const storedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '[]');
+      console.log('[ScopePlayground] Loading scenarios from localStorage:', storedScenarios);
       setSavedScenarios(storedScenarios);
     } catch (error) {
       console.error('Error loading saved scenarios:', error);
@@ -588,7 +606,7 @@ export default function ScopePlaygroundPage() {
     
     // Apply Self-Managed Partner discount if enabled
     let selfManagedPartnerDiscount = 0;
-    if (settings.selfManagedPartner.enabled) {
+    if (typeof settings.selfManagedPartner === 'object' && settings.selfManagedPartner.enabled) {
       // Calculate the original management overhead before reduction
       const originalManagementOverhead = managementOverhead;
       
@@ -606,6 +624,10 @@ export default function ScopePlaygroundPage() {
       selfManagedPartnerDiscount = managementDiscount + accountManagementDiscount;
       
       // Eliminate account management overhead entirely for self-managed partners
+      accountManagementOverhead = 0;
+    } else if (typeof settings.selfManagedPartner === 'boolean' && settings.selfManagedPartner) {
+      // Default reduction if it's just a boolean true
+      managementOverhead = managementOverhead * 0.9; // 10% reduction
       accountManagementOverhead = 0;
     }
     
@@ -762,6 +784,45 @@ export default function ScopePlaygroundPage() {
     }
   };
 
+  // Function to map position value to standardized business value
+  const mapPositionToBusinessValue = (value: string): string => {
+    // Map matrix position values to standardized business values
+    if (value === 'high' || value === 'critical') return 'Critical';
+    if (value === 'medium' || value === 'important') return 'Important';
+    if (value === 'low' || value === 'nice-to-have') return 'Nice to Have';
+    return 'Important'; // Default fallback
+  };
+
+  // Fix the valuePointsMapping to use a more flexible Record type
+  const valuePointsMapping: Record<string, number> = {
+    'high': 8,
+    'medium': 5,
+    'low': 2,
+    // Add standardized values for compatibility
+    'critical': 8,
+    'important': 5,
+    'nice-to-have': 2
+  };
+
+  // Fix the effortPointsMapping to use a more flexible Record type  
+  const effortPointsMapping: Record<string, number> = {
+    'high': 8,
+    'medium': 5,
+    'low': 2
+  };
+
+  // Function to convert URL paths to a readable format for displaying in the UI
+  const formatUrlPath = (story: Story): string => {
+    // Handle the case where urlPath might be undefined
+    const urlPath = story.urlPath || '';
+    
+    return urlPath
+      .replace(/\/+/g, '/') // Replace multiple slashes with single slash
+      .replace(/^\//, '')   // Remove leading slash
+      .replace(/\/$/g, '')  // Remove trailing slash
+      .replace(/\//g, ' → '); // Replace slashes with arrows for UI
+  };
+
   // Single, comprehensive handleDragEnd function with effort mismatch detection
   const handleDragEnd = (event: DragEndEvent) => {
     console.log("[handleDragEnd - ROOT] Drag ended. Forcing state update.");
@@ -829,25 +890,35 @@ export default function ScopePlaygroundPage() {
         hasEffortMismatch = true;
       }
       
+      // Check if there's a business value mismatch
+      let hasValueMismatch = false;
+      if (story.businessValue && story.businessValue !== mapPositionToBusinessValue(value)) {
+        hasValueMismatch = true;
+        console.log(`[handleDragEnd] Business value mismatch: ${story.businessValue} vs expected ${mapPositionToBusinessValue(value)}`);
+      }
+      
       // Update the storyPositions state
       setStoryPositions(prev => ({
         ...prev,
         [storyId]: { value: canonicalValue, effort, rank: Date.now() } // Use timestamp for basic ranking
       }));
       
-      // Update the story's businessValue to match the cell
-      setStories(prevStories => {
-        return prevStories.map(s => {
-          const id = s._id || s.id;
-          if (id === storyId) {
-            return {
-              ...s,
-              businessValue // Update to the mapped value
-            };
-          }
-          return s;
+      // Only update the story's businessValue if it's not already set
+      // This preserves the existing value when there's a mismatch
+      if (!story.businessValue) {
+        setStories(prevStories => {
+          return prevStories.map(s => {
+            const id = s._id || s.id;
+            if (id === storyId) {
+              return {
+                ...s,
+                businessValue // Update to the mapped value only if unset
+              };
+            }
+            return s;
+          });
         });
-      });
+      }
       
       // If there's an effort mismatch, show the dialog
       if (hasEffortMismatch) {
@@ -1036,6 +1107,7 @@ export default function ScopePlaygroundPage() {
   // Function to handle auto-placing all stories based on their business value and story points
   const handleAssignAllToDefaultCells = (storiesToAssign: Story[]) => {
     const newPositions: Record<string, StoryPosition> = { ...storyPositions };
+    let assignedCount = 0;
     
     storiesToAssign.forEach((story, index) => {
       if (!story._id) return;
@@ -1043,19 +1115,19 @@ export default function ScopePlaygroundPage() {
       // Determine value level based on business value
       let valueLevel = 'medium'; // Default
       if (story.businessValue === 'Critical') {
-        valueLevel = 'high';
+        valueLevel = 'critical';
       } else if (story.businessValue === 'Important') {
-        valueLevel = 'medium';
+        valueLevel = 'important';
       } else if (story.businessValue === 'Nice to Have') {
-        valueLevel = 'low';
+        valueLevel = 'nice-to-have';
       }
       
       // Determine effort level based on story points
       let effortLevel = 'medium'; // Default
       const points = story.storyPoints || story.points || 0;
-      if (points <= 3) {
+      if (points <= 3 && points > 0) {
         effortLevel = 'low';
-      } else if (points === 5) {
+      } else if (points >= 5 && points <= 8) {
         effortLevel = 'medium';
       } else if (points >= 8) {
         effortLevel = 'high';
@@ -1067,15 +1139,20 @@ export default function ScopePlaygroundPage() {
         effort: effortLevel, 
         rank: index 
       };
+      assignedCount++;
+      
+      // Log the assignment for debugging
+      console.log(`Assigned story ${story._id} (${story.title}) to ${valueLevel}/${effortLevel}`);
     });
     
     // Update all positions at once
+    console.log(`Setting ${assignedCount} story positions:`, newPositions);
     setStoryPositions(newPositions);
     
     // Provide feedback
     setNotification({
       type: 'success',
-      message: `Assigned ${storiesToAssign.length} stories to matrix cells based on their business value and points`
+      message: `Assigned ${assignedCount} stories to matrix cells based on their business value and points`
     });
   };
 
@@ -1104,7 +1181,7 @@ export default function ScopePlaygroundPage() {
     
     // Store in localStorage for demo purposes
     try {
-      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      const existingScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '[]');
       const newScenario = {
         _id: `scenario-${Date.now()}`,
         name,
@@ -1116,7 +1193,7 @@ export default function ScopePlaygroundPage() {
         data: scenarioData
       };
       
-      localStorage.setItem('scenarios', JSON.stringify([...existingScenarios, newScenario]));
+      localStorage.setItem('savedScenarios', JSON.stringify([...existingScenarios, newScenario]));
       console.log('Scenario saved successfully:', newScenario);
       alert(`Scenario "${name}" saved successfully!`);
     } catch (error) {
@@ -1133,7 +1210,7 @@ export default function ScopePlaygroundPage() {
     
     try {
       // Get existing scenarios
-      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      const existingScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '[]');
       
       // Find the scenario to update
       const scenarioIndex = existingScenarios.findIndex((s: any) => s._id === scenarioId);
@@ -1174,7 +1251,7 @@ export default function ScopePlaygroundPage() {
       existingScenarios[scenarioIndex] = updatedScenario;
       
       // Save updated scenarios list
-      localStorage.setItem('scenarios', JSON.stringify(existingScenarios));
+      localStorage.setItem('savedScenarios', JSON.stringify(existingScenarios));
       console.log('Scenario updated successfully:', updatedScenario);
       
       // Refresh the scenarios list
@@ -1201,13 +1278,13 @@ export default function ScopePlaygroundPage() {
     
     try {
       // Get existing scenarios
-      const existingScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+      const existingScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '[]');
       
       // Filter out the scenario to delete
       const updatedScenarios = existingScenarios.filter((s: any) => s._id !== scenarioId);
       
       // Save updated scenarios list
-      localStorage.setItem('scenarios', JSON.stringify(updatedScenarios));
+      localStorage.setItem('savedScenarios', JSON.stringify(updatedScenarios));
       console.log('Scenario deleted successfully');
       
       // Refresh the scenarios list
@@ -1239,11 +1316,36 @@ export default function ScopePlaygroundPage() {
         const newPositions: Record<string, StoryPosition> = {};
         
         stories.forEach((story, index) => {
+          // Skip stories without IDs
+          if (!story._id && !story.id) return;
+          
+          const storyId = story._id || story.id || `story-${index}`;
+          const points = story.storyPoints || story.points || 0;
+          
+          // For MVP preset: include critical stories and assign effort based on points
           if (story.businessValue === 'Critical') {
-            newPositions[story._id] = { value: 'high', effort: 'low', rank: index };
+            let effortLevel = 'medium';
+            
+            // Determine effort level based on story points
+            if (points <= 3 && points > 0) {
+              effortLevel = 'low';
+            } else if (points >= 5 && points <= 8) {
+              effortLevel = 'medium';
+            } else if (points >= 8) {
+              effortLevel = 'high';
+            }
+            
+            newPositions[storyId] = { 
+              value: 'critical', 
+              effort: effortLevel, 
+              rank: index 
+            };
+            
+            console.log(`MVP Preset: Placed story ${storyId} (${story.title}) in critical/${effortLevel}`);
           }
         });
         
+        console.log(`MVP Preset: Setting ${Object.keys(newPositions).length} story positions`);
         setStoryPositions(newPositions);
       }
       
@@ -1252,15 +1354,52 @@ export default function ScopePlaygroundPage() {
         const newPositions: Record<string, StoryPosition> = {};
         
         stories.forEach((story, index) => {
+          // Skip stories without IDs
+          if (!story._id && !story.id) return;
+          
+          const storyId = story._id || story.id || `story-${index}`;
+          const points = story.storyPoints || story.points || 0;
+          
+          // Determine effort level based on story points
+          let effortLevel = 'medium';
+          if (points <= 3 && points > 0) {
+            effortLevel = 'low';
+          } else if (points >= 5 && points <= 8) {
+            effortLevel = 'medium';
+          } else if (points >= 8) {
+            effortLevel = 'high';
+          }
+          
+          // For "Lovable" preset: include Critical and Important stories
           if (story.businessValue === 'Critical') {
-            newPositions[story._id] = { value: 'high', effort: 'low', rank: index };
+            newPositions[storyId] = { 
+              value: 'critical', 
+              effort: effortLevel, 
+              rank: index 
+            };
+            console.log(`Lovable Preset: Placed story ${storyId} (${story.title}) in critical/${effortLevel}`);
           } else if (story.businessValue === 'Important') {
-            newPositions[story._id] = { value: 'medium', effort: 'medium', rank: index };
+            newPositions[storyId] = { 
+              value: 'important', 
+              effort: effortLevel, 
+              rank: index 
+            };
+            console.log(`Lovable Preset: Placed story ${storyId} (${story.title}) in important/${effortLevel}`);
           }
         });
         
+        console.log(`Lovable Preset: Setting ${Object.keys(newPositions).length} story positions`);
         setStoryPositions(newPositions);
       }
+      
+      // For any preset, show a notification
+      setNotification({
+        type: 'success',
+        message: `Loaded ${scenarioId === 'preset-mvp' ? 'MVP' : 'Lovable Product'} preset`,
+        duration: 3000
+      });
+      
+      return;
     } else {
       // Load user-saved scenario from localStorage
       try {
@@ -1331,7 +1470,23 @@ export default function ScopePlaygroundPage() {
           
           // Restore settings if present
           if (scenario.data.settings) {
-            setSettings(scenario.data.settings);
+            // Create a compatible settings object with required fields
+            const compatibleSettings: SettingsType = {
+              ...settings, // Keep current settings as base
+              ...scenario.data.settings, // Add saved settings
+              // Ensure required properties exist
+              contributorCost: scenario.data.settings.contributorCost || settings.contributorCost,
+              contributorCount: scenario.data.settings.contributorCount || settings.contributorCount,
+              hoursPerDay: scenario.data.settings.hoursPerDay || settings.hoursPerDay,
+              contributorAllocation: scenario.data.settings.contributorAllocation || settings.contributorAllocation,
+              // Ensure selfManagedPartner is in the correct format
+              selfManagedPartner: typeof scenario.data.settings.selfManagedPartner === 'object' 
+                ? scenario.data.settings.selfManagedPartner 
+                : !!scenario.data.settings.selfManagedPartner,
+              pointsToHoursConversion: scenario.data.settings.pointsToHoursConversion || settings.pointsToHoursConversion
+            };
+            
+            setSettings(compatibleSettings);
           }
           
           // Restore story positions after a slight delay to ensure React has processed the story updates
@@ -1345,8 +1500,16 @@ export default function ScopePlaygroundPage() {
                 const pos = posData as any;
                 
                 if (pos) {
+                  let value = typeof pos.value === 'string' ? pos.value : 'important';
+                  
+                  // Map legacy values to standardized values if needed
+                  if (value === 'high') value = 'critical';
+                  else if (value === 'medium') value = 'important';
+                  else if (value === 'low') value = 'nice-to-have';
+                  
+                  // Create position with standardized values and ensure rank exists
                   positionsWithRank[id] = {
-                    value: typeof pos.value === 'string' ? pos.value : 'medium',
+                    value,
                     effort: typeof pos.effort === 'string' ? pos.effort : 'medium',
                     rank: typeof pos.rank === 'number' ? pos.rank : index
                   };
@@ -1354,9 +1517,16 @@ export default function ScopePlaygroundPage() {
               });
               
               // Set the positions with proper types
-              setStoryPositions(positionsWithRank);
+              console.log("[handleLoadScenario] Setting positions:", positionsWithRank);
+              
+              // Force a state update 
+              setStoryPositions(prev => {
+                console.log("[handleLoadScenario] Previous positions:", prev);
+                console.log("[handleLoadScenario] New positions:", positionsWithRank);
+                return positionsWithRank;
+              });
             }
-          }, 50);
+          }, 100); // Increased timeout to ensure React has fully updated
           
           console.log(`Scenario "${scenario.name}" loaded successfully!`);
           setNotification({
@@ -1634,18 +1804,6 @@ export default function ScopePlaygroundPage() {
     });
   };
 
-  // *** DEBUG: Log storyPositions whenever it changes ***
-  const initialRender = useRef(true);
-  useEffect(() => {
-    // Skip the initial render log
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-    console.log('[ScopePlaygroundPage useEffect] storyPositions state changed to:', storyPositions);
-  }, [storyPositions]);
-  // *** END DEBUG ***
-
   // Update story points in both local state and database
   const handleAdjustPoints = async (storyId: string, newPoints: number, reason: string) => {
     // Find the story in our local state
@@ -1753,6 +1911,31 @@ export default function ScopePlaygroundPage() {
     setShowEffortMismatchDialog(false);
     setMismatchedStory(null);
     setMismatchPosition(null);
+  };
+
+  // Define effort thresholds for effort levels with proper indexing type
+  const effortThresholds: Record<string, {min?: number, max?: number}> = {
+    'low': { max: 3 },
+    'medium': { min: 5, max: 8 },
+    'high': { min: 8 }
+  };
+  
+  // Check if story points are in expected range for the effort level
+  const isWithinEffortRange = (points: number, effort: string): boolean => {
+    // Access using indexing that now has proper typing
+    const thresholds = effortThresholds[effort];
+    
+    if (!thresholds) return true; // If we don't have thresholds, consider it valid
+    
+    if ('min' in thresholds && 'max' in thresholds) {
+      return points >= thresholds.min! && points <= thresholds.max!;
+    } else if ('min' in thresholds) {
+      return points >= thresholds.min!;
+    } else if ('max' in thresholds) {
+      return points <= thresholds.max!;
+    }
+    
+    return true;
   };
 
   return (
