@@ -66,7 +66,7 @@ function PasswordProtection({
       setIsVerifying(false);
     }, 1000);
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -114,7 +114,7 @@ function PasswordProtection({
 }
 
 // Main shared project page component
-export default function SharedProjectPage({ params }: { params: { slug: string } }) {
+export default function SharedProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   // Use React.use to unwrap the params promise in Next.js 15.2.3+
   const resolvedParams = React.use(params);
   const slug = resolvedParams.slug;
@@ -184,8 +184,8 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
   }, [project, userId, accessGranted, recordView, recordLeave]);
   
   // Handlers for story CRUD operations
-  const handleCreateStory = async (story: Story) => {
-    if (!project?._id) return null;
+  const handleCreateStory = async (story: Story): Promise<Story | undefined> => {
+    if (!project?._id) return undefined;
     
     try {
       const result = await createStory({
@@ -208,10 +208,10 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
           _id: result.storyId.toString(),
         };
       }
-      return null;
+      return undefined;
     } catch (error) {
       console.error('Error creating story:', error);
-      return null;
+      return undefined;
     }
   };
   
@@ -254,6 +254,15 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
       console.error('Error deleting story:', error);
       return false;
     }
+  };
+  
+  // Wrappers to satisfy child component prop types
+  const handleBacklogUpdateStory = async (storyId: string, story: Story): Promise<boolean> => {
+    return handleUpdateStory(story);
+  };
+
+  const handleMatrixUpdateStory = async (vmStory: any): Promise<boolean> => {
+    return handleUpdateStory(vmStory as Story);
   };
   
   // Handle password protection
@@ -303,7 +312,7 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
         />
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            {project.title || 'Shared Project'}
+            {project.name || 'Shared Project'}
           </h1>
           <p className="text-center text-gray-600">
             This content is password protected.
@@ -321,7 +330,7 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 mb-1">
-                {project.title || 'Shared Project'}
+                {project.name || 'Shared Project'}
               </h1>
               {project.description && (
                 <p className="text-gray-600">{project.description}</p>
@@ -360,17 +369,17 @@ export default function SharedProjectPage({ params }: { params: { slug: string }
             <BacklogViewer 
               stories={convertedStories} 
               onCreateStory={handleCreateStory}
-              onUpdateStory={handleUpdateStory}
+              onUpdateStory={handleBacklogUpdateStory}
               onDeleteStory={handleDeleteStory}
-              readOnly={true} // Shared view is read-only
             />
           </div>
           
           <div>
             <h2 className="text-xl font-semibold mb-4">Business Value Matrix</h2>
             <ValuesMatrix 
-              stories={convertedStories} 
-              onUpdateStory={handleUpdateStory}
+              stories={convertedStories}
+              storyPositions={{}}
+              onUpdateStory={handleMatrixUpdateStory}
               readOnly={true} // Shared view is read-only
             />
           </div>

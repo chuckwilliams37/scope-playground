@@ -36,7 +36,7 @@ export function PaymentForm({
   
   // Convex mutations
   const validatePromoCode = useMutation(api.payments.validatePromoCode);
-  const createPaymentSession = useMutation(api.payments.createPaymentSession);
+  const processPayment = useMutation(api.payments.processPayment);
   const completePayment = useMutation(api.payments.completePayment);
   
   // Determine price tier based on points
@@ -116,7 +116,12 @@ export function PaymentForm({
         projectPoints,
       });
       
-      setPromoResult(result);
+      setPromoResult({
+        valid: result.valid,
+        discount: result.discount,
+        message: 'Promo code applied successfully!',
+        promoId: result.promoCodeId
+      });
     } catch (error) {
       setPromoResult({
         valid: false,
@@ -134,9 +139,10 @@ export function PaymentForm({
     setIsProcessing(true);
     
     try {
-      const session = await createPaymentSession({
+      const session = await processPayment({
         projectId,
-        promoId: promoResult?.promoId,
+        promoCode: promoCode || undefined,
+        paymentMethod: 'demo',
       });
       
       // For demo purposes, we'll just simulate a successful payment

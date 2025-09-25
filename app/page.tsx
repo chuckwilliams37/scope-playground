@@ -18,7 +18,7 @@ import { ValuesMatrix } from '@/components/ValuesMatrix';
 import { BacklogViewer } from '@/components/BacklogViewer';
 import { MetricsPanel } from '@/components/MetricsPanel';
 import { ScenarioManager } from "@/components/ScenarioManager";
-import { SettingsPanel } from "../components/SettingsPanel";
+import { SettingsPanel, type Settings } from "../components/SettingsPanel";
 import { EffortMismatchModal } from "../components/EffortMismatchModal";
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from "../convex/_generated/api";
@@ -293,30 +293,10 @@ const defaultTweakableParams = {
 };
 
 // Update the settings interface to match the new MetricsPanel props structure
-interface SettingsType {
-  contributorCost: number;
-  contributorCount: number;
-  hoursPerDay: number;
-  contributorAllocation: number;
-  scopeLimiters: {
-    points: { default: number };
-    hours: { default: number };
-    duration: { default: number, unit: string };
-  };
-  aiProductivityFactors: {
-    linesOfCode: number;
-    testing: number;
-    debugging: number;
-    systemDesign: number;
-    documentation: number;
-  };
-  aiSimulationEnabled: boolean;
-  selfManagedPartner: boolean | { enabled: boolean; managementReductionPercent: number };
-  pointsToHoursConversion: number;
-}
+// Use the Settings type from SettingsPanel for consistency
 
 // Update the default settings object to match the new structure
-const defaultSettings: SettingsType = {
+const defaultSettings: Settings = {
   contributorCost: 500,
   contributorCount: 2,
   hoursPerDay: 8,
@@ -334,10 +314,7 @@ const defaultSettings: SettingsType = {
     documentation: 10
   },
   aiSimulationEnabled: true,
-  selfManagedPartner: {
-    enabled: false,
-    managementReductionPercent: 0
-  },
+  selfManagedPartner: { enabled: false, managementReductionPercent: 0 },
   pointsToHoursConversion: 8,
 };
 
@@ -421,7 +398,7 @@ export default function ScopePlaygroundPage() {
   const [showScenariosPanel, setShowScenariosPanel] = useState(false);
   
   // Project settings with tweakable parameters
-  const [settings, setSettings] = useState<SettingsType>(defaultSettings);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
 
   // State for effort mismatch handling
   const [pendingStoryPlacement, setPendingStoryPlacement] = useState<{
@@ -606,7 +583,7 @@ export default function ScopePlaygroundPage() {
     
     // Apply Self-Managed Partner discount if enabled
     let selfManagedPartnerDiscount = 0;
-    if (typeof settings.selfManagedPartner === 'object' && settings.selfManagedPartner.enabled) {
+    if (settings.selfManagedPartner.enabled) {
       // Calculate the original management overhead before reduction
       const originalManagementOverhead = managementOverhead;
       
@@ -624,10 +601,6 @@ export default function ScopePlaygroundPage() {
       selfManagedPartnerDiscount = managementDiscount + accountManagementDiscount;
       
       // Eliminate account management overhead entirely for self-managed partners
-      accountManagementOverhead = 0;
-    } else if (typeof settings.selfManagedPartner === 'boolean' && settings.selfManagedPartner) {
-      // Default reduction if it's just a boolean true
-      managementOverhead = managementOverhead * 0.9; // 10% reduction
       accountManagementOverhead = 0;
     }
     
@@ -1470,22 +1443,20 @@ export default function ScopePlaygroundPage() {
           
           // Restore settings if present
           if (scenario.data.settings) {
-            // Create a compatible settings object with required fields
-            const compatibleSettings: SettingsType = {
-              ...settings, // Keep current settings as base
-              ...scenario.data.settings, // Add saved settings
-              // Ensure required properties exist
-              contributorCost: scenario.data.settings.contributorCost || settings.contributorCost,
-              contributorCount: scenario.data.settings.contributorCount || settings.contributorCount,
-              hoursPerDay: scenario.data.settings.hoursPerDay || settings.hoursPerDay,
-              contributorAllocation: scenario.data.settings.contributorAllocation || settings.contributorAllocation,
-              // Ensure selfManagedPartner is in the correct format
-              selfManagedPartner: typeof scenario.data.settings.selfManagedPartner === 'object' 
-                ? scenario.data.settings.selfManagedPartner 
-                : !!scenario.data.settings.selfManagedPartner,
-              pointsToHoursConversion: scenario.data.settings.pointsToHoursConversion || settings.pointsToHoursConversion
+            // Create a compatible settings object matching Settings type
+            const raw = scenario.data.settings as any;
+            const compatibleSettings: Settings = {
+              ...settings,
+              ...raw,
+              contributorCost: raw.contributorCost ?? settings.contributorCost,
+              contributorCount: raw.contributorCount ?? settings.contributorCount,
+              hoursPerDay: raw.hoursPerDay ?? settings.hoursPerDay,
+              contributorAllocation: raw.contributorAllocation ?? settings.contributorAllocation,
+              selfManagedPartner: typeof raw.selfManagedPartner === 'object'
+                ? { enabled: !!raw.selfManagedPartner.enabled, managementReductionPercent: raw.selfManagedPartner.managementReductionPercent ?? 0 }
+                : { enabled: !!raw.selfManagedPartner, managementReductionPercent: 0 },
+              pointsToHoursConversion: raw.pointsToHoursConversion ?? settings.pointsToHoursConversion,
             };
-            
             setSettings(compatibleSettings);
           }
           
@@ -1620,6 +1591,7 @@ export default function ScopePlaygroundPage() {
   const [notification, setNotification] = useState<{ 
     type: NotificationType; 
     message: string; 
+    duration?: number;
   } | null>(null);
 
   // State for Share Project modal
@@ -1758,7 +1730,11 @@ export default function ScopePlaygroundPage() {
   };
 
   // Function to handle updating a story's value level or effort level via drag-and-drop
-  const handleStoryUpdate = async (storyId: string, value: string, effort: string) => {
+  const handleStoryUpdate = async (
+    storyId: string,
+    value: 'high' | 'medium' | 'low',
+    effort: 'high' | 'medium' | 'low'
+  ) => {
     if (!storyId) return;
     
     // Find the story
@@ -2019,7 +1995,8 @@ export default function ScopePlaygroundPage() {
                 onUpdateStory={(story) => {
                   // Ensure the story has a valid _id before passing to handleUpdateStory
                   if (story && story._id) {
-                    return handleUpdateStory(story._id, story);
+                    const ensuredStory: Story = { ...(story as any), _id: story._id as string };
+                    return handleUpdateStory(story._id as string, ensuredStory);
                   }
                   return Promise.resolve(false);
                 }}
@@ -2080,7 +2057,12 @@ export default function ScopePlaygroundPage() {
                   scenarioId={null}
                   scenarioName={'Current Scenario'}
                   settings={settings}
-                  stories={stories}
+                  stories={stories.map(s => ({
+                    ...s,
+                    userStory: s.userStory || '',
+                    businessValue: s.businessValue || 'Important',
+                    category: s.category || 'Feature'
+                  }))}
                   storyPositions={storyPositions}
                   onClose={() => setShowExportPanel(false)}
                 />
@@ -2102,7 +2084,17 @@ export default function ScopePlaygroundPage() {
               metrics={metrics}
               animatedMetrics={animatedMetrics}
               metricsChanging={metricsChanging}
-              settings={settings}
+              settings={{
+                contributorCost: settings.contributorCost,
+                contributorCount: settings.contributorCount,
+                hoursPerDay: settings.hoursPerDay,
+                contributorAllocation: settings.contributorAllocation,
+                scopeLimiters: settings.scopeLimiters,
+                aiProductivityFactors: settings.aiProductivityFactors,
+                aiSimulationEnabled: settings.aiSimulationEnabled,
+                selfManagedPartner: settings.selfManagedPartner.enabled,
+                pointsToHoursConversion: settings.pointsToHoursConversion,
+              }}
               onSettingsClick={() => setShowSettings(!showSettings)}
               onImportStoriesClick={() => setShowImportPanel(!showImportPanel)}
               onExportClick={() => setShowExportPanel(!showExportPanel)}
@@ -2188,6 +2180,7 @@ export default function ScopePlaygroundPage() {
           <Notification
             type={notification.type}
             message={notification.message}
+            duration={notification.duration}
             onClose={() => setNotification(null)}
           />
         )}

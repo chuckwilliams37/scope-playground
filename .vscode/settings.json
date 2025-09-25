@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.allowChords": true,
+    "terminal.integrated.allowMnemonics": true,
+    "terminal.integrated.fontLigatures.enabled": true
+}

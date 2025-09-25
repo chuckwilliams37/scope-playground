@@ -46,7 +46,11 @@ export function BacklogManager({ stories, onImport, onClearBacklog, onClose }: B
       const collectionId = await saveCollectionMutation({
         name: newCollectionName,
         description: newCollectionDesc,
-        stories: stories
+        // Ensure required fields like businessValue are populated
+        stories: stories.map(s => ({
+          ...s,
+          businessValue: s.businessValue || 'Important'
+        }))
       });
       
       setNewCollectionName('');
