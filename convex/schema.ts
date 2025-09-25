@@ -11,8 +11,8 @@ export default defineSchema({
     points: v.number(),
     id: v.string(), // External ID for reference (story-001, etc.)
     // Visibility controls for client-specific access
-    sharedWithClients: v.array(v.string()), // Array of client IDs that can see this story
-    isPublic: v.boolean(), // Whether this story is visible to all clients
+    sharedWithClients: v.optional(v.array(v.string())), // Array of client IDs that can see this story
+    isPublic: v.optional(v.boolean()), // Whether this story is visible to all clients
     originalPoints: v.optional(v.number()), // Original story point estimate
     adjustmentReason: v.optional(v.string()), // Reason for point adjustment
     effortCategory: v.optional(v.string()), // Effort category (e.g., Core Functionality, Development, etc.)

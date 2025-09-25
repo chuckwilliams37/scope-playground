@@ -15,10 +15,12 @@ export const listAccessibleStories = query({
     
     // Filter stories based on client access
     if (args.clientId) {
-      return stories.filter(story => 
-        story.isPublic || 
-        story.sharedWithClients.includes(args.clientId as string)
-      );
+      return stories.filter(story => {
+        // Handle legacy stories that might not have these fields
+        const isPublic = story.isPublic ?? true; // Default to public if not set
+        const sharedWithClients = story.sharedWithClients ?? []; // Default to empty array
+        return isPublic || sharedWithClients.includes(args.clientId as string);
+      });
     }
     
     // Return all stories if no clientId provided (admin/PM view)
