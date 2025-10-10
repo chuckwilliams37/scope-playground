@@ -21,6 +21,7 @@ type ValueMatrixProps = {
   storyPositions: Record<string, { value: string, effort: string, rank?: number }>;
   onAdjustPoints?: (storyId: string, newPoints: number, reason: string) => void;
   onUpdateStory?: (story: Story) => Promise<boolean>;
+  onEditStory?: (story: Story) => void;
   readOnly?: boolean;
   expandedStoryIds?: Set<string>;
   toggleStoryExpansion?: (storyId: string) => void;
@@ -79,6 +80,7 @@ export function ValuesMatrix({
   storyPositions = {},
   onAdjustPoints,
   onUpdateStory, 
+  onEditStory,
   readOnly = false,
   expandedStoryIds = new Set(),
   toggleStoryExpansion = () => {},
@@ -238,11 +240,10 @@ export function ValuesMatrix({
                   value: position.value,
                   effort: position.effort
                 }}
-                isExpanded={expandedStoryIds.has(story._id || story.id || '')}
-                onToggleExpand={() => toggleStoryExpansion(story._id || story.id || '')}
                 // Use the new onAdjustPoints handler passed from the parent
                 onAdjustPoints={!readOnly && onAdjustPoints ? onAdjustPoints : undefined} 
                 inMatrix={true} // Indicate this card is in the matrix
+                onEdit={onEditStory ? () => onEditStory(story) : undefined}
               />
             );
           })}

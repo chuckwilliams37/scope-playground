@@ -29,6 +29,7 @@ type StoryCardProps = {
   inMatrix?: boolean;
   highlight?: boolean;
   forceMismatch?: boolean;
+  onEdit?: (story: any) => void;
 };
 
 export function StoryCard({ 
@@ -41,7 +42,8 @@ export function StoryCard({
   onAdjustPoints,
   inMatrix = false,
   highlight = false,
-  forceMismatch = false
+  forceMismatch = false,
+  onEdit
 }: StoryCardProps) {
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [adjustmentReason, setAdjustmentReason] = useState(story.adjustmentReason || '');
@@ -272,15 +274,23 @@ export function StoryCard({
           ${highlight ? 'ring-2 ring-blue-500' : ''}
         `}
         style={style}
+        onClick={() => {
+          // In matrix, clicking the card opens edit dialog instead of expanding
+          if (inMatrix && onEdit) {
+            onEdit(story);
+          } else if (!inMatrix && onToggleExpand) {
+            onToggleExpand();
+          }
+        }}
       >
         {/* Drag handle - only this part is draggable */}
         <div 
           {...attributes}
           {...listeners}
-          className="absolute top-0 left-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-grab z-30"
+          className="absolute -top-3 -left-3 w-12 h-6 bg-gray-200/60 m-0.5 rounded-md border border-gray-400/30 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-grab z-30"
           title="Drag to reposition"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </div>
@@ -322,7 +332,7 @@ export function StoryCard({
           </div>
         )}
         
-        <div className="p-3">
+        <div className="p-2 mt-1">
           <div className="flex flex-col gap-2 m-0 p-0">
             <div className="m-0 p-0 bg-gradient-to-b from-gray-100 to-white rounded-lg">
               <div className="flex space-x-1 items-center justify-end z-20 -mt-1">
@@ -406,23 +416,26 @@ export function StoryCard({
                     </svg>
                   </button>
                 )}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onToggleExpand) onToggleExpand();
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  {isExpanded ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </button>
+                {/* Hide expand/collapse control when in matrix */}
+                {!inMatrix && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onToggleExpand) onToggleExpand();
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    {isExpanded ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                )}
               </div>
               <h3 className="font-medium text-gray-900 leading-[0.85] tracking-tight pl-2 -mt-2 z-10">{story.title}</h3>
             </div>
@@ -478,7 +491,7 @@ export function StoryCard({
               )}
             </div>
             
-            {isExpanded && (
+            {(!inMatrix && isExpanded) && (
               <div className="mt-2 text-sm text-gray-700 transition-all">
                 {story.userStory && (
                   <div className="mb-2 italic border-l-2 border-gray-200 pl-2">

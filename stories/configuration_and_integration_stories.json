@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-27",
+  "lastUpdated": "2025-09-25",
   "description": "Configuration, system settings, and integration related stories",
   "stories": [
     {
@@ -10,7 +10,8 @@
       "points": 3,
       "businessValue": "Important",
       "category": "Configuration",
-      "effortCategory": "Usability"
+      "effortCategory": "Usability",
+      "status": "Pending"
     },
     {
       "id": "story-015",
@@ -19,7 +20,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "AI Integration",
-      "effortCategory": "AI Assistance"
+      "effortCategory": "AI Assistance",
+      "status": "Pending"
     },
     {
       "id": "story-012",
@@ -28,7 +30,8 @@
       "points": 8,
       "businessValue": "Important",
       "category": "Productivity Enhancement",
-      "effortCategory": "AI Assistance"
+      "effortCategory": "AI Assistance",
+      "status": "Pending"
     }
   ]
 }

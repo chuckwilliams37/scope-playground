@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-27",
+  "lastUpdated": "2025-09-25",
   "description": "Project planning, team management, and resource allocation stories",
   "stories": [
     {
@@ -10,7 +10,8 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "Cost Planning",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Pending"
     },
     {
       "id": "story-013",
@@ -19,7 +20,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "Cost Planning",
-      "effortCategory": "Analytics"
+      "effortCategory": "Analytics",
+      "status": "Pending"
     },
     {
       "id": "story-014",
@@ -28,7 +30,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Team Planning",
-      "effortCategory": "Resource Management"
+      "effortCategory": "Resource Management",
+      "status": "Pending"
     },
     {
       "id": "story-017",
@@ -37,7 +40,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "Resource Management",
-      "effortCategory": "Advanced Planning"
+      "effortCategory": "Advanced Planning",
+      "status": "Pending"
     },
     {
       "id": "story-018",
@@ -46,7 +50,8 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Schedule Planning",
-      "effortCategory": "Time Management"
+      "effortCategory": "Time Management",
+      "status": "Pending"
     },
     {
       "id": "story-019",
@@ -55,7 +60,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Risk Management",
-      "effortCategory": "Planning"
+      "effortCategory": "Planning",
+      "status": "Pending"
     },
     {
       "id": "story-026",
@@ -64,7 +70,8 @@
       "points": 8,
       "businessValue": "Important",
       "category": "Decision Support",
-      "effortCategory": "Planning"
+      "effortCategory": "Planning",
+      "status": "Pending"
     }
   ]
 }

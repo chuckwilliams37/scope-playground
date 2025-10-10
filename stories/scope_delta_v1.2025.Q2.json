@@ -1,4 +1,7 @@
 {
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-09-25",
+  "description": "Delta stories for Q2 2025 release",
   "stories": [
     {
       "id": "delta-v1-001",
@@ -7,6 +10,7 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Security",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Admin can define user roles (e.g., Admin, PM, Client).",
         "Permissions restrict UI elements and actions based on role.",
@@ -21,6 +25,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Feature",
+      "status": "Pending",
       "acceptanceCriteria": [
         "A selection of predefined presets (e.g., 'MVP', 'Recommended', 'Empty') is available.",
         "Loading a preset populates the matrix and settings accordingly.",
@@ -34,6 +39,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Feature",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Settings panel allows input for team composition ratios or counts.",
         "Metrics panel accurately reflects changes in estimated duration and cost based on team composition.",
@@ -47,6 +53,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Feature",
+      "status": "Pending",
       "acceptanceCriteria": [
         "A toggle exists in settings to enable/disable AI simulation.",
         "When enabled, metrics panel shows adjusted timeline/cost reflecting AI factor percentages.",
@@ -60,6 +67,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Feature",
+      "status": "Pending",
       "acceptanceCriteria": [
         "A button/action exists (e.g., in the matrix area or top bar) labeled 'Clear Matrix'.",
         "Clicking the button prompts for confirmation.",
@@ -74,6 +82,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Stories listed in the Backlog Manager are expandable to show all details (user story, points, value, criteria, etc.).",
         "The story detail view within the backlog is clearly non-editable for roles without edit permissions.",
@@ -87,6 +96,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "When dragging a story over a matrix cell, if the story's value doesn't match the cell's value, a visual warning or tooltip appears.",
         "If dropping a story would cause an effort mismatch (e.g., points exceed column capacity), a prompt appears asking for confirmation or adjustment.",
@@ -100,6 +110,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Valid drop targets (matrix cells, backlog area) are visually highlighted when dragging a story.",
         "Invalid drop targets provide clear feedback (e.g., disabled state, 'no drop' cursor).",
@@ -113,6 +124,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "The Import Stories panel provides an option to upload or paste CSV data.",
         "The tool correctly parses CSV data based on expected headers (e.g., Title, UserStory, Points, BusinessValue).",
@@ -126,6 +138,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Spinners or skeleton loaders are displayed during Convex backend calls.",
         "Buttons are disabled and show a loading state during submission (e.g., Save Scenario).",
@@ -139,6 +152,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Backend errors from Convex are caught and displayed gracefully (e.g., via toast notifications).",
         "Input validation errors are clearly indicated next to the relevant fields.",
@@ -152,6 +166,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Polish",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Consistent use of colors, fonts, spacing, and components across all views.",
         "Layout adapts gracefully to common device widths (desktop, tablet, mobile).",
@@ -165,6 +180,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Task",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Keyboard navigation allows access to all interactive elements in a logical order.",
         "Sufficient color contrast is used for text and UI elements.",
@@ -179,6 +195,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Task",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Review React component rendering to minimize unnecessary updates.",
         "Analyze Convex query performance and add indexing if required.",
@@ -193,6 +210,7 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Task",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Review Convex security rules for database access control.",
         "Validate input handling on both frontend and backend to prevent injection attacks.",
@@ -207,6 +225,7 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Task",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Add unit tests for key utility functions and calculation logic.",
         "Add integration tests for core user flows (e.g., adding story to matrix, saving scenario).",
@@ -220,6 +239,7 @@
       "points": 3,
       "businessValue": "Nice to Have",
       "category": "Task",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Add JSDoc/TSDoc comments to complex functions and components.",
         "Update README.md with current setup, build, and run instructions.",

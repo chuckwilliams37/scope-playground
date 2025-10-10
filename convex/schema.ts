@@ -9,7 +9,7 @@ export default defineSchema({
     businessValue: v.string(),
     category: v.string(),
     points: v.number(),
-    id: v.string(), // External ID for reference (story-001, etc.)
+    id: v.optional(v.string()), // External ID for reference (story-001, etc.)
     // Visibility controls for client-specific access
     sharedWithClients: v.optional(v.array(v.string())), // Array of client IDs that can see this story
     isPublic: v.optional(v.boolean()), // Whether this story is visible to all clients

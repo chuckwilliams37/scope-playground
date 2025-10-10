@@ -169,7 +169,7 @@ export const importStories = mutation({
   args: {
     stories: v.array(
       v.object({
-        id: v.string(),
+        id: v.optional(v.string()),
         title: v.string(),
         userStory: v.string(),
         businessValue: v.string(),

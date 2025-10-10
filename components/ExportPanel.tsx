@@ -24,6 +24,7 @@ interface Story {
   notes?: string;
   adjustmentReason?: string;
   originalPoints?: number;
+  acceptanceCriteria?: string[]; // Acceptance criteria for the story
 }
 
 type StoryPosition = {
@@ -661,15 +662,20 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
             storyFillColor = [173, 216, 230]; // Blue for Important
           }
           
+          // Format acceptance criteria as a bulleted list
+          const acceptanceCriteriaText = story.acceptanceCriteria && story.acceptanceCriteria.length > 0
+            ? story.acceptanceCriteria.map((ac, idx) => `${idx + 1}. ${ac}`).join('\n')
+            : 'N/A';
+          
           // Create the row with properly typed styles
           // Using typed tuples for colors to satisfy TypeScript
           return [
             {
-              content: (story.id || story._id || '').substring(0, 4),
+              content: (story.id || story._id || '').substring(0, 8),
               styles: { fontStyle: isInMatrix ? 'bold' as const : 'normal' as const, fillColor: storyFillColor }
             },
             {
-              content: story.title.length > 30 ? story.title.substring(0, 27) + '...' : story.title,
+              content: story.title,
               styles: { fontStyle: isInMatrix ? 'bold' as const : 'normal' as const, fillColor: storyFillColor }
             },
             {
@@ -677,7 +683,11 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
               styles: { fontStyle: isInMatrix ? 'bold' as const : 'normal' as const, fillColor: storyFillColor }
             },
             {
-              content: story.userStory.length > 70 ? story.userStory.substring(0, 67) + '...' : story.userStory,
+              content: story.userStory,
+              styles: { fontStyle: isInMatrix ? 'bold' as const : 'normal' as const, fillColor: storyFillColor }
+            },
+            {
+              content: acceptanceCriteriaText,
               styles: { fontStyle: isInMatrix ? 'bold' as const : 'normal' as const, fillColor: storyFillColor }
             },
             {
@@ -690,7 +700,7 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         // Create story table with improved styling and layout
         autoTable(pdf, {
           startY: y,
-          head: [['ID', 'Title', 'Category', 'User Story', 'Points']],
+          head: [['ID', 'Title', 'Category', 'User Story', 'Acceptance Criteria', 'Points']],
           body: storyTableData,
           theme: 'grid',
           headStyles: { 
@@ -700,17 +710,24 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
           },
           columnStyles: {
             0: { cellWidth: 15 },
-            1: { cellWidth: 40 },
+            1: { cellWidth: 35 },
             2: { cellWidth: 25 },
-            3: { cellWidth: 90 },
-            4: { cellWidth: 15 }
+            3: { cellWidth: 45 },
+            4: { cellWidth: 50 },
+            5: { cellWidth: 12 }
           },
           styles: {
             fontSize: 8,
             cellPadding: 3,
-            overflow: 'linebreak'
+            overflow: 'linebreak',
+            valign: 'top'
           },
-          margin: { left: 15, right: 15 }
+          margin: { left: 10, right: 10 },
+          // Enable page breaks within the table
+          pageBreak: 'auto',
+          rowPageBreak: 'avoid',
+          // Ensure table continues across pages
+          showHead: 'everyPage'
         });
       }
       

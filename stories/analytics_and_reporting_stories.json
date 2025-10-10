@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-27",
+  "lastUpdated": "2025-09-25",
   "description": "Analytics, metrics and reporting related stories",
   "stories": [
     {
@@ -10,7 +10,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Analytics",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Pending"
     },
     {
       "id": "story-011",
@@ -19,7 +20,8 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Export & Share",
-      "effortCategory": "Data Export"
+      "effortCategory": "Data Export",
+      "status": "Pending"
     }
   ]
 }

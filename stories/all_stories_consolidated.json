@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-27",
+  "lastUpdated": "2025-09-25",
   "description": "Consolidated list of all user stories from all categories",
   "stories": [
     {
@@ -10,7 +10,14 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "Access Control",
-      "effortCategory": "Security"
+      "effortCategory": "Security",
+      "status": "In Progress",
+      "acceptanceCriteria": [
+        "Client can only see stories that have been specifically shared with them",
+        "Stories not shared with the client are completely hidden from view",
+        "Admin/PM can see which clients have access to which stories",
+        "Changes to sharing permissions are reflected immediately"
+      ]
     },
     {
       "id": "story-002",
@@ -19,7 +26,14 @@
       "points": 3,
       "businessValue": "Critical",
       "category": "Story Management",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete",
+      "acceptanceCriteria": [
+        "Stories are displayed in a scrollable list view",
+        "Each story shows title, points, and business value in collapsed view",
+        "Stories can be expanded to show full details including user story text",
+        "Story list can be filtered by category and business value"
+      ]
     },
     {
       "id": "story-003",
@@ -28,7 +42,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "UI Interaction",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete"
     },
     {
       "id": "story-004",
@@ -37,7 +52,8 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "UX Enhancement",
-      "effortCategory": "User Guidance"
+      "effortCategory": "User Guidance",
+      "status": "In Progress"
     },
     {
       "id": "story-005",
@@ -46,7 +62,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Analytics",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete"
     },
     {
       "id": "story-006",
@@ -55,7 +72,8 @@
       "points": 3,
       "businessValue": "Important",
       "category": "Configuration",
-      "effortCategory": "Usability"
+      "effortCategory": "Usability",
+      "status": "Complete"
     },
     {
       "id": "story-007",
@@ -64,7 +82,14 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "Data Management",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete",
+      "acceptanceCriteria": [
+        "User can save the current scope matrix configuration with a name and description",
+        "All saved configurations are listed and can be selected for loading",
+        "Loading a configuration correctly restores all story positions",
+        "User is prompted for confirmation before replacing the current matrix configuration"
+      ]
     },
     {
       "id": "story-008",
@@ -73,7 +98,8 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "Cost Planning",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete"
     },
     {
       "id": "story-009",
@@ -82,7 +108,14 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Access Control",
-      "effortCategory": "Security"
+      "effortCategory": "Security",
+      "status": "In Progress",
+      "acceptanceCriteria": [
+        "System supports at least 3 different roles (Admin, PM, Client)",
+        "Each UI element has appropriate visibility settings based on user role",
+        "Admin can assign and modify user roles",
+        "Role changes take effect immediately without requiring users to log out"
+      ]
     },
     {
       "id": "story-010",
@@ -91,7 +124,8 @@
       "points": 3,
       "businessValue": "Critical",
       "category": "UX Enhancement",
-      "effortCategory": "User Guidance"
+      "effortCategory": "User Guidance",
+      "status": "Pending"
     },
     {
       "id": "story-011",
@@ -100,7 +134,8 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Export & Share",
-      "effortCategory": "Data Export"
+      "effortCategory": "Data Export",
+      "status": "Complete"
     },
     {
       "id": "story-012",
@@ -109,7 +144,8 @@
       "points": 8,
       "businessValue": "Important",
       "category": "Productivity Enhancement",
-      "effortCategory": "AI Assistance"
+      "effortCategory": "AI Assistance",
+      "status": "Pending"
     },
     {
       "id": "story-013",
@@ -118,7 +154,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "Cost Planning",
-      "effortCategory": "Analytics"
+      "effortCategory": "Analytics",
+      "status": "Pending"
     },
     {
       "id": "story-014",
@@ -127,7 +164,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Team Planning",
-      "effortCategory": "Resource Management"
+      "effortCategory": "Resource Management",
+      "status": "Pending"
     },
     {
       "id": "story-015",
@@ -136,7 +174,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "AI Integration",
-      "effortCategory": "AI Assistance"
+      "effortCategory": "AI Assistance",
+      "status": "Complete"
     },
     {
       "id": "story-016",
@@ -155,7 +194,8 @@
       "points": 13,
       "businessValue": "Critical",
       "category": "Resource Management",
-      "effortCategory": "Advanced Planning"
+      "effortCategory": "Advanced Planning",
+      "status": "Pending"
     },
     {
       "id": "story-018",
@@ -164,7 +204,8 @@
       "points": 5,
       "businessValue": "Important",
       "category": "Schedule Planning",
-      "effortCategory": "Time Management"
+      "effortCategory": "Time Management",
+      "status": "Pending"
     },
     {
       "id": "story-019",
@@ -173,7 +214,8 @@
       "points": 8,
       "businessValue": "Critical",
       "category": "Risk Management",
-      "effortCategory": "Planning"
+      "effortCategory": "Planning",
+      "status": "Pending"
     },
     {
       "id": "story-020",
@@ -202,7 +244,14 @@
       "points": 5,
       "businessValue": "Critical",
       "category": "Data Management",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete",
+      "acceptanceCriteria": [
+        "Save dialog includes fields for name, description, and optional tags",
+        "Saved scenarios include all story positions, rankings, and custom adjustments",
+        "Saved scenarios can be organized into collections",
+        "Scenarios can be exported to and imported from JSON files"
+      ]
     },
     {
       "id": "story-026",
@@ -211,7 +260,8 @@
       "points": 8,
       "businessValue": "Important",
       "category": "Decision Support",
-      "effortCategory": "Planning"
+      "effortCategory": "Planning",
+      "status": "Pending"
     },
     {
       "id": "story-045",
@@ -220,7 +270,15 @@
       "points": 8,
       "businessValue": "Critical", 
       "category": "Story Management",
-      "effortCategory": "Core Functionality"
+      "effortCategory": "Core Functionality",
+      "status": "Complete",
+      "acceptanceCriteria": [
+        "PM can add new stories with all required fields plus acceptance criteria",
+        "Stories can be edited with full validation of required fields",
+        "Stories can be deleted with confirmation dialog",
+        "Changes are saved to the database in real-time",
+        "Multiple stories can be selected for batch operations"
+      ]
     }
   ]
 }

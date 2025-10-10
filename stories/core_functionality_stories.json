@@ -1,6 +1,6 @@
 {
   "modelVersion": "1.0.0",
-  "lastUpdated": "2025-03-27",
+  "lastUpdated": "2025-09-25",
   "description": "Core functionality stories including backlog management and essential features",
   "stories": [
     {
@@ -11,6 +11,7 @@
       "businessValue": "Critical",
       "category": "Access Control",
       "effortCategory": "Security",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Client can only see stories that have been specifically shared with them",
         "Stories not shared with the client are completely hidden from view",
@@ -26,6 +27,7 @@
       "businessValue": "Critical",
       "category": "Story Management",
       "effortCategory": "Core Functionality",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Stories are displayed in a scrollable list view",
         "Each story shows title, points, and business value in collapsed view",
@@ -41,6 +43,7 @@
       "businessValue": "Critical",
       "category": "Data Management",
       "effortCategory": "Core Functionality",
+      "status": "Pending",
       "acceptanceCriteria": [
         "User can save the current scope matrix configuration with a name and description",
         "All saved configurations are listed and can be selected for loading",
@@ -56,6 +59,7 @@
       "businessValue": "Important",
       "category": "Access Control",
       "effortCategory": "Security",
+      "status": "Pending",
       "acceptanceCriteria": [
         "System supports at least 3 different roles (Admin, PM, Client)",
         "Each UI element has appropriate visibility settings based on user role",
@@ -71,6 +75,7 @@
       "businessValue": "Critical",
       "category": "Data Management",
       "effortCategory": "Core Functionality",
+      "status": "Pending",
       "acceptanceCriteria": [
         "Save dialog includes fields for name, description, and optional tags",
         "Saved scenarios include all story positions, rankings, and custom adjustments",
@@ -86,6 +91,7 @@
       "businessValue": "Critical", 
       "category": "Story Management",
       "effortCategory": "Core Functionality",
+      "status": "Pending",
       "acceptanceCriteria": [
         "PM can add new stories with all required fields plus acceptance criteria",
         "Stories can be edited with full validation of required fields",

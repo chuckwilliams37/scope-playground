@@ -31,6 +31,7 @@ import { Notification, NotificationType } from "../components/Notification";
 import { ShareProject } from "../components/ShareProject";
 import { BacklogManager } from '../components/BacklogManager';
 import { Story as ImportedStory } from '../types/index';
+import { StoryForm } from '../components/StoryForm';
 
 // Matrix cell default value mappings
 const MATRIX_DEFAULTS = {
@@ -420,6 +421,8 @@ export default function ScopePlaygroundPage() {
   const [expandedStoryIds, setExpandedStoryIds] = useState<Set<string>>(new Set());
   // Track stories that should be expanded in the backlog
   const [expandedBacklogStoryIds, setExpandedBacklogStoryIds] = useState<string[]>([]);
+  // Matrix edit dialog state
+  const [matrixEditingStory, setMatrixEditingStory] = useState<Story | null>(null);
 
   // State to track saved scenarios from localStorage
   const [savedScenarios, setSavedScenarios] = useState<any[]>([]);
@@ -805,6 +808,17 @@ export default function ScopePlaygroundPage() {
     console.log("[handleDragEnd - ROOT] Previous positions:", storyPositions);
     
     if (over && over.id) {
+      // Allow dragging a story back to the backlog by dropping anywhere on backlog area
+      if (over.id === 'backlog-area') {
+        const storyId = active.id as string;
+        setStoryPositions(prev => {
+          const copy = { ...prev };
+          delete copy[storyId];
+          return copy;
+        });
+        return;
+      }
+
       // Correctly parse the cell ID which has format 'cell-value-effort'
       const cellId = over.id as string;
       const cellParts = cellId.split('-');
@@ -2000,6 +2014,11 @@ export default function ScopePlaygroundPage() {
                   }
                   return Promise.resolve(false);
                 }}
+                onEditStory={(story) => {
+                  const ensuredId = (story as any)._id || (story as any).id;
+                  if (!ensuredId) return;
+                  setMatrixEditingStory({ ...(story as any), _id: ensuredId } as Story);
+                }}
                 expandedStoryIds={expandedStoryIds}
                 toggleStoryExpansion={toggleMatrixStoryExpansion}
                 totalPoints={metrics.totalPoints}
@@ -2016,6 +2035,27 @@ export default function ScopePlaygroundPage() {
                 />
               </div>
             )}
+
+        {/* Matrix Edit Story Modal */}
+        {matrixEditingStory && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+            <div className="w-full max-w-2xl">
+              <StoryForm
+                story={matrixEditingStory as any}
+                onSave={async (updated) => {
+                  if (updated && (updated as any)._id) {
+                    await handleUpdateStory((updated as any)._id, updated as any);
+                  }
+                  setMatrixEditingStory(null);
+                }}
+                onCancel={() => setMatrixEditingStory(null)}
+                categories={Array.from(new Set(stories.map(s => s.category).filter(Boolean)) as any) as string[]}
+                businessValues={["Critical","Important","Nice to Have"]}
+                effortCategories={["Low","Medium","High"]}
+              />
+            </div>
+          </div>
+        )}
             
             {showImportPanel && (
               <div className="mb-4">
