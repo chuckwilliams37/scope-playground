@@ -1,0 +1,413 @@
+{
+  "timestamp": "2025-10-10T05:41:09.099Z",
+  "createInClickUp": [
+    {
+      "title": "ENHANCEMENT: Admin View of Employee Profiles",
+      "userStory": "As an admin I want a consolidated admin-only view of employee profiles so I can quickly review status, assignments, and compliance.",
+      "category": "Administration",
+      "points": 1,
+      "businessValue": "Important",
+      "status": "in review",
+      "acceptanceCriteria": [
+        "Access restricted to Admin or above.",
+        "Admin can view any employee's profile with core fields (name, role, company, status).",
+        "Admin view displays assigned equipment and latest training/compliance status.",
+        "Admin view links to audit log entries related to the employee."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "dueDate": "2025-09-29",
+        "priority": "High",
+        "timeEstimate": "4h"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.094Z"
+      }
+    },
+    {
+      "title": "Provide Cost Estimate: Equipment Maintenance/Warranty Service Project",
+      "userStory": "As a product owner I want a clear cost estimate for the equipment maintenance & warranty service project so that I can scope budget and timeline.",
+      "category": "Operations",
+      "points": 1,
+      "businessValue": "Important",
+      "status": "in progress",
+      "acceptanceCriteria": [
+        "Assumptions and out-of-scope explicitly listed.",
+        "Delivery risks and dependencies identified.",
+        "Estimate broken down by epics (Requests, PO, Provider Portal, Logs, Reports).",
+        "Includes points, hours, and lead roles per epic."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 1,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Chuck Williams",
+        "dueDate": "2025-09-26",
+        "priority": "Urgent",
+        "timeEstimate": "4h"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.095Z"
+      }
+    },
+    {
+      "title": "FUW: Leslie to Coordinate Adding Equipment to System",
+      "userStory": "As a coordinator I want Leslie to work with staff to add equipment so that seed data exists for acceptance testing.",
+      "category": "Data Onboarding",
+      "points": 2,
+      "businessValue": "Critical",
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "Blocker reason recorded and updated when unblocked.",
+        "Each item has owner/company, status, and unique asset identifier.",
+        "Initial equipment list imported or entered (min 20 records).",
+        "Sample assignments created for at least 3 employees."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 2,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Leslie Anchondo",
+        "priority": "High",
+        "timeEstimate": "6h"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.095Z"
+      }
+    },
+    {
+      "title": "Admin: Maintenance Request PO Approval & Management",
+      "userStory": "As an admin I want to triage and approve maintenance requests and generate POs so that work can be scheduled and tracked.",
+      "category": "Procurement",
+      "points": 5,
+      "businessValue": "Critical",
+      "status": "prioritized",
+      "acceptanceCriteria": [
+        "Admin can approve, deny, or request more info.",
+        "Admin can comment on requests for clarification or instructions.",
+        "Admin can edit P.O. details (vendor, expected cost, due date).",
+        "Admin can schedule work (assign vendor or in-house).",
+        "Admin is notified of new maintenance requests.",
+        "Approved requests generate a unique P.O. number automatically.",
+        "Reports by P.O. status (pending, approved, scheduled, completed).",
+        "System tracks full history of approvals, denials, edits, and status changes."
+      ],
+      "position": {
+        "effort": "5 points",
+        "rank": 8,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "timeEstimate": "13h"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.095Z"
+      }
+    },
+    {
+      "title": "DECISION: Auto-add Assigned Equipment to Jobsites?",
+      "userStory": "As a team we need a decision on whether employee-assigned equipment should be auto-added to their jobsite so that visibility rules remain consistent.",
+      "category": "Decision",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Decision documented with pros/cons.",
+        "If 'No', rationale captured and edge-cases addressed.",
+        "If 'Yes', rules and automation steps defined."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 11,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "DECISION: Define Equipment Manager Role",
+      "userStory": "As a team we need clarity whether Equipment Manager is a distinct role so that RBAC can be implemented cleanly.",
+      "category": "Decision",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Affected screens and API permissions updated.",
+        "If confirmed, permissions added to Rights & Roles matrix.",
+        "Role existence confirmed or rejected."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 12,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "DECISION: Are Providers Their Own Employee Type?",
+      "userStory": "As a team we must decide whether providers are modeled as employees or separate entities to simplify permissions and data modeling.",
+      "category": "Decision",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Data model choice recorded with justification.",
+        "Migration plan (if needed) captured.",
+        "RBAC implications documented."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 13,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "Equipment Status Field",
+      "userStory": "As an admin I want equipment to have a status so that lifecycle and availability are clear.",
+      "category": "Equipment Management",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Filters support status values across lists and reports.",
+        "Status editable by Admin/Equipment Manager.",
+        "Status field added (e.g., Active, In Maintenance, Retired)."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 14,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "Refactor Mileage Tracking to Dedicated Report",
+      "userStory": "As a developer I want mileage tracking moved from the equipment table into a dedicated report so that performance and history are improved.",
+      "category": "Refactor",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "in progress",
+      "acceptanceCriteria": [
+        "Equipment table no longer stores aggregated mileage directly.",
+        "Mileage history preserved and queryable (not just sum).",
+        "Mileage log exists with date/time and miles entries.",
+        "Users can enter mileage into the log (date/time, miles)."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 15,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "Urgent"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "GPS Mileage Tracking Identity Strategy",
+      "userStory": "As a systems architect I want to decide whether mileage is tracked by VIN or device ID so that data integrity is maximized.",
+      "category": "Architecture",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Backfill/migration approach documented.",
+        "Identity source (VIN or device) selected with rationale.",
+        "Mapping rules defined for device swaps and multi-device scenarios."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 17,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "Employee Access to Equipment Files",
+      "userStory": "As an employee I want to see files attached to my assigned equipment so that I can access manuals and documentation.",
+      "category": "Permissions",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Access controls enforced server-side.",
+        "Audit log includes file view events.",
+        "Employees can view files attached to equipment they are assigned to."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 18,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "(DEFERRED) JobNimbus Integration",
+      "userStory": "As an admin I want a JobNimbus integration so CRM/job data can sync with our system.",
+      "category": "Integration",
+      "points": 5,
+      "businessValue": "Nice to Have",
+      "status": "Deferred",
+      "acceptanceCriteria": [
+        "Add Company Locations table (with hours optional).",
+        "Add Lead Source fields where specified.",
+        "Add ManagerId to Employees.",
+        "Add SalesRep to Jobs table.",
+        "Add address line 2.",
+        "Add project manager to employee type.",
+        "Contact table includes standard info, Contact Type, Status, Sales Rep, Lead Source, assigned to, related contacts.",
+        "Field mappings and validation documented.",
+        "Job table updates: JobType, Status, Lead Source, Tags, Type of Loss, Insurance Company, related Contacts, Class (reference JobNimbus), job photo, Date of Loss.",
+        "Rename Employees to Team (or map accordingly).",
+        "Sync jobs, contacts, and companies with conflict resolution."
+      ],
+      "position": {
+        "effort": "5 points",
+        "rank": 19,
+        "value": "Nice to Have"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "Update Rights & Roles Matrix & Notify Brent",
+      "userStory": "As a PM I want the updated matrix communicated so stakeholders are aligned.",
+      "category": "Security",
+      "points": 1,
+      "businessValue": "Important",
+      "status": "prioritized",
+      "acceptanceCriteria": [
+        "Follow-up Q&A captured in notes.",
+        "Matrix updated in documentation repo.",
+        "Summary sent to Brent with key changes."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 21,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Chuck Williams",
+        "dueDate": "2025-09-30",
+        "priority": "High",
+        "timeEstimate": "2h"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "P.O. System Core",
+      "userStory": "As a user I want to create, edit, view, and remove Purchase Orders so procurement can be managed.",
+      "category": "Procurement",
+      "points": 0,
+      "businessValue": "Important",
+      "status": "captured",
+      "acceptanceCriteria": [
+        "Files can be attached to a P.O.",
+        "Users are notified of relevant P.O. changes based on access.",
+        "Users can create, edit, view, and remove POs (per role permissions)."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 22,
+        "value": "Important"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    },
+    {
+      "title": "Comments & Notes (Equipment, Requests, etc.)",
+      "userStory": "As a user I want threaded comments with notifications so collaboration stays in context.",
+      "category": "Collaboration",
+      "points": 2,
+      "businessValue": "Important",
+      "status": "prioritized",
+      "acceptanceCriteria": [
+        "Notification deep link opens the relevant entity view.",
+        "Notifications on replies are sent to participants.",
+        "Users can reply to a comment (threaded)."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 23,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "High"
+      },
+      "tags": [],
+      "_meta": {
+        "source": "json",
+        "updatedAt": "2025-10-10T05:41:09.096Z"
+      }
+    }
+  ],
+  "updateClickUp": [],
+  "updateJSON": [],
+  "tagOrphans": [],
+  "ambiguities": [],
+  "counts": {
+    "create": 15,
+    "update": 0,
+    "tagOrphans": 0,
+    "ambiguities": 0
+  },
+  "batchId": "20251010-004109-377p"
+}

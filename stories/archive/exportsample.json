@@ -1,0 +1,55 @@
+{
+    "stories": [
+      {
+        "id": "sample-001",
+        "title": "User Authentication",
+        "userStory": "As a user, I want to create an account and log in securely.",
+        "points": 5,
+        "businessValue": "Critical",
+        "category": "Security",
+        "position": {
+          "value": "Critical",
+          "effort": "Medium",
+          "rank": 1
+        },
+        "acceptanceCriteria": [
+          "The user can create an account and log in securely.",
+          "The user can log out securely."
+        ]
+      },
+      {
+        "id": "sample-002",
+        "title": "Dashboard View",
+        "userStory": "As a user, I want a dashboard that shows me key metrics and information at a glance.",
+        "points": 8,
+        "businessValue": "Important",
+        "category": "UI/UX",
+        "position": {
+          "value": "Important",
+          "effort": "High",
+          "rank": 2
+        },
+        "acceptanceCriteria": [
+          "The user can view a dashboard with key metrics and information at a glance.",
+          "The user can view a dashboard with key metrics and information at a glance."
+        ]
+      },
+      {
+        "id": "sample-003",
+        "title": "Export to PDF",
+        "userStory": "As a user, I want to export reports to PDF format.",
+        "points": 3,
+        "businessValue": "Nice to Have",
+        "category": "Reporting",
+        "position": {
+          "value": "Nice to Have",
+          "effort": "Low",
+          "rank": 3
+        },
+        "acceptanceCriteria": [
+          "The user can export reports to PDF format.",
+          "The user can export reports to PDF format."
+        ]
+      }
+    ]
+  }

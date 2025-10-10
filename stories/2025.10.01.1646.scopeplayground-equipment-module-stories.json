@@ -1,0 +1,556 @@
+{
+  "modelVersion": "1.0.0",
+  "lastUpdated": "2025-10-01",
+  "description": "Equipment, Maintenance, PO, and Permissions stories converted from task list to ScopePlayground schema. — Conformed `position` to {effort, rank, value} and removed `id` per Convex validator. — BusinessValue corrections applied to 7 stories.",
+  "stories": [
+    {
+      "title": "ENHANCEMENT: Admin View of Employee Profiles",
+      "userStory": "As an admin I want a consolidated admin-only view of employee profiles so I can quickly review status, assignments, and compliance.",
+      "points": 1,
+      "businessValue": "Important",
+      "category": "Administration",
+      "status": "In Review",
+      "acceptanceCriteria": [
+        "Admin can view any employee's profile with core fields (name, role, company, status).",
+        "Admin view displays assigned equipment and latest training/compliance status.",
+        "Admin view links to audit log entries related to the employee.",
+        "Access restricted to Admin or above."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 0.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "dueDate": "2025-09-29",
+        "priority": "High",
+        "timeEstimate": "4h"
+      }
+    },
+    {
+      "title": "Provide Cost Estimate: Equipment Maintenance/Warranty Service Project",
+      "userStory": "As a product owner I want a clear cost estimate for the equipment maintenance & warranty service project so that I can scope budget and timeline.",
+      "points": 1,
+      "businessValue": "Important",
+      "category": "Operations",
+      "status": "In Progress",
+      "acceptanceCriteria": [
+        "Estimate broken down by epics (Requests, PO, Provider Portal, Logs, Reports).",
+        "Includes points, hours, and lead roles per epic.",
+        "Assumptions and out-of-scope explicitly listed.",
+        "Delivery risks and dependencies identified."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 1.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Chuck Williams",
+        "dueDate": "2025-09-26",
+        "priority": "Urgent",
+        "timeEstimate": "4h"
+      }
+    },
+    {
+      "title": "FUW: Leslie to Coordinate Adding Equipment to System",
+      "userStory": "As a coordinator I want Leslie to work with staff to add equipment so that seed data exists for acceptance testing.",
+      "points": 2,
+      "businessValue": "Critical",
+      "category": "Data Onboarding",
+      "status": "Blocked",
+      "acceptanceCriteria": [
+        "Initial equipment list imported or entered (min 20 records).",
+        "Each item has owner/company, status, and unique asset identifier.",
+        "Sample assignments created for at least 3 employees.",
+        "Blocker reason recorded and updated when unblocked."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 2.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Leslie Anchondo",
+        "priority": "High",
+        "timeEstimate": "6h"
+      }
+    },
+    {
+      "title": "Employee Equipment Assignment",
+      "userStory": "As a company administrator or Equipment Manager I want to assign equipment to employees so that visibility, access, and control follow assignments.",
+      "points": 2,
+      "businessValue": "Critical",
+      "category": "Equipment Management",
+      "status": "In Review",
+      "acceptanceCriteria": [
+        "Admin/Equipment Manager can assign equipment to one or more employees.",
+        "Assigned equipment appears in the employee’s dashboard immediately.",
+        "Removing assignment revokes visibility and access.",
+        "Audit log captures all assignment and removal events.",
+        "Employees cannot access equipment not assigned to them."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 3.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "Urgent",
+        "timeEstimate": "5h"
+      }
+    },
+    {
+      "title": "Administrative Geo-Tracking Reports",
+      "userStory": "As an admin or equipment manager I want geo-history, mileage, and behavior reports so I can audit driving and zone compliance.",
+      "points": 8,
+      "businessValue": "Important",
+      "category": "Reporting",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Timeline of GPS locations per equipment.",
+        "Calculated vs. actual mileage displayed.",
+        "Average speed, max speed, and stop/start events displayed.",
+        "System flags mileage discrepancies.",
+        "System highlights entries outside approved geo-zones or time ranges.",
+        "Filterable by equipment, employee, and time range.",
+        "Export to CSV and PDF.",
+        "Access restricted to Admin/Equipment Manager."
+      ],
+      "position": {
+        "effort": "8 points",
+        "rank": 4.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "timeEstimate": "13h"
+      }
+    },
+    {
+      "title": "Job Site & Employee-Constrained Equipment Visibility",
+      "userStory": "As an employee I only want to see and act on equipment and job sites I'm assigned to so that I remain scoped to relevant work.",
+      "points": 2,
+      "businessValue": "Critical",
+      "category": "Permissions",
+      "status": "In Progress",
+      "acceptanceCriteria": [
+        "Employees see equipment assigned to them or to their job sites only.",
+        "Maintenance requests allowed only for accessible equipment.",
+        "Comments/updates restricted to assigned equipment/job sites.",
+        "No view/modify access to unrelated job sites/equipment.",
+        "Permissions enforced in UI and backend.",
+        "Blocked attempts are denied and logged."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 5.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "High",
+        "timeEstimate": "8h"
+      }
+    },
+    {
+      "title": "Admin-only Job & Equipment Creation/Assignment Restrictions",
+      "userStory": "As an admin I want only privileged roles to create, update, delete equipment and job sites so that governance is enforced.",
+      "businessValue": "Critical",
+      "category": "Permissions",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Only Admin/Equipment Manager can create/update/delete equipment.",
+        "Only Admin/Equipment Manager can create/update/delete job sites.",
+        "Employees cannot create or modify equipment/job sites.",
+        "Unauthorized attempts yield friendly error messages.",
+        "All create/update/delete actions logged with timestamp and user.",
+        "Role-based permissions enforced across frontend and backend.",
+        "Automated tests verify access restrictions."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 6.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "timeEstimate": "8h"
+      }
+    },
+    {
+      "title": "Employee Equipment Work & Maintenance Request Submission",
+      "userStory": "As an employee I want to submit maintenance requests for my assigned equipment so that issues are tracked and resolved.",
+      "points": 2,
+      "businessValue": "Critical",
+      "category": "Requests",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Employees can submit new maintenance requests for assigned equipment.",
+        "Mandatory fields: equipment ID, issue description, urgency.",
+        "Employee can attach photos or documents to requests.",
+        "Submitted requests visible to Admins/Managers immediately.",
+        "Employee can track request status (submitted, in review, approved, scheduled, completed).",
+        "Employee receives notification when status changes."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 7.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "High",
+        "timeEstimate": "5h"
+      }
+    },
+    {
+      "title": "Admin: Maintenance Request PO Approval & Management",
+      "userStory": "As an admin I want to triage and approve maintenance requests and generate POs so that work can be scheduled and tracked.",
+      "points": 5,
+      "businessValue": "Critical",
+      "category": "Procurement",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Admin is notified of new maintenance requests.",
+        "Admin can approve, deny, or request more info.",
+        "Approved requests generate a unique P.O. number automatically.",
+        "Admin can edit P.O. details (vendor, expected cost, due date).",
+        "Admin can schedule work (assign vendor or in-house).",
+        "Admin can comment on requests for clarification or instructions.",
+        "System tracks full history of approvals, denials, edits, and status changes.",
+        "Reports by P.O. status (pending, approved, scheduled, completed)."
+      ],
+      "position": {
+        "effort": "5 points",
+        "rank": 8.0,
+        "value": "Critical"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "timeEstimate": "13h"
+      }
+    },
+    {
+      "title": "Equipment Maintenance Log Review",
+      "userStory": "As a user I want an immutable chronological maintenance log per equipment so that compliance and history are auditable.",
+      "points": 3,
+      "businessValue": "Important",
+      "category": "Logs",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Each equipment record shows chronological maintenance/work log.",
+        "Log entries include date, requestor, issue description, resolution, and linked PO (if any).",
+        "Logs are immutable once created.",
+        "Users can filter by type (repair, inspection, preventive maintenance).",
+        "Users can search by keyword or date range.",
+        "Access: Admins, Equipment Managers, and assigned employees.",
+        "Export available for compliance reporting."
+      ],
+      "position": {
+        "effort": "3 points",
+        "rank": 9.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "timeEstimate": "5h"
+      }
+    },
+    {
+      "title": "(DEFERRED) Provider P.O. Portal",
+      "userStory": "As a registered provider I want to view and update my assigned POs so I can fulfill work without accessing unrelated data.",
+      "points": 8,
+      "businessValue": "Nice to Have",
+      "category": "Portal",
+      "status": "Deferred",
+      "acceptanceCriteria": [
+        "Providers can log in and view only P.O.s assigned to them.",
+        "Providers can update limited status fields (acknowledged, in-progress, completed).",
+        "Providers can add comments/questions linked to P.O. history.",
+        "Providers can upload documents (invoices, receipts, work orders).",
+        "Providers can review payment status (pending, approved, paid).",
+        "Providers cannot see P.O.s not assigned to them.",
+        "System logs all provider interactions with P.O.s.",
+        "Providers receive notifications when P.O. status changes."
+      ],
+      "position": {
+        "effort": "8 points",
+        "rank": 10.0,
+        "value": "Nice to Have"
+      }
+    },
+    {
+      "title": "DECISION: Auto-add Assigned Equipment to Jobsites?",
+      "userStory": "As a team we need a decision on whether employee-assigned equipment should be auto-added to their jobsite so that visibility rules remain consistent.",
+      "businessValue": "Important",
+      "category": "Decision",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Decision documented with pros/cons.",
+        "If 'Yes', rules and automation steps defined.",
+        "If 'No', rationale captured and edge-cases addressed."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 11.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "DECISION: Define Equipment Manager Role",
+      "userStory": "As a team we need clarity whether Equipment Manager is a distinct role so that RBAC can be implemented cleanly.",
+      "businessValue": "Important",
+      "category": "Decision",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Role existence confirmed or rejected.",
+        "If confirmed, permissions added to Rights & Roles matrix.",
+        "Affected screens and API permissions updated."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 12.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "DECISION: Are Providers Their Own Employee Type?",
+      "userStory": "As a team we must decide whether providers are modeled as employees or separate entities to simplify permissions and data modeling.",
+      "businessValue": "Important",
+      "category": "Decision",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Data model choice recorded with justification.",
+        "RBAC implications documented.",
+        "Migration plan (if needed) captured."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 13.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "Equipment Status Field",
+      "userStory": "As an admin I want equipment to have a status so that lifecycle and availability are clear.",
+      "businessValue": "Important",
+      "category": "Equipment Management",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Status field added (e.g., Active, In Maintenance, Retired).",
+        "Status editable by Admin/Equipment Manager.",
+        "Filters support status values across lists and reports."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 14.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "Refactor Mileage Tracking to Dedicated Report",
+      "userStory": "As a developer I want mileage tracking moved from the equipment table into a dedicated report so that performance and history are improved.",
+      "businessValue": "Important",
+      "category": "Refactor",
+      "status": "In Progress",
+      "acceptanceCriteria": [
+        "Mileage log exists with date/time and miles entries.",
+        "Users can enter mileage into the log (date/time, miles).",
+        "Mileage history preserved and queryable (not just sum).",
+        "Equipment table no longer stores aggregated mileage directly."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 15.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "Urgent"
+      }
+    },
+    {
+      "title": "Maintenance Intervals & Notifications",
+      "userStory": "As an Equipment Manager I want maintenance intervals with notifications so preventive maintenance isn't missed.",
+      "businessValue": "Critical",
+      "category": "Scheduling",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Configurable maintenance intervals per equipment (time or usage-based).",
+        "Upcoming-due notifications to Admin/Equipment Manager.",
+        "Overdue alerts and escalation path defined."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 16.0,
+        "value": "Critical"
+      }
+    },
+    {
+      "title": "GPS Mileage Tracking Identity Strategy",
+      "userStory": "As a systems architect I want to decide whether mileage is tracked by VIN or device ID so that data integrity is maximized.",
+      "businessValue": "Important",
+      "category": "Architecture",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Identity source (VIN or device) selected with rationale.",
+        "Mapping rules defined for device swaps and multi-device scenarios.",
+        "Backfill/migration approach documented."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 17.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "Employee Access to Equipment Files",
+      "userStory": "As an employee I want to see files attached to my assigned equipment so that I can access manuals and documentation.",
+      "businessValue": "Important",
+      "category": "Permissions",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Employees can view files attached to equipment they are assigned to.",
+        "Access controls enforced server-side.",
+        "Audit log includes file view events."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 18.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "(DEFERRED) JobNimbus Integration",
+      "userStory": "As an admin I want a JobNimbus integration so CRM/job data can sync with our system.",
+      "points": 5,
+      "businessValue": "Nice to Have",
+      "category": "Integration",
+      "status": "Deferred",
+      "acceptanceCriteria": [
+        "Add ManagerId to Employees.",
+        "Add SalesRep to Jobs table.",
+        "Add Company Locations table (with hours optional).",
+        "Add Lead Source fields where specified.",
+        "Rename Employees to Team (or map accordingly).",
+        "Add project manager to employee type.",
+        "Add address line 2.",
+        "Job table updates: JobType, Status, Lead Source, Tags, Type of Loss, Insurance Company, related Contacts, Class (reference JobNimbus), job photo, Date of Loss.",
+        "Contact table includes standard info, Contact Type, Status, Sales Rep, Lead Source, assigned to, related contacts.",
+        "Field mappings and validation documented.",
+        "Sync jobs, contacts, and companies with conflict resolution."
+      ],
+      "position": {
+        "effort": "5 points",
+        "rank": 19.0,
+        "value": "Nice to Have"
+      }
+    },
+    {
+      "title": "Rights & Roles Matrix (Equipment Management Capabilities)",
+      "userStory": "As a platform owner I want a defined and enforced Rights & Roles matrix so that permissions are consistent.",
+      "businessValue": "Critical",
+      "category": "Security",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Matrix updated to include Equipment Manager capabilities.",
+        "Permissions enforced across UI and API endpoints.",
+        "Automated tests verify role actions."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 20.0,
+        "value": "Critical"
+      }
+    },
+    {
+      "title": "Update Rights & Roles Matrix & Notify Brent",
+      "userStory": "As a PM I want the updated matrix communicated so stakeholders are aligned.",
+      "points": 1,
+      "businessValue": "Important",
+      "category": "Security",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Matrix updated in documentation repo.",
+        "Summary sent to Brent with key changes.",
+        "Follow-up Q&A captured in notes."
+      ],
+      "position": {
+        "effort": "1 points",
+        "rank": 21.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Chuck Williams",
+        "dueDate": "2025-09-30",
+        "priority": "High",
+        "timeEstimate": "2h"
+      }
+    },
+    {
+      "title": "P.O. System Core",
+      "userStory": "As a user I want to create, edit, view, and remove Purchase Orders so procurement can be managed.",
+      "businessValue": "Important",
+      "category": "Procurement",
+      "status": "Captured",
+      "acceptanceCriteria": [
+        "Users can create, edit, view, and remove POs (per role permissions).",
+        "Files can be attached to a P.O.",
+        "Users are notified of relevant P.O. changes based on access."
+      ],
+      "position": {
+        "effort": "TBD",
+        "rank": 22.0,
+        "value": "Important"
+      }
+    },
+    {
+      "title": "Comments & Notes (Equipment, Requests, etc.)",
+      "userStory": "As a user I want threaded comments with notifications so collaboration stays in context.",
+      "points": 2,
+      "businessValue": "Important",
+      "category": "Collaboration",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Users can reply to a comment (threaded).",
+        "Notifications on replies are sent to participants.",
+        "Notification deep link opens the relevant entity view."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 23.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "High"
+      }
+    },
+    {
+      "title": "Manage Contacts & Associate as Vendors",
+      "userStory": "As an admin I want to manage contacts and mark some as vendors so procurement flows can reference them.",
+      "points": 2,
+      "businessValue": "Important",
+      "category": "CRM",
+      "status": "Prioritized",
+      "acceptanceCriteria": [
+        "Add new contacts.",
+        "Edit existing contact details.",
+        "Remove unnecessary contacts.",
+        "Associate contacts as vendors.",
+        "Contact information verification step available."
+      ],
+      "position": {
+        "effort": "2 points",
+        "rank": 24.0,
+        "value": "Important"
+      },
+      "meta": {
+        "assignee": "Alex Wigley",
+        "priority": "High"
+      }
+    }
+  ]
+}
