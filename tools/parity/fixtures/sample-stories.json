@@ -1,0 +1,75 @@
+[
+  {
+    "id": "story-001",
+    "title": "Client-Specific Story Access",
+    "userStory": "As a logged-in client, I can only view user stories that have been explicitly shared with me by the admin or PM.",
+    "points": 5,
+    "businessValue": "Critical",
+    "status": "In Progress",
+    "acceptanceCriteria": [
+      "Client can only see stories that have been specifically shared with them",
+      "Stories not shared with the client are completely hidden from view",
+      "Admin/PM can see which clients have access to which stories",
+      "Changes to sharing permissions are reflected immediately"
+    ],
+    "tags": ["security", "access-control"]
+  },
+  {
+    "id": "story-002",
+    "title": "Backlog Story Viewer",
+    "userStory": "As a client, I can see a list of user stories with expandable detail (not editable), including story points and business value.",
+    "points": 3,
+    "businessValue": "Critical",
+    "status": "Done",
+    "acceptanceCriteria": [
+      "Stories are displayed in a scrollable list view",
+      "Each story shows title, points, and business value in collapsed view",
+      "Stories can be expanded to show full details including user story text",
+      "Story list can be filtered by category and business value"
+    ],
+    "tags": ["ui", "core"]
+  },
+  {
+    "id": "story-003",
+    "title": "Scope Matrix Drag-and-Drop",
+    "userStory": "As a client, I can drag and drop features into the scope matrix. If effort is mismatched for a column, the system prompts me with effort adjustment options.",
+    "points": 8,
+    "businessValue": "Critical",
+    "status": "Done",
+    "acceptanceCriteria": [
+      "Stories can be dragged from backlog to matrix",
+      "Effort validation occurs on drop",
+      "User is prompted for effort adjustment if needed"
+    ],
+    "tags": ["ui", "interaction"]
+  },
+  {
+    "id": "story-004",
+    "title": "Business Value Mismatch Explanation",
+    "userStory": "When I move a low-value item into a high-priority scope bucket (or vice versa), the system explains the meaning of this mismatch with distinct contextual messages.",
+    "points": 5,
+    "businessValue": "Important",
+    "status": "In Progress",
+    "acceptanceCriteria": [
+      "System detects business value mismatches",
+      "Contextual messages explain the mismatch",
+      "Messages are distinct for different mismatch types"
+    ],
+    "tags": ["ux", "guidance"]
+  },
+  {
+    "id": "story-005",
+    "title": "Real-Time Scope Metrics Panel",
+    "userStory": "As a client or admin, I want to see live scope metrics like total story points, estimated dev days, and projected cost as I change the scope matrix.",
+    "points": 8,
+    "businessValue": "Critical",
+    "status": "Done",
+    "acceptanceCriteria": [
+      "Metrics update in real-time as stories are moved",
+      "Total story points are calculated correctly",
+      "Dev days estimation is accurate",
+      "Cost projection reflects current settings"
+    ],
+    "tags": ["analytics", "core"]
+  }
+]
