@@ -12,7 +12,10 @@
     "parity:pull": "ts-node --project tools/tsconfig.json tools/parity/check-parity.ts --mode pull --json data/stories.json",
     "parity:push": "ts-node --project tools/tsconfig.json tools/parity/check-parity.ts --mode push --json data/stories.json",
     "simple-parity": "ts-node --project tools/tsconfig.json tools/parity/simple-parity-checker.ts",
+    "test": "jest",
     "test:parity": "jest tools/parity/__tests__",
+    "test:clientsafe": "jest tests/estimation tests/export --testPathPattern='(redact|csv_clientsafe)'",
+    "test:watch": "jest --watch",
     "delta:dry": "ts-node --project tools/tsconfig.json tools/resolve-delta/run.ts",
     "delta:apply": "APPLY=true ts-node --project tools/tsconfig.json tools/resolve-delta/run.ts",
     "delta:revert": "ts-node --project tools/tsconfig.json tools/resolve-delta/revert.ts"

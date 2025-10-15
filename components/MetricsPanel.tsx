@@ -67,6 +67,8 @@ type MetricsPanelProps = {
   onImportStoriesClick: () => void;
   onExportClick?: () => void;
   readOnly?: boolean;
+  clientSafeMode?: boolean;
+  onToggleClientSafe?: (enabled: boolean) => void;
 };
 
 export function MetricsPanel({
@@ -77,7 +79,9 @@ export function MetricsPanel({
   onSettingsClick,
   onImportStoriesClick,
   onExportClick,
-  readOnly
+  readOnly,
+  clientSafeMode = true,
+  onToggleClientSafe
 }: MetricsPanelProps) {
   
   // Helper function to format currency
@@ -119,6 +123,44 @@ export function MetricsPanel({
     <div className="bg-white rounded-lg shadow p-4 h-full" id="metrics-panel-container">
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-semibold text-gray-700">Scope Metrics</h2>
+        {/* Client-Safe Mode Banner */}
+        {clientSafeMode && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-md">
+            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-xs font-medium text-blue-700">Client-Safe mode active</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Client-Safe Toggle */}
+      {onToggleClientSafe && !readOnly && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 cursor-pointer" htmlFor="client-safe-toggle">
+                Client-Safe mode
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Hide hourly rate and internal levers in UI and exports
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                id="client-safe-toggle"
+                type="checkbox"
+                checked={clientSafeMode}
+                onChange={(e) => onToggleClientSafe(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center mb-3">
         <div className="mt-8 flex flex-col space-y-2">
           <button 
             onClick={onSettingsClick}
@@ -224,15 +266,17 @@ export function MetricsPanel({
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-sm text-green-600 font-medium">Estimated Cost</div>
           <div className="text-3xl font-bold mt-1">{formatCurrency(animatedMetrics.totalCost)}</div>
-          <div className="text-xs text-gray-600 mt-1">
-            ({formatCurrency(settings.contributorCost * settings.contributorCount / settings.hoursPerDay)}/hour)
-          </div>
+          {!clientSafeMode && (
+            <div className="text-xs text-gray-600 mt-1">
+              ({formatCurrency(settings.contributorCost * settings.contributorCount / settings.hoursPerDay)}/hour)
+            </div>
+          )}
         </div>
         
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-sm text-green-600 font-medium">Contributors</div>
           <div className="text-3xl font-bold mt-1">{settings.contributorCount}</div>
-          {metrics.effectiveContributorCount && metrics.productivityLossPercent !== undefined && settings.contributorCount > 1 && (
+          {!clientSafeMode && metrics.effectiveContributorCount && metrics.productivityLossPercent !== undefined && settings.contributorCount > 1 && (
             <div className="text-xs mt-1">
               <div className="font-medium text-amber-600">
                 Effective: {formatNumber(metrics.effectiveContributorCount)} 
@@ -284,12 +328,12 @@ export function MetricsPanel({
         </div>
         
         <div className="bg-green-50 p-3 rounded-lg">
-          <div className="text-sm text-green-600 font-medium">AI Productivity Gain</div>
+          <div className="text-sm text-green-600 font-medium">{clientSafeMode ? 'Productivity Optimization' : 'AI Productivity Gain'}</div>
           <div className="text-3xl font-bold mt-1">{Math.round(metrics.aiProductivityGain * 100)}%</div>
         </div>
       </div>
       
-      {settings.aiSimulationEnabled && (
+      {!clientSafeMode && settings.aiSimulationEnabled && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
           <h3 className="text-sm font-medium text-blue-700 mb-2">AI Productivity Impact</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -313,7 +357,7 @@ export function MetricsPanel({
         </div>
       )}
       
-      {settings.contributorCount > 1 && (
+      {!clientSafeMode && settings.contributorCount > 1 && (
         <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
           <h3 className="text-sm font-medium text-amber-700 mb-2">Team Communication Impact</h3>
           <p className="text-xs text-gray-600 mb-2">
@@ -378,7 +422,7 @@ export function MetricsPanel({
         </div>
       )}
       
-      {settings.contributorCount > 1 && (
+      {!clientSafeMode && settings.contributorCount > 1 && (
         <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
           <h3 className="text-sm font-medium text-amber-700 mb-2">Team Dynamics Impact</h3>
           <p className="text-xs text-gray-600 mb-2">
@@ -402,12 +446,14 @@ export function MetricsPanel({
         </div>
       )}
       
-      <div className="mt-4 p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-        <div className="font-medium mb-1">Formula</div>
-        <div className="text-xs">
-          {animatedMetrics.totalPoints} points × {settings.hoursPerDay} hrs/point ÷ ({settings.contributorCount} {settings.contributorCount === 1 ? 'contributor' : 'contributors'} × {settings.contributorAllocation}% allocation)
+      {!clientSafeMode && (
+        <div className="mt-4 p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+          <div className="font-medium mb-1">Formula</div>
+          <div className="text-xs">
+            {animatedMetrics.totalPoints} points × {settings.hoursPerDay} hrs/point ÷ ({settings.contributorCount} {settings.contributorCount === 1 ? 'contributor' : 'contributors'} × {settings.contributorAllocation}% allocation)
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

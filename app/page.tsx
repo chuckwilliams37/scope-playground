@@ -32,6 +32,9 @@ import { ShareProject } from "../components/ShareProject";
 import { BacklogManager } from '../components/BacklogManager';
 import { Story as ImportedStory } from '../types/index';
 import { StoryForm } from '../components/StoryForm';
+import { ClientSafeBanner } from '../components/badges/ClientSafeBanner';
+import { useClientSafe } from '../hooks/useClientSafe';
+import { useHotkey, HOTKEYS } from '../hooks/useHotkey';
 
 // Matrix cell default value mappings
 const MATRIX_DEFAULTS = {
@@ -387,6 +390,14 @@ export default function ScopePlaygroundPage() {
     }
   }, [fetchedStories]);
 
+  // Client-Safe mode state
+  const { clientSafeMode, toggleClientSafeMode } = useClientSafe();
+  
+  // Keyboard shortcut for Client-Safe toggle (Ctrl+Shift+C)
+  useHotkey(HOTKEYS.CLIENT_SAFE_TOGGLE, () => {
+    toggleClientSafeMode();
+  });
+  
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const [activeCell, setActiveCell] = useState<string | null>(null);
@@ -1948,6 +1959,8 @@ export default function ScopePlaygroundPage() {
         onShowBacklogManager={() => setShowBacklogManager(true)}
       />
       
+      <ClientSafeBanner />
+      
       <DndContext 
         sensors={sensors}
         onDragStart={handleDragStart}
@@ -2105,6 +2118,7 @@ export default function ScopePlaygroundPage() {
                   }))}
                   storyPositions={storyPositions}
                   onClose={() => setShowExportPanel(false)}
+                  clientSafeMode={clientSafeMode}
                 />
               </div>
             )}
@@ -2138,6 +2152,8 @@ export default function ScopePlaygroundPage() {
               onSettingsClick={() => setShowSettings(!showSettings)}
               onImportStoriesClick={() => setShowImportPanel(!showImportPanel)}
               onExportClick={() => setShowExportPanel(!showExportPanel)}
+              clientSafeMode={clientSafeMode}
+              onToggleClientSafe={toggleClientSafeMode}
             />
             
             {showScenariosPanel && (

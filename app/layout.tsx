@@ -1,5 +1,6 @@
 import './globals.css';
 import { ConvexClientProvider } from '@/components/ConvexClientProvider';
+import { ClientSafeProvider } from '@/hooks/useClientSafe';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ConvexClientProvider>
-          {children}
+          <ClientSafeProvider>
+            {children}
+          </ClientSafeProvider>
         </ConvexClientProvider>
       </body>
     </html>

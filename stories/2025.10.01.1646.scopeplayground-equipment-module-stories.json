@@ -29,55 +29,6 @@
       }
     },
     {
-      "title": "Provide Cost Estimate: Equipment Maintenance/Warranty Service Project",
-      "userStory": "As a product owner I want a clear cost estimate for the equipment maintenance & warranty service project so that I can scope budget and timeline.",
-      "points": 1,
-      "businessValue": "Important",
-      "category": "Operations",
-      "status": "In Progress",
-      "acceptanceCriteria": [
-        "Estimate broken down by epics (Requests, PO, Provider Portal, Logs, Reports).",
-        "Includes points, hours, and lead roles per epic.",
-        "Assumptions and out-of-scope explicitly listed.",
-        "Delivery risks and dependencies identified."
-      ],
-      "position": {
-        "effort": "1 points",
-        "rank": 1.0,
-        "value": "Important"
-      },
-      "meta": {
-        "assignee": "Chuck Williams",
-        "dueDate": "2025-09-26",
-        "priority": "Urgent",
-        "timeEstimate": "4h"
-      }
-    },
-    {
-      "title": "FUW: Leslie to Coordinate Adding Equipment to System",
-      "userStory": "As a coordinator I want Leslie to work with staff to add equipment so that seed data exists for acceptance testing.",
-      "points": 2,
-      "businessValue": "Critical",
-      "category": "Data Onboarding",
-      "status": "Blocked",
-      "acceptanceCriteria": [
-        "Initial equipment list imported or entered (min 20 records).",
-        "Each item has owner/company, status, and unique asset identifier.",
-        "Sample assignments created for at least 3 employees.",
-        "Blocker reason recorded and updated when unblocked."
-      ],
-      "position": {
-        "effort": "2 points",
-        "rank": 2.0,
-        "value": "Critical"
-      },
-      "meta": {
-        "assignee": "Leslie Anchondo",
-        "priority": "High",
-        "timeEstimate": "6h"
-      }
-    },
-    {
       "title": "Employee Equipment Assignment",
       "userStory": "As a company administrator or Equipment Manager I want to assign equipment to employees so that visibility, access, and control follow assignments.",
       "points": 2,
@@ -104,11 +55,11 @@
     },
     {
       "title": "Administrative Geo-Tracking Reports",
-      "userStory": "As an admin or equipment manager I want geo-history, mileage, and behavior reports so I can audit driving and zone compliance.",
+      "userStory": "As an admin or equipment manager I want GPS-based reports so I can monitor equipment location, mileage, and usage patterns.",
       "points": 8,
       "businessValue": "Important",
       "category": "Reporting",
-      "status": "Captured",
+      "status": "Deferred",
       "acceptanceCriteria": [
         "Timeline of GPS locations per equipment.",
         "Calculated vs. actual mileage displayed.",
@@ -152,30 +103,6 @@
       "meta": {
         "assignee": "Alex Wigley",
         "priority": "High",
-        "timeEstimate": "8h"
-      }
-    },
-    {
-      "title": "Admin-only Job & Equipment Creation/Assignment Restrictions",
-      "userStory": "As an admin I want only privileged roles to create, update, delete equipment and job sites so that governance is enforced.",
-      "businessValue": "Critical",
-      "category": "Permissions",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Only Admin/Equipment Manager can create/update/delete equipment.",
-        "Only Admin/Equipment Manager can create/update/delete job sites.",
-        "Employees cannot create or modify equipment/job sites.",
-        "Unauthorized attempts yield friendly error messages.",
-        "All create/update/delete actions logged with timestamp and user.",
-        "Role-based permissions enforced across frontend and backend.",
-        "Automated tests verify access restrictions."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 6.0,
-        "value": "Critical"
-      },
-      "meta": {
         "timeEstimate": "8h"
       }
     },
@@ -282,147 +209,6 @@
       }
     },
     {
-      "title": "DECISION: Auto-add Assigned Equipment to Jobsites?",
-      "userStory": "As a team we need a decision on whether employee-assigned equipment should be auto-added to their jobsite so that visibility rules remain consistent.",
-      "businessValue": "Important",
-      "category": "Decision",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Decision documented with pros/cons.",
-        "If 'Yes', rules and automation steps defined.",
-        "If 'No', rationale captured and edge-cases addressed."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 11.0,
-        "value": "Important"
-      }
-    },
-    {
-      "title": "DECISION: Define Equipment Manager Role",
-      "userStory": "As a team we need clarity whether Equipment Manager is a distinct role so that RBAC can be implemented cleanly.",
-      "businessValue": "Important",
-      "category": "Decision",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Role existence confirmed or rejected.",
-        "If confirmed, permissions added to Rights & Roles matrix.",
-        "Affected screens and API permissions updated."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 12.0,
-        "value": "Important"
-      }
-    },
-    {
-      "title": "DECISION: Are Providers Their Own Employee Type?",
-      "userStory": "As a team we must decide whether providers are modeled as employees or separate entities to simplify permissions and data modeling.",
-      "businessValue": "Important",
-      "category": "Decision",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Data model choice recorded with justification.",
-        "RBAC implications documented.",
-        "Migration plan (if needed) captured."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 13.0,
-        "value": "Important"
-      }
-    },
-    {
-      "title": "Equipment Status Field",
-      "userStory": "As an admin I want equipment to have a status so that lifecycle and availability are clear.",
-      "businessValue": "Important",
-      "category": "Equipment Management",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Status field added (e.g., Active, In Maintenance, Retired).",
-        "Status editable by Admin/Equipment Manager.",
-        "Filters support status values across lists and reports."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 14.0,
-        "value": "Important"
-      }
-    },
-    {
-      "title": "Refactor Mileage Tracking to Dedicated Report",
-      "userStory": "As a developer I want mileage tracking moved from the equipment table into a dedicated report so that performance and history are improved.",
-      "businessValue": "Important",
-      "category": "Refactor",
-      "status": "In Progress",
-      "acceptanceCriteria": [
-        "Mileage log exists with date/time and miles entries.",
-        "Users can enter mileage into the log (date/time, miles).",
-        "Mileage history preserved and queryable (not just sum).",
-        "Equipment table no longer stores aggregated mileage directly."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 15.0,
-        "value": "Important"
-      },
-      "meta": {
-        "assignee": "Alex Wigley",
-        "priority": "Urgent"
-      }
-    },
-    {
-      "title": "Maintenance Intervals & Notifications",
-      "userStory": "As an Equipment Manager I want maintenance intervals with notifications so preventive maintenance isn't missed.",
-      "businessValue": "Critical",
-      "category": "Scheduling",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Configurable maintenance intervals per equipment (time or usage-based).",
-        "Upcoming-due notifications to Admin/Equipment Manager.",
-        "Overdue alerts and escalation path defined."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 16.0,
-        "value": "Critical"
-      }
-    },
-    {
-      "title": "GPS Mileage Tracking Identity Strategy",
-      "userStory": "As a systems architect I want to decide whether mileage is tracked by VIN or device ID so that data integrity is maximized.",
-      "businessValue": "Important",
-      "category": "Architecture",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Identity source (VIN or device) selected with rationale.",
-        "Mapping rules defined for device swaps and multi-device scenarios.",
-        "Backfill/migration approach documented."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 17.0,
-        "value": "Important"
-      }
-    },
-    {
-      "title": "Employee Access to Equipment Files",
-      "userStory": "As an employee I want to see files attached to my assigned equipment so that I can access manuals and documentation.",
-      "businessValue": "Important",
-      "category": "Permissions",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Employees can view files attached to equipment they are assigned to.",
-        "Access controls enforced server-side.",
-        "Audit log includes file view events."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 18.0,
-        "value": "Important"
-      }
-    },
-    {
       "title": "(DEFERRED) JobNimbus Integration",
       "userStory": "As an admin I want a JobNimbus integration so CRM/job data can sync with our system.",
       "points": 5,
@@ -446,64 +232,6 @@
         "effort": "5 points",
         "rank": 19.0,
         "value": "Nice to Have"
-      }
-    },
-    {
-      "title": "Rights & Roles Matrix (Equipment Management Capabilities)",
-      "userStory": "As a platform owner I want a defined and enforced Rights & Roles matrix so that permissions are consistent.",
-      "businessValue": "Critical",
-      "category": "Security",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Matrix updated to include Equipment Manager capabilities.",
-        "Permissions enforced across UI and API endpoints.",
-        "Automated tests verify role actions."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 20.0,
-        "value": "Critical"
-      }
-    },
-    {
-      "title": "Update Rights & Roles Matrix & Notify Brent",
-      "userStory": "As a PM I want the updated matrix communicated so stakeholders are aligned.",
-      "points": 1,
-      "businessValue": "Important",
-      "category": "Security",
-      "status": "Prioritized",
-      "acceptanceCriteria": [
-        "Matrix updated in documentation repo.",
-        "Summary sent to Brent with key changes.",
-        "Follow-up Q&A captured in notes."
-      ],
-      "position": {
-        "effort": "1 points",
-        "rank": 21.0,
-        "value": "Important"
-      },
-      "meta": {
-        "assignee": "Chuck Williams",
-        "dueDate": "2025-09-30",
-        "priority": "High",
-        "timeEstimate": "2h"
-      }
-    },
-    {
-      "title": "P.O. System Core",
-      "userStory": "As a user I want to create, edit, view, and remove Purchase Orders so procurement can be managed.",
-      "businessValue": "Important",
-      "category": "Procurement",
-      "status": "Captured",
-      "acceptanceCriteria": [
-        "Users can create, edit, view, and remove POs (per role permissions).",
-        "Files can be attached to a P.O.",
-        "Users are notified of relevant P.O. changes based on access."
-      ],
-      "position": {
-        "effort": "TBD",
-        "rank": 22.0,
-        "value": "Important"
       }
     },
     {

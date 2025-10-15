@@ -10,6 +10,7 @@ import { useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 // @ts-ignore
 import { Id } from '../convex/_generated/dataModel';
+import { exportStoriesToCSV, exportMetricsToCSV, downloadCSV } from '../utils/export/csv';
 
 // Type definition for Story (use consistent naming with the rest of the app)
 interface Story {
@@ -41,9 +42,10 @@ type ExportPanelProps = {
   stories: Story[];
   storyPositions: Record<string, StoryPosition>;
   onClose: () => void;
+  clientSafeMode?: boolean;
 };
 
-export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stories, storyPositions, onClose }: ExportPanelProps) {
+export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stories, storyPositions, onClose, clientSafeMode = true }: ExportPanelProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [shareableLink, setShareableLink] = useState('');
   const [showLinkCopied, setShowLinkCopied] = useState(false);
@@ -437,32 +439,44 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
       
       // Team configuration
       settingsData.push([{ content: 'Team Configuration', colSpan: 2, styles: { fontStyle: 'bold' as const, fillColor: [240, 240, 240] } }]);
-      settingsData.push(['Contributor Cost (Daily)', `$${settings.contributorCost.toFixed(2)}`]);
-      settingsData.push(['Contributor Count', `${settings.contributorCount}`]);
-      settingsData.push(['Hours Per Day', `${settings.hoursPerDay}`]);
       
-      // Format allocation percentage correctly
-      // Check if allocation is already a percentage (>1) or decimal (<1)
-      const allocationPercentage = settings.contributorAllocation > 1 
-        ? settings.contributorAllocation.toFixed(0) 
-        : (settings.contributorAllocation * 100).toFixed(0);
-      settingsData.push(['Contributor Allocation', `${allocationPercentage}%`]);
-      
-      // Scope limiters
-      settingsData.push([{ content: 'Scope Limiters', colSpan: 2, styles: { fontStyle: 'bold' as const, fillColor: [240, 240, 240] } }]);
-      settingsData.push(['Points Limit', `${settings.scopeLimiters.points.default}`]);
-      settingsData.push(['Hours Limit', `${settings.scopeLimiters.hours.default}`]);
-      settingsData.push(['Duration Limit', `${settings.scopeLimiters.duration.default} ${settings.scopeLimiters.duration.unit}`]);
-      
-      // Self-managed partner
-      if (settings.selfManagedPartner?.enabled) {
-        settingsData.push(['Self-Managed Partner', `Enabled (${settings.selfManagedPartner.managementReductionPercent}% reduction)`]);
-      } else {
-        settingsData.push(['Self-Managed Partner', 'Disabled']);
+      // Only show contributor cost and allocation if NOT in client-safe mode
+      if (!clientSafeMode) {
+        settingsData.push(['Contributor Cost (Daily)', `$${settings.contributorCost.toFixed(2)}`]);
       }
       
-      // AI productivity settings if enabled
-      if (settings.aiSimulationEnabled) {
+      settingsData.push(['Contributor Count', `${settings.contributorCount}`]);
+      
+      if (!clientSafeMode) {
+        settingsData.push(['Hours Per Day', `${settings.hoursPerDay}`]);
+        
+        // Format allocation percentage correctly
+        // Check if allocation is already a percentage (>1) or decimal (<1)
+        const allocationPercentage = settings.contributorAllocation > 1 
+          ? settings.contributorAllocation.toFixed(0) 
+          : (settings.contributorAllocation * 100).toFixed(0);
+        settingsData.push(['Contributor Allocation', `${allocationPercentage}%`]);
+      }
+      
+      // Scope limiters - only show in non-client-safe mode
+      if (!clientSafeMode) {
+        settingsData.push([{ content: 'Scope Limiters', colSpan: 2, styles: { fontStyle: 'bold' as const, fillColor: [240, 240, 240] } }]);
+        settingsData.push(['Points Limit', `${settings.scopeLimiters.points.default}`]);
+        settingsData.push(['Hours Limit', `${settings.scopeLimiters.hours.default}`]);
+        settingsData.push(['Duration Limit', `${settings.scopeLimiters.duration.default} ${settings.scopeLimiters.duration.unit}`]);
+      }
+      
+      // Self-managed partner - only show in non-client-safe mode
+      if (!clientSafeMode) {
+        if (settings.selfManagedPartner?.enabled) {
+          settingsData.push(['Self-Managed Partner', `Enabled (${settings.selfManagedPartner.managementReductionPercent}% reduction)`]);
+        } else {
+          settingsData.push(['Self-Managed Partner', 'Disabled']);
+        }
+      }
+      
+      // AI productivity settings if enabled - only show in non-client-safe mode
+      if (!clientSafeMode && settings.aiSimulationEnabled) {
         settingsData.push([{ content: 'AI Productivity Settings', colSpan: 2, styles: { fontStyle: 'bold' as const, fillColor: [240, 240, 240] } }]);
         settingsData.push(['Lines of Code', `${settings.aiProductivityFactors.linesOfCode}%`]);
         settingsData.push(['Testing', `${settings.aiProductivityFactors.testing}%`]);
@@ -486,8 +500,8 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         margin: { left: 20, right: 20 }
       });
 
-      // Add AI Productivity Gains documentation
-      if (settings.aiSimulationEnabled) {
+      // Add AI Productivity Gains documentation - only in non-client-safe mode
+      if (!clientSafeMode && settings.aiSimulationEnabled) {
         // Check if we need a new page
         if (y > 200) {
           pdf.addPage();
@@ -646,7 +660,16 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         
         const percentOfTotal = Math.round(((pointsByValue[value as keyof typeof pointsByValue] || 0) / metrics.totalPoints) * 100);
         pdf.text(`Percentage of Project: ${percentOfTotal}%`, 20, y);
-        y += 15;
+        y += 10;
+        
+        // Add legend for matrix inclusion
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('Legend: Bold text = Story included in matrix | Normal text = Story not yet positioned', 20, y);
+        y += 10;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
         
         // Create story table data with formatting improvements for better readability and highlight matrix stories
         const storyTableData = valueStories.map(story => {
@@ -697,15 +720,34 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
           ];
         });
         
+        // Calculate point totals for included and not included
+        const includedPoints = stories
+          .filter(s => storyPositions[(s as any)._id || (s as any).id])
+          .reduce((sum, s) => sum + (s.points || 0), 0);
+        const notIncludedPoints = stories
+          .filter(s => !storyPositions[(s as any)._id || (s as any).id])
+          .reduce((sum, s) => sum + (s.points || 0), 0);
+        
         // Create story table with improved styling and layout
         autoTable(pdf, {
           startY: y,
           head: [['ID', 'Title', 'Category', 'User Story', 'Acceptance Criteria', 'Points']],
           body: storyTableData,
+          foot: [[
+            { content: 'TOTALS', colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } },
+            { content: `${stories.reduce((sum, s) => sum + (s.points || 0), 0)}`, styles: { fontStyle: 'bold' } }
+          ], [
+            { content: `In Matrix: ${includedPoints} pts | Not in Matrix: ${notIncludedPoints} pts`, colSpan: 6, styles: { fontStyle: 'italic', fontSize: 7, fillColor: [240, 240, 240] } }
+          ]],
           theme: 'grid',
           headStyles: { 
             fillColor: fillColor,
             textColor: [255, 255, 255],
+            fontStyle: 'bold'
+          },
+          footStyles: {
+            fillColor: [245, 245, 245],
+            textColor: [0, 0, 0],
             fontStyle: 'bold'
           },
           columnStyles: {
@@ -788,6 +830,18 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
     }
   };
   
+  const handleExportStoriesCSV = () => {
+    const csv = exportStoriesToCSV(stories, storyPositions, { clientSafe: clientSafeMode });
+    const filename = `stories-${scenarioName.replace(/\s+/g, '-').toLowerCase()}-${clientSafeMode ? 'client-safe' : 'full'}.csv`;
+    downloadCSV(csv, filename);
+  };
+  
+  const handleExportMetricsCSV = () => {
+    const csv = exportMetricsToCSV(metrics, settings, { clientSafe: clientSafeMode });
+    const filename = `metrics-${scenarioName.replace(/\s+/g, '-').toLowerCase()}-${clientSafeMode ? 'client-safe' : 'full'}.csv`;
+    downloadCSV(csv, filename);
+  };
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -836,6 +890,33 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
           </div>
           
           <div className="border-t pt-5">
+            <h3 className="text-md font-medium mb-2 text-gray-700">Export as CSV</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Export stories and metrics to CSV format{clientSafeMode ? ' (client-safe mode - sensitive data hidden)' : ''}.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportStoriesCSV}
+                className="flex-1 py-2 px-4 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition duration-200 flex justify-center items-center text-sm"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                Stories CSV
+              </button>
+              <button
+                onClick={handleExportMetricsCSV}
+                className="flex-1 py-2 px-4 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition duration-200 flex justify-center items-center text-sm"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                Metrics CSV
+              </button>
+            </div>
+          </div>
+          
+          <div className="border-t pt-5 mt-5">
             <h3 className="text-md font-medium mb-2 text-gray-700">Share via Link</h3>
             <p className="text-sm text-gray-600 mb-3">
               Generate a shareable link that others can use to view this scenario.

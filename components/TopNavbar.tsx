@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useClientSafe } from '../hooks/useClientSafe';
 
 type Scenario = {
   _id?: string;
@@ -43,6 +44,7 @@ export function TopNavbar({
   onShowShare,
   onShowBacklogManager
 }: TopNavbarProps) {
+  const { clientSafeMode, toggleClientSafeMode } = useClientSafe();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioMenuOpen, setScenarioMenuOpen] = useState(false);
   const [presetMenuOpen, setPresetMenuOpen] = useState(false);
@@ -278,8 +280,25 @@ export function TopNavbar({
                 </button>
                 
                 {toolsMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                     <div className="py-1">
+                      <button
+                        className="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => {
+                          toggleClientSafeMode();
+                        }}
+                      >
+                        <span>Toggle Client-Safe Mode</span>
+                        <div className="flex items-center gap-2">
+                          {clientSafeMode && (
+                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                          <span className="text-xs text-gray-500">⌃⇧C</span>
+                        </div>
+                      </button>
+                      <div className="border-t border-gray-200"></div>
                       <button
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => {
@@ -351,9 +370,34 @@ export function TopNavbar({
             </button>
           </div>
           
-          {/* Current scenario name display */}
-          <div className="hidden sm:flex items-center">
-            <div className="text-sm text-gray-500">
+          {/* Right side: Client-Safe toggle + Current scenario */}
+          <div className="hidden sm:flex items-center gap-4">
+            {/* Client-Safe Badge */}
+            {clientSafeMode && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 border border-blue-300 rounded-full">
+                <svg className="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-semibold text-blue-700">Client-Safe ON</span>
+              </div>
+            )}
+            
+            {/* Client-Safe Toggle */}
+            <div className="flex items-center gap-2" title="Hides hourly rates and internal levers in UI and exports (Ctrl+Shift+C)">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={clientSafeMode}
+                  onChange={(e) => toggleClientSafeMode(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span className="ml-2 text-sm font-medium text-gray-700">Client-Safe</span>
+              </label>
+            </div>
+            
+            {/* Current scenario name */}
+            <div className="text-sm text-gray-500 border-l border-gray-300 pl-4">
               Current: <span className="font-medium text-gray-900">{currentScenarioName || 'Untitled Scenario'}</span>
             </div>
           </div>
