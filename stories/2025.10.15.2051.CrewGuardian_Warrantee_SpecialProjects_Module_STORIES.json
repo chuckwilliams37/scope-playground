@@ -1,0 +1,129 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-10-16T01:58:58.582Z",
+  "stories": [
+    {
+      "_id": "j57e03e6qjqkkx0hnv3zmdn0z97sgrdt",
+      "title": "Scheduler Notification & Assignment",
+      "businessValue": "Critical",
+      "storyPoints": 5,
+      "points": 5,
+      "notes": "Imported from ClickUp. Original ID: 86ac1zncm, Status: defined",
+      "userStory": "As a Ready Roofer special projects scheduler I would like to receive notifications via email & SMS when new special projects are created so that I can schedule a crew and add notes for that special project / job.\n\nAs scheduler, get notified on new job.\nWho are schedulers? Admins ? Managers? \nIssue: jobs on calendar are currently all jobs, not specifically assigned jobs. \nProblem to solve: Efficiently finding updated jobs when doing sync.",
+      "category": "Notifications",
+      "effortCategory": "Medium",
+      "acceptanceCriteria": [
+        "System emails scheduler automatically on new job creation.",
+        "Scheduler can assign crew and set job date/time.",
+        "Assigned crew receives notification by email + SMS.",
+        "System company scheduler email accounts / addresses are configurable by company admins",
+        "Scheduler may add contact notes on the job"
+      ]
+    },
+    {
+      "_id": "j57cgs0hae876x6vx07zd7eg657sgctm",
+      "title": "Warranty Job Creation & Linking",
+      "businessValue": "Critical",
+      "storyPoints": 5,
+      "points": 5,
+      "notes": "Imported from ClickUp. Original ID: 86ac1znbm, Status: defined",
+      "userStory": "As office/sales staff I would like the ability to create warranty/special project jobs linked to existing Ready Roofer JobNimbus jobs so that I can create a Warranty &/or special job on a custom ReadyRoofer domain (such as specialprojects.readyroofer.com).",
+      "category": "Jobcreation",
+      "effortCategory": "",
+      "acceptanceCriteria": [
+        "Staff can choose job type (Warranty / Special Project).",
+        "Form optionally includes reference to an existing JobNimbus or CrewGuardian job (jobsite).",
+        "Linked JobNimbus or CrewGuardian details auto-populate.",
+        "Job entry saved with link to original job or local jobs."
+      ]
+    },
+    {
+      "_id": "j57bv1yq4chvn8y204x4d79zdh7sg3sx",
+      "title": "Field Job Execution",
+      "businessValue": "Critical",
+      "storyPoints": 3,
+      "points": 3,
+      "notes": "Imported from ClickUp. Original ID: 86ac1znd4, Status: defined",
+      "userStory": "As crew member, I would like to receive job details via my preferred communication method (from email, SMS text, & in-app notifications) and have the ability to upload documentation, photos, and make notes on the project so that I can be aware of job criteria, address, timing, and share comments, workmanship evidence, receipts, and information on jobs.",
+      "category": "Crew",
+      "effortCategory": "Low",
+      "acceptanceCriteria": [
+        "Crew sees job details (linked job info, materials, schedule).",
+        "Crew receives notifications by email + SMS + in-app.",
+        "Crew can upload photos.",
+        "Crew can generate purchase orders.",
+        "Crew can log fuel/mileage and expenses/receipts.",
+        "All uploads and entries attach to job record."
+      ]
+    },
+    {
+      "_id": "j575drn5ywhpwy97398j7p5rzs7shss7",
+      "title": "Internal Damage Reporting",
+      "businessValue": "Critical",
+      "storyPoints": 3,
+      "points": 3,
+      "notes": "Imported from ClickUp. Original ID: 86ac1zne5, Status: defined",
+      "userStory": "As crew member I would like the ability to flag internal damage to the job site so that I can notify the team to process for additional jobsite-dependent work.",
+      "category": "Damage",
+      "effortCategory": "Low",
+      "acceptanceCriteria": [
+        "Internal Damage option available on job record.",
+        "Office notified immediately by email + SMS + in-app.",
+        "Flag creates potential follow-up/linked job.",
+        "Job view should clearly reflect the \"internal damage\" flag",
+        "Other linked jobs (such as internal damage) should be linked/ listed/ available in Jobs view"
+      ]
+    },
+    {
+      "_id": "j576k30feq0gzswstpx3zgq1jd7sh4vm",
+      "title": "Job Closeout & Billing",
+      "businessValue": "Critical",
+      "storyPoints": 3,
+      "points": 3,
+      "notes": "Imported from ClickUp. Original ID: 86ac1zneu, Status: defined",
+      "userStory": "As office staff I would like to close out jobs by optionally, required, minimum 1, multi-selecting who to charge from \"Warrantee\", \"Roofer\", \"Project Manager\", and \"Other\" so that I can inform the office that the \"job is complete\" and \"ready for billing / invoicing\".",
+      "category": "Audit",
+      "effortCategory": "Low",
+      "acceptanceCriteria": [
+        "Closeout requires selection of billing parties.",
+        "Multi-select option allowed.",
+        "Audit trail records decision maker and timestamp.",
+        "Once closed, no further job changes are allowed on the job (except additional immutable notes & audit records) except by Company Admin"
+      ]
+    },
+    {
+      "_id": "j57bj4z8n48xs3brnkf1v34gmh7sgz4a",
+      "title": "Notifications & Follow-Up",
+      "businessValue": "Critical",
+      "storyPoints": 3,
+      "points": 3,
+      "notes": "Imported from ClickUp. Original ID: 86ac1znfa, Status: defined",
+      "userStory": "As office admin, customer, and/or jobsite crew member I would like to receive appropriate notifications when jobs are created, closed, and optionally when other activities occur (such as comments, equipment, & POs are added) so that I can take appropriate action and have a record of events as related to warrantee & special jobs and so that the company receives feedback on the job from the customer.",
+      "category": "Followup",
+      "effortCategory": "Low",
+      "acceptanceCriteria": [
+        "Customer receives email (or optionally SMS text) on completion.",
+        "Team notified by email + SMS + in-app on closeout.",
+        "Office notified by email + SMS + in-app if damage flagged.",
+        "CrewGuardian users are able to configure notifications for special / warrantee jobs"
+      ]
+    },
+    {
+      "_id": "j579cr9gb9xnegz3q6sqy4f5yh7sg52x",
+      "title": "Data Tracking & Integrations (aka Connections & Reporting)",
+      "businessValue": "Important",
+      "storyPoints": 5,
+      "points": 5,
+      "notes": "Imported from ClickUp. Original ID: 86ac1znfy, Status: defined",
+      "userStory": "As a company admin, I would like to capture & be able to view reports on job data so that I can review & act on job information. \n\nData we want:\nFuel & Miles\nBrand & Shingle Color\nOriginal Job date\nJob date\ncost of exepnse\ncrew assigned\npm assigned \nissue type\nissue details\ntime / hrs\nper diem \nmotels / expenses",
+      "category": "Datatracking",
+      "effortCategory": "Medium",
+      "acceptanceCriteria": [
+        "Job captures start/end dates, costs, expenses, receipts.",
+        "Job pulls brand + shingle color from JobNimbus if available.",
+        "BambooHR integration (push/pull of time/hours) is optional.",
+        "Job is able to store & report on all data listed in parent story description"
+      ]
+    }
+  ]
+}

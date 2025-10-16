@@ -1,0 +1,48 @@
+{
+  "86ac1zncm": [
+    "System emails scheduler automatically on new job creation.",
+    "Scheduler can assign crew and set job date/time.",
+    "Assigned crew receives notification by email + SMS.",
+    "System company scheduler email accounts / addresses are configurable by company admins",
+    "Scheduler may add contact notes on the job"
+  ],
+  "86ac1znbm": [
+    "Staff can choose job type (Warranty / Special Project).",
+    "Form optionally includes reference to an existing JobNimbus or CrewGuardian job (jobsite).",
+    "Linked JobNimbus or CrewGuardian details auto-populate.",
+    "Job entry saved with link to original job or local jobs."
+  ],
+  "86ac1znd4": [
+    "Crew sees job details (linked job info, materials, schedule).",
+    "Crew receives notifications by email + SMS + in-app.",
+    "Crew can upload photos.",
+    "Crew can generate purchase orders.",
+    "Crew can log fuel/mileage and expenses/receipts.",
+    "All uploads and entries attach to job record."
+  ],
+  "86ac1zne5": [
+    "Internal Damage option available on job record.",
+    "Office notified immediately by email + SMS + in-app.",
+    "Flag creates potential follow-up/linked job.",
+    "Job view should clearly reflect the \"internal damage\" flag",
+    "Other linked jobs (such as internal damage) should be linked/ listed/ available in Jobs view"
+  ],
+  "86ac1zneu": [
+    "Closeout requires selection of billing parties.",
+    "Multi-select option allowed.",
+    "Audit trail records decision maker and timestamp.",
+    "Once closed, no further job changes are allowed on the job (except additional immutable notes & audit records) except by Company Admin"
+  ],
+  "86ac1znfa": [
+    "Customer receives email (or optionally SMS text) on completion.",
+    "Team notified by email + SMS + in-app on closeout.",
+    "Office notified by email + SMS + in-app if damage flagged.",
+    "CrewGuardian users are able to configure notifications for special / warrantee jobs"
+  ],
+  "86ac1znfy": [
+    "Job captures start/end dates, costs, expenses, receipts.",
+    "Job pulls brand + shingle color from JobNimbus if available.",
+    "BambooHR integration (push/pull of time/hours) is optional.",
+    "Job is able to store & report on all data listed in parent story description"
+  ]
+}

@@ -215,6 +215,7 @@ export default defineSchema({
       effortCategory: v.optional(v.string()),
       adjustmentReason: v.optional(v.string()),
       originalPoints: v.optional(v.number()),
+      acceptanceCriteria: v.optional(v.array(v.string())),  // Add acceptance criteria support
       position: v.optional(v.object({
         value: v.string(),
         effort: v.string()

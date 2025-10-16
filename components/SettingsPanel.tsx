@@ -7,6 +7,7 @@ export type Settings = {
   contributorCost: number;
   contributorCount: number;
   hoursPerDay: number;
+  standardWorkday?: number;  // Standard 8-hour day for client-facing display
   contributorAllocation: number;
   scopeLimiters: {
     points: { default: number };

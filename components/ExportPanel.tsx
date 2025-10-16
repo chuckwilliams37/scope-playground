@@ -58,11 +58,12 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
     setIsExporting(true);
     
     try {
-      // Create new PDF document
+      // Create new PDF document with compression enabled
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true  // Enable PDF compression for smaller file size
       });
 
       // Set document properties
@@ -109,6 +110,24 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         pdf.setLineWidth(0.3);
         pdf.line(20, y, 190, y);
         return y + 5; // Return new y position
+      };
+      
+      // Helper function to compress canvas images for smaller PDF size
+      const compressImage = (canvas: HTMLCanvasElement, quality: number = 0.92): string => {
+        // Create compressed canvas at 80% of original size (less aggressive)
+        const compressed = document.createElement('canvas');
+        const ctx = compressed.getContext('2d')!;
+        
+        compressed.width = canvas.width * 0.8;
+        compressed.height = canvas.height * 0.8;
+        
+        // Use high-quality smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(canvas, 0, 0, compressed.width, compressed.height);
+        
+        // Return JPEG with higher quality (92% for better clarity)
+        return compressed.toDataURL('image/jpeg', quality);
       };
       
       // Page 1: Cover and Executive Summary
@@ -160,10 +179,11 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
       const metricsData = [
         ['Total Stories', `${stories.length}`],
         ['Total Story Points', `${metrics.totalPoints || 0}`],
-        ['Estimated Hours', `${metrics.adjustedEffort ? metrics.adjustedEffort.toFixed(0) : '0'}`],
+        ['Project Hours', `${metrics.billableHours ? metrics.billableHours.toFixed(0) : (metrics.adjustedEffort ? metrics.adjustedEffort.toFixed(0) : '0')}`],
+        ...(!clientSafeMode && metrics.productiveHours ? [['Productive Hours', `${metrics.productiveHours.toFixed(0)} (${(metrics.efficiencyPercent! * 100).toFixed(0)}% efficiency)`]] : []),
         ['Estimated Duration', `${metrics.totalDays ? metrics.totalDays.toFixed(1) : '0'} days`],
         ['Estimated Cost', `$${metrics.totalCost ? metrics.totalCost.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '0.00'}`]
-      ];
+      ].filter(Boolean);
       
       // Use autoTable directly with the pdf instance
       autoTable(pdf, {
@@ -343,26 +363,28 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         y = addText(splitMatrixDesc, y, 10);
         y += 10;
         
-        // Capture the matrix as an image
+        // Capture the matrix as an image with optimized settings
         try {
           const canvas = await html2canvas(matrixClone, {
-            scale: 1.5,
+            scale: 1.2,  // Balanced scale for quality (was 0.9, original 1.5)
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            imageTimeout: 0,
+            removeContainer: true
           });
           
           // Remove the clone
           document.body.removeChild(matrixClone);
           
-          // Add the matrix image
-          const imgData = canvas.toDataURL('image/png');
-          const imgWidth = 170;
+          // Compress and add the matrix image (JPEG for smaller size)
+          const imgData = compressImage(canvas, 0.92);
+          const imgWidth = 160;  // Balanced size for quality
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Center the image
           const xOffset = (210 - imgWidth) / 2;
-          pdf.addImage(imgData, 'PNG', xOffset, y, imgWidth, imgHeight);
+          pdf.addImage(imgData, 'JPEG', xOffset, y, imgWidth, imgHeight);
           
           // Set y position after image
           y += imgHeight + 15;
@@ -395,26 +417,28 @@ export function ExportPanel({ metrics, scenarioId, scenarioName, settings, stori
         // Temporarily add to the body
         document.body.appendChild(metricsClone);
         
-        // Capture as image
+        // Capture as image with optimized settings
         try {
           const canvas = await html2canvas(metricsClone, {
-            scale: 1.5,
+            scale: 1.2,  // Balanced scale for quality (was 0.9, original 1.5)
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            imageTimeout: 0,
+            removeContainer: true
           });
           
           // Remove the clone
           document.body.removeChild(metricsClone);
           
-          // Add the metrics image
-          const imgData = canvas.toDataURL('image/png');
-          const imgWidth = 170;
+          // Compress and add the metrics image (JPEG for smaller size)
+          const imgData = compressImage(canvas, 0.92);
+          const imgWidth = 160;  // Balanced size for quality
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Center the image
           const xOffset = (210 - imgWidth) / 2;
-          pdf.addImage(imgData, 'PNG', xOffset, y, imgWidth, imgHeight);
+          pdf.addImage(imgData, 'JPEG', xOffset, y, imgWidth, imgHeight);
           
           // Set y position after image
           y += imgHeight + 15;

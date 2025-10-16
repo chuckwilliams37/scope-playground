@@ -1,0 +1,51 @@
+"Task Type","Task ID","Task Name","Status","Task Content","Assignee","Priority","Latest Comment","Comment Count","Assigned Comment Count","Due Date","Start Date","Date Created","Date Updated","Date Closed","Date Done","Created By","Space","Folder","List","Subtask ID's","Subtask URL's","tags","Lists","Sprints","Linked Tasks","Linked Docs","Time Logged (hours)","Time Logged Rolled Up (hours)","Time Estimate (hours)","Time Estimate Rolled Up (hours)","Points Estimate","Points Estimate Rolled Up","Story Points (number)"
+"Task","86ac1zncm","Scheduler Notification & Assignment","defined","As a Ready Roofer special projects scheduler I would like to receive notifications via email & SMS when new special projects are created so that I can schedule a crew and add notes for that special project / job.
+
+As scheduler, get notified on new job.
+Who are schedulers? Admins ? Managers? 
+Issue: jobs on calendar are currently all jobs, not specifically assigned jobs. 
+Problem to solve: Efficiently finding updated jobs when doing sync. 
+
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:21 pm -05:00","Thursday, October 9th 2025, 12:46:28 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1zncq, 86ac1zncv, 86ac1znd0, 86ac3jz7t, 86ac3jzjv]","[https://app.clickup.com/t/86ac1zncq, https://app.clickup.com/t/86ac1zncv, https://app.clickup.com/t/86ac1znd0, https://app.clickup.com/t/86ac3jz7t, https://app.clickup.com/t/86ac3jzjv]","[notifications, scheduling]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",5,5,5
+"Task","86ac1zncq","System emails scheduler automatically on new job creation. ","captured","
+","[]","none","",0,0,"","","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""
+"Task","86ac1zncv"," Scheduler can assign crew and set job date/time. ","captured","
+","[]","none","",0,0,"","","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""
+"Task","86ac1znd0"," Assigned crew receives notification by email + SMS.","captured","
+","[]","none","",0,0,"","","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","Tuesday, September 23rd 2025, 10:41:13 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""
+"Task","86ac3jz7t","System company scheduler email accounts / addresses are configurable by company admins","captured","
+","[]","none","",0,0,"","","Thursday, September 25th 2025, 2:37:40 pm -05:00","Thursday, October 9th 2025, 12:37:50 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""
+"Task","86ac3jzjv","Scheduler may add contact notes on the job","captured","
+","[]","none","",0,0,"","","Thursday, September 25th 2025, 2:37:54 pm -05:00","Thursday, September 25th 2025, 2:37:54 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""
+"Task","86ac1znbm","Warranty Job Creation & Linking","defined","As office/sales staff I would like the ability to create warranty/special project jobs linked to existing Ready Roofer JobNimbus jobs so that I can create a Warranty &/or special job on a custom ReadyRoofer domain (such as specialprojects.readyroofer.com).
+
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:18 pm -05:00","Thursday, October 9th 2025, 12:47:07 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1znbq, 86ac1znbv, 86ac1znc5, 86ac1znc9]","[https://app.clickup.com/t/86ac1znbq, https://app.clickup.com/t/86ac1znbv, https://app.clickup.com/t/86ac1znc5, https://app.clickup.com/t/86ac1znc9]","[jobcreation, jobnimbus, warranty]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",5,5,5
+"Task","86ac1znd4","Field Job Execution","defined","As crew member, I would like to receive job details via my preferred communication method (from email, SMS text, & in-app notifications) and have the ability to upload documentation, photos, and make notes on the project so that I can be aware of job criteria, address, timing, and share comments, workmanship evidence, receipts, and information on jobs.
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:23 pm -05:00","Thursday, October 9th 2025, 12:54:12 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1znd8, 86ac1zndg, 86ac1zndm, 86ac1zndp, 86ac1zndv, 86ac1zne0]","[https://app.clickup.com/t/86ac1znd8, https://app.clickup.com/t/86ac1zndg, https://app.clickup.com/t/86ac1zndm, https://app.clickup.com/t/86ac1zndp, https://app.clickup.com/t/86ac1zndv, https://app.clickup.com/t/86ac1zne0]","[crew, execution, field]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",3,3,8
+"Task","86ac1zne5","Internal Damage Reporting","defined","As crew member I would like the ability to flag internal damage to the job site so that I can notify the team to process for additional jobsite-dependent work.
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:26 pm -05:00","Thursday, October 9th 2025, 12:59:54 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1znea, 86ac1znef, 86ac1zner, 86ace9bfm, 86ace9c0m]","[https://app.clickup.com/t/86ac1znea, https://app.clickup.com/t/86ac1znef, https://app.clickup.com/t/86ac1zner, https://app.clickup.com/t/86ace9bfm, https://app.clickup.com/t/86ace9c0m]","[damage, followup, notifications]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",2,2,3
+"Task","86ac1zneu","Job Closeout & Billing","defined","As office staff I would like to close out jobs by optionally, required, minimum 1, multi-selecting who to charge from ""Warrantee"", ""Roofer"", ""Project Manager"", and ""Other"" so that I can inform the office that the ""job is complete"" and ""ready for billing / invoicing"".
+
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:28 pm -05:00","Thursday, October 9th 2025, 1:08:24 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1znew, 86ac1znez, 86ac1znf5, 86ace9kkt]","[https://app.clickup.com/t/86ac1znew, https://app.clickup.com/t/86ac1znez, https://app.clickup.com/t/86ac1znf5, https://app.clickup.com/t/86ace9kkt]","[audit, billing, closeout]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",3,3,5
+"Task","86ac1znfa","Notifications & Follow-Up","defined","As office admin, customer, and/or jobsite crew member I would like to receive appropriate notifications when jobs are created, closed, and optionally when other activities occur (such as comments, equipment, & POs are added) so that I can take appropriate action and have a record of events as related to warrantee & special jobs and so that the company receives feedback on the job from the customer.
+
+","[]","HIGH","",0,0,"","","Tuesday, September 23rd 2025, 10:41:30 pm -05:00","Thursday, October 9th 2025, 1:13:12 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1znff, 86ac1znfn, 86ac1znfq, 86ace9v9r]","[https://app.clickup.com/t/86ac1znff, https://app.clickup.com/t/86ac1znfn, https://app.clickup.com/t/86ac1znfq, https://app.clickup.com/t/86ace9v9r]","[followup, notifications]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",3,3,3
+"Task","86ac1znfy","Data Tracking & Integrations","defined","As a company admin, I would like to capture & be able to view reports on job data so that I can review & act on job information. 
+
+Data we want:
+Fuel & Miles
+Brand & Shingle Color
+Original Job date
+Job date
+cost of exepnse
+crew assigned
+pm assigned 
+issue type
+issue details
+time / hrs
+per diem 
+motels / expenses
+
+","[]","NORMAL","",0,0,"","","Tuesday, September 23rd 2025, 10:41:32 pm -05:00","Thursday, October 9th 2025, 1:19:30 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[86ac1zng1, 86ac1zng6, 86ac1znga, 86acea30t]","[https://app.clickup.com/t/86ac1zng1, https://app.clickup.com/t/86ac1zng6, https://app.clickup.com/t/86ac1znga, https://app.clickup.com/t/86acea30t]","[datatracking, integration]","[RR: Warrantee_SpecialProjects]","[]","","","","","","",5,5,8
+"Task","86ac2bhn3","Bobby: Potentially convert Alex's form components into a library.","captured","
+","[]","none","",0,0,"","","Wednesday, September 24th 2025, 10:54:48 am -05:00","Monday, October 13th 2025, 2:15:35 pm -05:00","","","Chuck Williams","ReadyRoofer","RR_Dev_Projects","RR: Warrantee_SpecialProjects","[]","[]","","[RR: Warrantee_SpecialProjects]","[]","","","","","","",,0,""

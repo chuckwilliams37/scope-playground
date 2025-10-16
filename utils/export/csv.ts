@@ -105,7 +105,10 @@ export function exportMetricsToCSV(
   // Core metrics (always included)
   rows.push(['Total Stories', metrics.totalStories?.toString() || '0']);
   rows.push(['Total Points', metrics.totalPoints?.toString() || '0']);
-  rows.push(['Estimated Hours', metrics.adjustedEffort?.toFixed(1) || '0']);
+  rows.push(['Project Hours', (metrics as any).billableHours?.toFixed(1) || metrics.adjustedEffort?.toFixed(1) || '0']);
+  if (!options.clientSafe && (metrics as any).productiveHours) {
+    rows.push(['Productive Hours', `${(metrics as any).productiveHours.toFixed(1)} (${((metrics as any).efficiencyPercent * 100).toFixed(0)}% efficiency)`]);
+  }
   rows.push(['Estimated Days', metrics.totalDays?.toFixed(1) || '0']);
   rows.push(['Estimated Cost', `$${metrics.totalCost?.toFixed(2) || '0'}`]);
   rows.push(['Team Size', settings.contributorCount?.toString() || '1']);

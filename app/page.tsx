@@ -301,9 +301,10 @@ const defaultTweakableParams = {
 
 // Update the default settings object to match the new structure
 const defaultSettings: Settings = {
-  contributorCost: 500,
+  contributorCost: 800,
   contributorCount: 2,
-  hoursPerDay: 8,
+  hoursPerDay: 6,  // Productive hours (internal tracking)
+  standardWorkday: 8,  // Standard 8-hour day (client-facing display)
   contributorAllocation: 80,
   scopeLimiters: {
     points: { default: 100 },
@@ -642,26 +643,47 @@ export default function ScopePlaygroundPage() {
     // Calculate days based on effective team size and allocation
     const effectiveHoursPerDay = settings.hoursPerDay * (settings.contributorAllocation / 100);
     const effectiveDaysPerContributor = adjustedEffort / effectiveHoursPerDay;
-    let totalDays = effectiveDaysPerContributor / effectiveContributorCount;
+    const workingDays = effectiveDaysPerContributor / effectiveContributorCount;
     
-    // Account for weekends (add 2/5 more days to account for weekends)
-    // This assumes a 5-day work week and adds the proportional number of weekend days
-    totalDays = totalDays * 7/5; // Multiply by 7/5 to include weekends
+    // Store working days (business days only, excluding weekends)
+    const totalDays = workingDays;
     
-    // Calculate cost (still using actual contributor count for cost)
-    const totalCost = totalDays * settings.contributorCost * contributorCount;
+    // Calculate calendar days (including weekends) for reference
+    // Assumes 5-day work week: add 2/5 more days for weekends
+    const calendarDays = workingDays * (7 / 5);
+    
+    // Calculate cost using scaled point value (fixes perverse incentive)
+    const standardWorkday = settings.standardWorkday || 8;
+    const scaledPointValue = settings.contributorCost * (settings.hoursPerDay / standardWorkday);
+    const totalCost = totalPoints * scaledPointValue * contributorCount;
     
     // Calculate productivity loss percentage due to team size and communication overhead
     const productivityLossPercent = contributorCount > 1 
       ? Math.round(((contributorCount - effectiveContributorCount) / contributorCount) * 100) 
       : 0;
     
+    // Calculate billable hours (hours that match the cost calculation)
+    // Use standardWorkday (8 hrs) for client-facing, hoursPerDay (6 hrs) for internal
+    const clientHourlyRate = settings.contributorCost / standardWorkday;  // $800 ÷ 8 = $100/hr
+    const effectiveHourlyRate = settings.contributorCost / settings.hoursPerDay;  // $800 ÷ 6 = $133/hr
+    
+    const billableHours = totalCost / clientHourlyRate;  // Use client rate for billable hours
+    const productiveHours = adjustedEffort;
+    const overheadHours = billableHours - productiveHours;
+    const efficiencyPercent = productiveHours / billableHours;
+    
     return {
       totalStories,
       totalPoints,
       rawEffort,
       adjustedEffort,
-      totalDays,
+      billableHours,        // New: hours that reconcile with cost
+      productiveHours,      // New: productive hours after AI
+      overheadHours,        // New: overhead hours (meetings, coordination, etc.)
+      efficiencyPercent,    // New: productive / billable ratio
+      totalDays,            // Working days (business days only, no weekends)
+      calendarDays,         // Calendar days (including weekends)
+      scaledPointValue,     // Point value scaled by hours commitment
       totalCost,
       scopeLimits: {
         overPoints: totalPoints > settings.scopeLimiters.points.default,
@@ -690,6 +712,7 @@ export default function ScopePlaygroundPage() {
     totalStories: 0,
     totalPoints: 0,
     adjustedEffort: 0,
+    billableHours: 0,
     totalDays: 0,
     totalCost: 0
   });

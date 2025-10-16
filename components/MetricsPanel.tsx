@@ -9,7 +9,13 @@ type MetricsPanelProps = {
     totalPoints: number;
     rawEffort: number;
     adjustedEffort: number;
+    billableHours?: number;
+    productiveHours?: number;
+    overheadHours?: number;
+    efficiencyPercent?: number;
     totalDays: number;
+    calendarDays?: number;
+    scaledPointValue?: number;
     totalCost: number;
     scopeLimits: {
       overPoints: boolean;
@@ -32,6 +38,7 @@ type MetricsPanelProps = {
     totalStories: number;
     totalPoints: number;
     adjustedEffort: number;
+    billableHours?: number;
     totalDays: number;
     totalCost: number;
   };
@@ -46,6 +53,7 @@ type MetricsPanelProps = {
     contributorCost: number;
     contributorCount: number;
     hoursPerDay: number;
+    standardWorkday?: number;
     contributorAllocation: number;
     scopeLimiters: {
       points: { default: number };
@@ -239,8 +247,19 @@ export function MetricsPanel({
         </div>
         
         <div className={`bg-blue-50 border ${metrics.scopeLimits?.overHours ? 'border-red-300' : 'border-blue-100'} rounded-lg p-3`}>
-          <div className="text-sm text-blue-600 font-medium">Adjusted Effort</div>
-          <div className="text-3xl font-bold mt-1">{formatNumber(animatedMetrics.adjustedEffort)}</div>
+          <div className="text-sm text-blue-600 font-medium">
+            {clientSafeMode ? 'Project Hours' : 'Billable Hours'}
+          </div>
+          <div className="text-3xl font-bold mt-1">
+            {formatNumber(animatedMetrics.billableHours || animatedMetrics.adjustedEffort)}
+          </div>
+          {!clientSafeMode && metrics.productiveHours && metrics.billableHours && (
+            <div className="text-xs text-gray-600 mt-1">
+              {formatNumber(metrics.productiveHours)} productive hrs
+              <br />
+              ({formatNumber(metrics.efficiencyPercent! * 100)}% efficiency)
+            </div>
+          )}
           <div className="text-sm mt-1">
             {metrics.scopeLimits?.overHours && 
               <span className="text-red-500">Exceeds hour limit</span>
@@ -250,9 +269,15 @@ export function MetricsPanel({
         
         <div className={`bg-blue-50 border ${metrics.scopeLimits?.overDuration ? 'border-red-300' : 'border-blue-100'} rounded-lg p-3`}>
           <div className="text-sm text-blue-600 font-medium">Timeline</div>
-          <div className="text-3xl font-bold mt-1">{formatNumber(animatedMetrics.totalDays)}</div>
+          <div className="text-3xl font-bold mt-1">{formatNumber(animatedMetrics.totalDays)} days</div>
           <div className="text-xs text-gray-600 mt-1">
-            ({Math.floor(animatedMetrics.totalDays / 7)} weeks, {Math.ceil(animatedMetrics.totalDays % 7)} days)
+            Working days (excludes weekends)
+            {metrics.calendarDays && (
+              <>
+                <br />
+                ~{formatNumber(metrics.calendarDays)} calendar days
+              </>
+            )}
           </div>
           <div className="text-sm mt-1">
             {metrics.scopeLimits?.overDuration && 
@@ -273,11 +298,42 @@ export function MetricsPanel({
           )}
         </div>
         
+        {/* Point Value / Daily Rate card - different display for client vs internal */}
         <div className="bg-green-50 p-3 rounded-lg">
-          <div className="text-sm text-green-600 font-medium">Contributors</div>
-          <div className="text-3xl font-bold mt-1">{settings.contributorCount}</div>
-          {!clientSafeMode && metrics.effectiveContributorCount && metrics.productivityLossPercent !== undefined && settings.contributorCount > 1 && (
-            <div className="text-xs mt-1">
+          <div className="text-sm text-green-600 font-medium">
+            {clientSafeMode ? 'Point Value' : 'Point Rate'}
+          </div>
+          <div className="text-3xl font-bold mt-1">
+            {formatCurrency(metrics.scaledPointValue || settings.contributorCost)}
+          </div>
+          {clientSafeMode ? (
+            <div className="text-xs text-gray-600 mt-1">
+              1 point = 1 developer day
+              <br />
+              ${formatNumber((metrics.scaledPointValue || settings.contributorCost) / (settings.standardWorkday || 8))}/hr ({settings.hoursPerDay}-hour day)
+            </div>
+          ) : (
+            <div className="text-xs text-gray-600 mt-1">
+              {settings.hoursPerDay} hrs/day commitment
+              <br />
+              ${formatNumber((metrics.scaledPointValue || settings.contributorCost) / settings.hoursPerDay)}/hr effective
+              {settings.hoursPerDay !== 8 && (
+                <>
+                  <br />
+                  <span className="text-amber-600">Scaled from ${settings.contributorCost} base</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Hide Contributors section in client-safe mode to prevent artifacts */}
+        {!clientSafeMode && (
+          <div className="bg-green-50 p-3 rounded-lg">
+            <div className="text-sm text-green-600 font-medium">Contributors</div>
+            <div className="text-3xl font-bold mt-1">{settings.contributorCount}</div>
+            {metrics.effectiveContributorCount && metrics.productivityLossPercent !== undefined && settings.contributorCount > 1 && (
+              <div className="text-xs mt-1">
               <div className="font-medium text-amber-600">
                 Effective: {formatNumber(metrics.effectiveContributorCount)} 
                 ({metrics.productivityLossPercent}% loss)
@@ -325,7 +381,8 @@ export function MetricsPanel({
               </details>
             </div>
           )}
-        </div>
+          </div>
+        )}
         
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-sm text-green-600 font-medium">{clientSafeMode ? 'Productivity Optimization' : 'AI Productivity Gain'}</div>
